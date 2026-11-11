@@ -258,9 +258,13 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <span class="imp-t" id="imp-t">Photos à associer</span>
     <div class="imp" id="imp-list"></div>
     <div class="imp-a">
-      <button type="button" class="shoot" id="imp-ok" style="padding-block:16px;font-size:1.05rem">Enregistrer</button>
+      <button type="button" class="shoot" id="imp-ok" style="padding-block:16px;font-size:1.05rem">Ajouter à la tournée</button>
       <button type="button" class="q-btn" id="imp-no">Annuler</button>
     </div>
+    <p class="hint" style="text-align:left;margin-top:2px">
+      Les photos rejoignent la file d'envoi et leurs points passent au vert.
+      Tant que tu n'as pas appuyé, rien n'est enregistré.
+    </p>
   </div>
 
   <div class="busy" id="busy" hidden><i aria-hidden="true"></i><span id="busy-txt">Enregistrement…</span></div>
@@ -431,6 +435,16 @@ async function compresser(file, maxCote = 1280, qualite = .7) {
   } catch { return file; }
   finally { if (img && img.close) img.close(); }
 }
+/* Le bandeau de confirmation affiche une image servie par une URL d'objet.
+   Chaque nouvelle vignette libère la précédente : sans ça, une tournée de
+   trente photos laisse trente images en mémoire. */
+let urlFlash = null;
+function poserFlash(url) {
+  if (urlFlash && urlFlash !== url) URL.revokeObjectURL(urlFlash);
+  urlFlash = url;
+  $("flash-img").src = url;
+}
+
 const positionFraiche = () => new Promise((ok, ko) =>
   navigator.geolocation.getCurrentPosition(
     p => ok({ lat:p.coords.latitude, lon:p.coords.longitude, precision_m: Math.round(p.coords.accuracy) }),
@@ -564,7 +578,7 @@ async function traiter(e, source) {
   choixManuel = false;
 
   $("busy").hidden = true;
-  $("flash-img").src = URL.createObjectURL(photo);
+  poserFlash(URL.createObjectURL(photo));
   $("flash-t").textContent = site.nom + (source === "galerie" ? " enregistré (galerie)" : " enregistré");
   $("flash-s").textContent = Math.round(photo.size / 1024) + " Ko · " +
     (ENDPOINT ? "envoi en cours" : "conservé sur le téléphone");
@@ -667,16 +681,21 @@ async function importerGalerie(files) {
     const f = files[i];
     $("busy-txt").textContent = `Lecture de la photo ${i + 1} / ${files.length}…`;
     const ex = await lireExif(f);
-    let site = null, d = null, auto = false;
+    let site = null, d = null, auto = false, defaut = false;
     if (ex.lat !== null) {
       const r = identifierSite({ lat: ex.lat, lon: ex.lon, precision_m: 10 });
       if (r.statut === "ok") { site = r.site; d = r.d; auto = true; }
     }
+    /* Pas de position dans la photo — et c'est le cas courant, l'iPhone la
+       retire des photos choisies dans la galerie. Le point déjà affiché à
+       l'écran, choisi à la main ou reconnu par le GPS, est alors la meilleure
+       réponse : on la propose, l'agent n'a plus qu'à corriger si besoin. */
+    if (!site && courant) { site = courant; defaut = true; }
     /* La vignette est une image réduite, pas l'original : afficher dix photos
        pleine résolution dans la liste suffisait à faire tomber le téléphone. */
     const vig = await compresser(f, 200, .55);
     aImporter.push({
-      file: f, exif: ex, site, d, auto,
+      file: f, exif: ex, site, d, auto, defaut,
       // vig === f : le format n'a pas pu être décodé, pas de vignette à afficher
       url: vig === f ? null : URL.createObjectURL(vig),
       quand: ex.date || new Date(f.lastModified || Date.now())
@@ -690,12 +709,14 @@ async function importerGalerie(files) {
 
 function rendreImport(trop = 0) {
   const n = aImporter.length;
-  const auto = aImporter.filter(x => x.auto).length;
-  const reste = n - auto;
-  let t;
-  if (auto && !reste) t = `${n} photo${n > 1 ? "s" : ""} placée${n > 1 ? "s" : ""} par leur position GPS`;
-  else if (auto)      t = `${n} photos — ${auto} placée${auto > 1 ? "s" : ""} par le GPS, ${reste} à choisir`;
-  else                t = `${n} photo${n > 1 ? "s" : ""} à associer — choisis le point de la première, les suivantes de la même minute suivront`;
+  const parGps   = aImporter.filter(x => x.auto).length;
+  const parPoint = aImporter.filter(x => x.defaut && x.site).length;
+  const aChoisir = aImporter.filter(x => !x.site).length;
+  const bouts = [];
+  if (parGps)   bouts.push(`${parGps} par la position de la photo`);
+  if (parPoint) bouts.push(`${parPoint} sur ${courant ? courant.nom : "le point en cours"}`);
+  if (aChoisir) bouts.push(`${aChoisir} à choisir`);
+  let t = `${n} photo${n > 1 ? "s" : ""} — ${bouts.join(", ")}`;
   if (trop > 0) t += ` (${trop} photo${trop > 1 ? "s" : ""} au-delà de ${MAX_LOT} ignorée${trop > 1 ? "s" : ""})`;
   $("imp-t").textContent = t;
   const opts = s => SITES.map(x =>
@@ -703,18 +724,21 @@ function rendreImport(trop = 0) {
   $("imp-list").innerHTML = aImporter.map((x, i) => {
     const h = x.quand.toLocaleString("fr-FR",
       { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-    const info = x.auto ? `${h} · reconnu à ${x.d} m`
-      : (x.exif.lat !== null ? `${h} · hors zone, à choisir` : `${h} · sans position, à choisir`);
+    const info =
+        x.auto   ? `${h} · reconnu à ${x.d} m`
+      : x.defaut ? `${h} · point en cours`
+      : x.site   ? `${h} · même rafale`
+      : (x.exif.lat !== null ? `${h} · hors zone, à choisir` : `${h} · à choisir`);
     const vign = x.url
       ? `<img src="${x.url}" alt="" width="54" height="54" loading="lazy" decoding="async">`
       : `<span class="imp-v" aria-hidden="true">?</span>`;
-    return `<div class="imp-i${x.auto ? " auto" : ""}">${vign}` +
+    return `<div class="imp-i${x.site ? " auto" : ""}">${vign}` +
       `<div class="imp-c"><span class="imp-h">${info}</span>` +
       `<select data-i="${i}"><option value="">— choisir le point —</option>${opts(x.site)}</select>` +
       `</div></div>`;
   }).join("");
   $("import").hidden = false;
-  $("imp-ok").textContent = `Enregistrer ${n} photo${n > 1 ? "s" : ""}`;
+  $("imp-ok").textContent = `Ajouter ${n} photo${n > 1 ? "s" : ""} à la tournée`;
   // On ne remonte la liste qu'à son ouverture : pas à chaque choix de point.
   if (trop !== -1) $("import").scrollIntoView({ block: "start", behavior: "smooth" });
 }
@@ -731,13 +755,15 @@ $("imp-list").addEventListener("change", e => {
   const i = +sel.dataset.i;
   const site = SITES.find(x => x.code === sel.value) || null;
   aImporter[i].site = site;
+  aImporter[i].defaut = false;          // ce point-là est désormais un choix, pas une proposition
   if (!site) return;
 
   let propage = 0;
   const t0 = aImporter[i].quand.getTime();
   aImporter.forEach((x, j) => {
-    if (j === i || x.site || x.auto) return;
-    if (Math.abs(x.quand.getTime() - t0) <= RAFALE_MIN * 60000) { x.site = site; propage++; }
+    // On ne touche ni aux photos placées par leur GPS, ni à un choix déjà fait.
+    if (j === i || x.auto || (x.site && !x.defaut)) return;
+    if (Math.abs(x.quand.getTime() - t0) <= RAFALE_MIN * 60000) { x.site = site; x.defaut = false; propage++; }
   });
   if (propage) {
     rendreImport(-1);
@@ -777,13 +803,21 @@ $("imp-ok").addEventListener("click", async () => {
     await new Promise(r => setTimeout(r, 0));   // laisse respirer l'interface
   }
   sauverFaits();
-  aImporter.forEach(x => URL.revokeObjectURL(x.url));
+  /* On garde en vie la vignette de la dernière photo : c'est elle qui va
+     s'afficher dans le bandeau de confirmation, comme après une prise de vue.
+     Les autres sont libérées tout de suite. */
+  const derniere = aImporter[aImporter.length - 1];
+  const vignetteFlash = derniere ? derniere.url : null;
+  aImporter.forEach(x => { if (x.url && x.url !== vignetteFlash) URL.revokeObjectURL(x.url); });
+  const sites = [...new Set(aImporter.map(x => x.site.code))];
   const n = aImporter.length; aImporter = [];
   $("import").hidden = true; $("imp-list").innerHTML = "";
   $("busy").hidden = true; $("imp-ok").disabled = false;
-  $("flash-t").textContent = `${n} photo${n > 1 ? "s" : ""} importée${n > 1 ? "s" : ""}`;
+  $("flash-t").textContent = `${n} photo${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""}` +
+    (sites.length === 1 ? ` · ${sites[0]}` : ` · ${sites.length} points`);
   $("flash-s").textContent = ENDPOINT ? "envoi en cours" : "conservées sur le téléphone";
-  $("flash-img").removeAttribute("src");
+  if (vignetteFlash) { poserFlash(vignetteFlash); }
+  else $("flash-img").removeAttribute("src");
   $("flash").hidden = false;
   rendre(); vider(); demanderSync();
 });
