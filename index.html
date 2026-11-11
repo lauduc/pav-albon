@@ -320,6 +320,12 @@ const sauverFaits = () => { try { localStorage.setItem("pav-faits", JSON.stringi
 
 /* ── état ──────────────────────────────────────────────────────────────── */
 let position = null, courant = null, demo = false, envoiEnCours = false;
+/* Un point choisi à la main l'emporte sur le GPS. Sans ce verrou, chaque
+   nouvelle position émise par watchPosition — c'est-à-dire en continu sur un
+   téléphone — écraserait le choix de l'agent et refermerait le bouton.
+   Il est relâché après la photo, pour que la détection reprenne la main au
+   point suivant de la tournée. */
+let choixManuel = false;
 const $ = id => document.getElementById(id);
 
 /* ── photo ─────────────────────────────────────────────────────────────── */
@@ -381,6 +387,9 @@ function majGps() {
   $("gps-txt").textContent = `${position.lat.toFixed(5)}, ${position.lon.toFixed(5)} · ±${position.precision_m} m`
     + (r.statut === "ok" ? ` · ${r.d} m du point` : "");
 
+  // Le choix de l'agent ne se fait pas écraser par la position suivante.
+  if (choixManuel) return;
+
   if (r.statut === "ok") { $("state-lbl").textContent = "Point détecté"; courant = r.site; $("pick").hidden = true; }
   else {
     courant = null;
@@ -411,6 +420,7 @@ $("shoot").addEventListener("click", () => {
   $("file").click();
 });
 $("changer").addEventListener("click", () => {
+  choixManuel = false;            // on redonne sa chance au GPS
   ouvrirChoix(); $("pick").scrollIntoView({ block: "nearest" });
 });
 
@@ -437,6 +447,8 @@ $("file").addEventListener("change", async e => {
   };
   await qPut(item);
   faits.set(site.code, (faits.get(site.code) || 0) + 1); sauverFaits();
+  // La photo est prise : le GPS reprend la main pour le point suivant.
+  choixManuel = false;
 
   $("flash-img").src = URL.createObjectURL(photo);
   $("flash-t").textContent = site.nom + " enregistré";
@@ -448,14 +460,16 @@ $("file").addEventListener("change", async e => {
   else if (demo) courant = site;
 
   rendre(); majGps(); vider();
-  $("shoot").disabled = !courant;
+  $("shoot").disabled = false;
 });
 
 $("pick").addEventListener("click", e => {
   const b = e.target.closest("button[data-code]"); if (!b) return;
   courant = SITES.find(s => s.code === b.dataset.code);
+  choixManuel = true;
   $("pick").hidden = true; $("state-lbl").textContent = "Point choisi à la main";
   rendre();
+  $("shoot").scrollIntoView({ block: "center", behavior: "smooth" });
 });
 
 /* ── envoi ─────────────────────────────────────────────────────────────── */
@@ -476,26 +490,52 @@ async function vider() {
 window.addEventListener("online", vider);
 
 /* ── démarrage ─────────────────────────────────────────────────────────── */
+/* Le mode démo n'existe que pour un appareil SANS géolocalisation utilisable.
+   Il ne doit jamais s'activer après coup : sur un téléphone, watchPosition
+   émet régulièrement des erreurs passagères (timeout, position indisponible),
+   et chacune ferait sauter le point en cours. */
 function demarrerDemo(raison) {
+  if (demo) return;                       // une seule fois
   demo = true;
-  courant = SITES.find(s => !faits.has(s.code)) || SITES[0];
-  position = { lat: courant.lat, lon: courant.lon, precision_m: 8 };
-  $("state-lbl").textContent = "Point détecté";
-  $("note").innerHTML = `<strong>Mode démo :</strong> ${raison} La page avance automatiquement au point suivant après chaque photo. Sur ton domaine en HTTPS, elle utilise le GPS réel et <code>ENDPOINT</code> envoie vers n8n.`;
+  if (!choixManuel) {
+    courant = SITES.find(s => !faits.has(s.code)) || SITES[0];
+    position = { lat: courant.lat, lon: courant.lon, precision_m: 8 };
+    $("state-lbl").textContent = "Point détecté";
+  }
+  $("note").innerHTML = `<strong>Mode démo :</strong> ${raison} Le point avance tout seul après chaque photo. Sur un téléphone, avec la géolocalisation autorisée, la page utilise le GPS réel.`;
   rendre(); majGps();
 }
 
-if (!navigator.geolocation) demarrerDemo("la géolocalisation n'est pas disponible ici.");
-else {
-  let repondu = false;
-  const secours = setTimeout(() => { if (!repondu) demarrerDemo("la géolocalisation n'a pas répondu — le lecteur d'artifact la bloque."); }, 4000);
+if (!navigator.geolocation) {
+  demarrerDemo("ce navigateur ne fournit pas de géolocalisation.");
+} else {
+  let premiere = true;
+  const secours = setTimeout(() => {
+    if (premiere) demarrerDemo("la géolocalisation n'a pas répondu.");
+  }, 6000);
+
   navigator.geolocation.watchPosition(
-    p => { repondu = true; clearTimeout(secours); demo = false;
-           position = { lat:p.coords.latitude, lon:p.coords.longitude, precision_m: Math.round(p.coords.accuracy) };
-           $("note").innerHTML = `GPS actif. Remplace le tableau <code>SITES</code> en haut du fichier par tes 10 points, puis renseigne <code>ENDPOINT</code>.`;
-           majGps(); },
-    () => { repondu = true; clearTimeout(secours); demarrerDemo("la géolocalisation est refusée dans ce cadre."); },
-    { enableHighAccuracy:true, maximumAge:0, timeout:8000 }
+    p => {
+      premiere = false; clearTimeout(secours); demo = false;
+      position = { lat: p.coords.latitude, lon: p.coords.longitude,
+                   precision_m: Math.round(p.coords.accuracy) };
+      $("note").textContent = "";
+      majGps();
+    },
+    err => {
+      clearTimeout(secours);
+      // Erreur APRÈS une première position : signal momentanément perdu.
+      // On garde le point en cours et on le dit, sans rien basculer.
+      if (!premiere) {
+        $("gps-txt").textContent = "Signal GPS momentanément indisponible — le point reste celui affiché";
+        return;
+      }
+      premiere = false;
+      demarrerDemo(err && err.code === 1
+        ? "la géolocalisation a été refusée pour ce site."
+        : "la géolocalisation n'est pas disponible ici.");
+    },
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
   );
 }
 rendre();
