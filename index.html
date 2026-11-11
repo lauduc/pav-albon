@@ -109,6 +109,15 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .shoot svg { width: 28px; height: 28px; flex: none; }
 .hint { font-size: .85rem; color: var(--muted); text-align: center; margin: -6px 0 0; }
 
+/* Même gabarit que le bouton principal — c'est la deuxième façon d'alimenter
+   la tournée, pas un lien discret. Fond clair pour qu'elle reste seconde. */
+.shoot.second {
+  background: var(--surface); color: var(--ink);
+  border: 2px solid var(--signal); box-shadow: none;
+  font-size: 1.1rem; padding-block: 20px;
+}
+.shoot.second:active { transform: translateY(1px); }
+
 .changer {
   appearance: none; border: 0; background: none; cursor: pointer;
   font-family: var(--font-ui); font-size: .85rem; color: var(--muted);
@@ -136,6 +145,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   padding: 10px 12px; min-width: 0;
 }
 .imp-i img { width: 54px; height: 54px; object-fit: cover; border-radius: 8px; flex: none; }
+.imp-v {
+  width: 54px; height: 54px; border-radius: 8px; flex: none;
+  display: grid; place-items: center; background: var(--bg);
+  border: 1px dashed var(--line); color: var(--muted); font-family: var(--font-mono);
+}
 .imp-c { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; }
 .imp-h { font-family: var(--font-mono); font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .imp-i select {
@@ -235,7 +249,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   </button>
   <p class="hint" id="hint">Photographie chaque point, même quand tout va bien.</p>
   <button type="button" class="changer" id="changer" hidden>Ce n'est pas le bon point ?</button>
-  <button type="button" class="changer" id="galerie">Importer des photos depuis la galerie</button>
+  <button type="button" class="shoot second" id="galerie">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    <span>Importer depuis la galerie</span>
+  </button>
 
   <div class="imp" id="import" hidden>
     <span class="imp-t" id="imp-t">Photos à associer</span>
@@ -395,13 +412,24 @@ let choixManuel = false;
 const $ = id => document.getElementById(id);
 
 /* ── photo ─────────────────────────────────────────────────────────────── */
+/* Chaque photo décodée occupe largeur × hauteur × 4 octets en mémoire vive :
+   une photo de 12 Mpx, c'est 48 Mo. Sans close() ni canvas remis à zéro, une
+   dizaine de photos suffisait à faire tuer l'onglet par le système — c'est
+   l'« appli qui se plante et se ferme ». On libère donc tout, à chaque photo. */
 async function compresser(file, maxCote = 1280, qualite = .7) {
-  const img = await createImageBitmap(file);
-  const r = Math.min(1, maxCote / Math.max(img.width, img.height));
-  const c = document.createElement("canvas");
-  c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
-  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-  return new Promise(ok => c.toBlob(ok, "image/jpeg", qualite));
+  let img = null;
+  try { img = await createImageBitmap(file); }
+  catch { return file; }           // format non décodable (HEIC brut) : on garde l'original
+  try {
+    const r = Math.min(1, maxCote / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const b = await new Promise(ok => c.toBlob(ok, "image/jpeg", qualite));
+    c.width = c.height = 0;        // libère le canvas sans attendre le ramasse-miettes
+    return b || file;
+  } catch { return file; }
+  finally { if (img && img.close) img.close(); }
 }
 const positionFraiche = () => new Promise((ok, ko) =>
   navigator.geolocation.getCurrentPosition(
@@ -624,35 +652,52 @@ async function lireExif(file) {
 /* ── import par lots ───────────────────────────────────────────────────── */
 let aImporter = [];
 
+const MAX_LOT = 25;                // au-delà, la mémoire du téléphone ne suit plus
+
 async function importerGalerie(files) {
   if (!files.length) return;
-  $("busy-txt").textContent = `Lecture de ${files.length} photo${files.length > 1 ? "s" : ""}…`;
-  $("busy").hidden = false;
+  let trop = 0;
+  if (files.length > MAX_LOT) { trop = files.length - MAX_LOT; files = files.slice(0, MAX_LOT); }
+
+  aImporter.forEach(x => URL.revokeObjectURL(x.url));
   aImporter = [];
-  for (const f of files) {
+  $("busy").hidden = false;
+
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    $("busy-txt").textContent = `Lecture de la photo ${i + 1} / ${files.length}…`;
     const ex = await lireExif(f);
     let site = null, d = null, auto = false;
     if (ex.lat !== null) {
       const r = identifierSite({ lat: ex.lat, lon: ex.lon, precision_m: 10 });
       if (r.statut === "ok") { site = r.site; d = r.d; auto = true; }
     }
+    /* La vignette est une image réduite, pas l'original : afficher dix photos
+       pleine résolution dans la liste suffisait à faire tomber le téléphone. */
+    const vig = await compresser(f, 200, .55);
     aImporter.push({
       file: f, exif: ex, site, d, auto,
-      url: URL.createObjectURL(f),
+      // vig === f : le format n'a pas pu être décodé, pas de vignette à afficher
+      url: vig === f ? null : URL.createObjectURL(vig),
       quand: ex.date || new Date(f.lastModified || Date.now())
     });
+    await new Promise(r => setTimeout(r, 0));   // laisse respirer l'interface
   }
   aImporter.sort((a, b) => a.quand - b.quand);
   $("busy").hidden = true;
-  rendreImport();
+  rendreImport(trop);
 }
 
-function rendreImport() {
+function rendreImport(trop = 0) {
   const n = aImporter.length;
   const auto = aImporter.filter(x => x.auto).length;
-  $("imp-t").textContent = auto
-    ? `${n} photo${n > 1 ? "s" : ""} — ${auto} placée${auto > 1 ? "s" : ""} par leur position GPS`
-    : `${n} photo${n > 1 ? "s" : ""} à associer`;
+  const reste = n - auto;
+  let t;
+  if (auto && !reste) t = `${n} photo${n > 1 ? "s" : ""} placée${n > 1 ? "s" : ""} par leur position GPS`;
+  else if (auto)      t = `${n} photos — ${auto} placée${auto > 1 ? "s" : ""} par le GPS, ${reste} à choisir`;
+  else                t = `${n} photo${n > 1 ? "s" : ""} à associer — choisis le point de la première, les suivantes de la même minute suivront`;
+  if (trop > 0) t += ` (${trop} photo${trop > 1 ? "s" : ""} au-delà de ${MAX_LOT} ignorée${trop > 1 ? "s" : ""})`;
+  $("imp-t").textContent = t;
   const opts = s => SITES.map(x =>
     `<option value="${x.code}"${s && s.code === x.code ? " selected" : ""}>${x.nom}</option>`).join("");
   $("imp-list").innerHTML = aImporter.map((x, i) => {
@@ -660,19 +705,45 @@ function rendreImport() {
       { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
     const info = x.auto ? `${h} · reconnu à ${x.d} m`
       : (x.exif.lat !== null ? `${h} · hors zone, à choisir` : `${h} · sans position, à choisir`);
-    return `<div class="imp-i${x.auto ? " auto" : ""}"><img src="${x.url}" alt="">` +
+    const vign = x.url
+      ? `<img src="${x.url}" alt="" width="54" height="54" loading="lazy" decoding="async">`
+      : `<span class="imp-v" aria-hidden="true">?</span>`;
+    return `<div class="imp-i${x.auto ? " auto" : ""}">${vign}` +
       `<div class="imp-c"><span class="imp-h">${info}</span>` +
       `<select data-i="${i}"><option value="">— choisir le point —</option>${opts(x.site)}</select>` +
       `</div></div>`;
   }).join("");
   $("import").hidden = false;
   $("imp-ok").textContent = `Enregistrer ${n} photo${n > 1 ? "s" : ""}`;
-  $("import").scrollIntoView({ block: "start", behavior: "smooth" });
+  // On ne remonte la liste qu'à son ouverture : pas à chaque choix de point.
+  if (trop !== -1) $("import").scrollIntoView({ block: "start", behavior: "smooth" });
 }
+
+/* Une rafale prise devant la même colonne porte des heures voisines. Quand
+   l'agent place une photo à la main, les photos sans point prises dans les
+   RAFALE_MIN minutes autour reçoivent le même point : c'est le repli quand
+   l'iPhone a retiré la position GPS des métadonnées, ce qu'il fait presque
+   toujours sur les photos choisies dans la galerie. */
+const RAFALE_MIN = 4;
 
 $("imp-list").addEventListener("change", e => {
   const sel = e.target.closest("select[data-i]"); if (!sel) return;
-  aImporter[+sel.dataset.i].site = SITES.find(x => x.code === sel.value) || null;
+  const i = +sel.dataset.i;
+  const site = SITES.find(x => x.code === sel.value) || null;
+  aImporter[i].site = site;
+  if (!site) return;
+
+  let propage = 0;
+  const t0 = aImporter[i].quand.getTime();
+  aImporter.forEach((x, j) => {
+    if (j === i || x.site || x.auto) return;
+    if (Math.abs(x.quand.getTime() - t0) <= RAFALE_MIN * 60000) { x.site = site; propage++; }
+  });
+  if (propage) {
+    rendreImport(-1);
+    $("imp-t").textContent =
+      `${propage} photo${propage > 1 ? "s" : ""} de la même minute placée${propage > 1 ? "s" : ""} sur ${site.nom}`;
+  }
 });
 
 $("imp-no").addEventListener("click", () => {
@@ -703,6 +774,7 @@ $("imp-ok").addEventListener("click", async () => {
       photo
     });
     faits.set(x.site.code, (faits.get(x.site.code) || 0) + 1);
+    await new Promise(r => setTimeout(r, 0));   // laisse respirer l'interface
   }
   sauverFaits();
   aImporter.forEach(x => URL.revokeObjectURL(x.url));
