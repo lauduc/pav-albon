@@ -853,3 +853,858 @@ chargerReferentiel();
 
 </body>
 </html>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<!-- SANS cette balise, le téléphone rend la page en largeur bureau (≈785 px)
+     puis la réduit : tout devient minuscule. C'est la ligne la plus
+     importante du fichier pour un outil de terrain. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E8B000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tournée PAV">
+<title>Tournée PAV</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Colonne unique : bandeau d'état en haut, bouton dans la zone du pouce, tournée en dessous. */
+/* Fourni par la plateforme d'artifact, absent d'une page autonome : sans lui
+   les paddings s'ajoutent à la largeur et la page déborde de 32 px. */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Dégage les encoches et la barre de geste, maintenant que la page est en
+   viewport-fit=cover. */
+:root {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+:root {
+  --bg: #E8EAE6; --surface: #FFFFFF; --ink: #1A1F1C; --muted: #6A716B;
+  --line: #CFD4CD; --signal: #E8B000; --signal-ink: #2A2000;
+  --ok: #2E7D4F; --warn: #C97A14; --alert: #B3382C;
+  --font-ui: "Barlow", system-ui, sans-serif;
+  --font-label: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141714; --surface: #1E221F; --ink: #E9EDE8; --muted: #9AA39B;
+  --line: #30362F; --signal: #F2C230; --signal-ink: #241B00;
+  --ok: #5FBE85; --warn: #E8A94A; --alert: #E8766A; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #141714; --surface: #1E221F; --ink: #E9EDE8; --muted: #9AA39B;
+  --line: #30362F; --signal: #F2C230; --signal-ink: #241B00;
+  --ok: #5FBE85; --warn: #E8A94A; --alert: #E8766A; color-scheme: dark;
+}
+/* Indispensable hors plateforme d'artifact : les règles de classe ci-dessous
+   (.flash, .pick en display:flex) l'emportent sinon sur le display:none que
+   le navigateur applique à l'attribut hidden, et les blocs masqués
+   s'affichent vides. */
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-ui);
+  font-size: 16px; line-height: 1.45; margin: 0;
+  display: flex; flex-direction: column;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap {
+  flex: 1; display: flex; flex-direction: column; gap: 14px;
+  width: 100%; max-width: 32rem; margin: 0 auto; min-width: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 24px;
+}
+.eyebrow {
+  font-family: var(--font-label); text-transform: uppercase;
+  letter-spacing: .09em; font-size: .8rem; font-weight: 600; color: var(--muted);
+}
+.bar {
+  background: var(--surface); border-bottom: 1px solid var(--line);
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9;
+  margin-bottom: 2px;
+}
+.bar-in {
+  width: 100%; max-width: 32rem; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 10px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+}
+.count { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: .95rem; }
+.count b { font-size: 1.3rem; font-weight: 500; }
+.track { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.track > i { display: block; height: 100%; background: var(--ok); width: 0; transition: width .35s ease; }
+
+.point {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 16px; display: flex; flex-direction: column; gap: 4px;
+}
+.point h1 { font-size: 1.45rem; font-weight: 600; margin: 0; text-wrap: balance; line-height: 1.2; }
+.code { font-family: var(--font-mono); font-size: .9rem; color: var(--muted); }
+.gps { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.flux { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip {
+  font-family: var(--font-label); text-transform: uppercase; letter-spacing: .05em;
+  font-size: .75rem; font-weight: 600; padding: 3px 8px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted);
+}
+
+.shoot {
+  appearance: none; border: 0; cursor: pointer; width: 100%;
+  background: var(--signal); color: var(--signal-ink);
+  font-family: var(--font-ui); font-size: 1.25rem; font-weight: 600;
+  padding-block: 26px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  box-shadow: 0 2px 0 rgba(0,0,0,.18);
+}
+.shoot:disabled { opacity: .45; cursor: default; box-shadow: none; }
+.shoot:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+.shoot svg { width: 28px; height: 28px; flex: none; }
+.hint { font-size: .85rem; color: var(--muted); text-align: center; margin: -6px 0 0; }
+
+.changer {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-ui); font-size: .85rem; color: var(--muted);
+  text-decoration: underline; text-underline-offset: 3px;
+  padding: 2px 0; margin: -8px auto 0; display: block;
+}
+.busy {
+  display: flex; align-items: center; gap: 11px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 14px; font-size: .92rem; color: var(--ink);
+}
+.busy i {
+  flex: none; width: 20px; height: 20px; border-radius: 50%;
+  border: 2.5px solid var(--line); border-top-color: var(--signal);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .busy i { animation: none; } }
+.imp { display: flex; flex-direction: column; gap: 10px; }
+.imp-t { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .09em;
+  font-size: .8rem; font-weight: 600; color: var(--muted); }
+.imp-i {
+  display: flex; gap: 12px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 12px; min-width: 0;
+}
+.imp-i img { width: 54px; height: 54px; object-fit: cover; border-radius: 8px; flex: none; }
+.imp-c { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; }
+.imp-h { font-family: var(--font-mono); font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.imp-i select {
+  font-family: var(--font-ui); font-size: .92rem; font-weight: 500; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 7px 8px; width: 100%; max-width: 100%;
+}
+.imp-i.auto { border-color: var(--ok); }
+.imp-i.auto .imp-h { color: var(--ok); }
+.imp-a { display: flex; gap: 8px; flex-wrap: wrap; }
+.imp-a button { flex: 1 1 auto; }
+.q-l { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.q-sub { font-size: .78rem; color: var(--muted); }
+.q-btn {
+  appearance: none; cursor: pointer; flex: none;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 999px;
+  font-family: var(--font-ui); font-size: .85rem; font-weight: 600;
+  padding: 7px 15px;
+}
+.q-btn:disabled { opacity: .5; cursor: default; }
+.queue.actif { border-style: solid; border-color: var(--signal); }
+.flash {
+  background: var(--surface); border: 1px solid var(--ok); border-left: 4px solid var(--ok);
+  border-radius: 0 12px 12px 0; padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.flash img { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; flex: none; max-width: 100%; }
+.flash .t { min-width: 0; }
+.flash strong { font-weight: 600; display: block; }
+.flash span { font-size: .85rem; color: var(--muted); }
+
+.pick { display: flex; flex-direction: column; gap: 8px; }
+.pick button {
+  appearance: none; cursor: pointer; text-align: left;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px;
+  font-family: var(--font-ui); font-size: 1rem; font-weight: 500;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+}
+.pick button:active { border-color: var(--signal); }
+.pick .d { font-family: var(--font-mono); font-size: .85rem; color: var(--muted); flex: none; }
+
+.round { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+.round li {
+  display: flex; align-items: center; gap: 10px;
+  padding-block: 11px; border-bottom: 1px solid var(--line);
+  font-size: .95rem; min-width: 0;
+}
+.round { list-style: none; padding: 0; margin: 0; }
+.round .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.round .cd { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); flex: none; }
+.dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--line); flex: none; }
+.round li.done { color: var(--muted); }
+.round li.done .dot { background: var(--ok); border-color: var(--ok); }
+.round li.here .dot { background: var(--signal); border-color: var(--signal); box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 28%, transparent); }
+.round li.here { font-weight: 600; }
+
+.queue {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-size: .85rem; color: var(--muted);
+  border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px;
+}
+.queue b { font-family: var(--font-mono); color: var(--ink); font-weight: 500; }
+.note {
+  font-size: .82rem; color: var(--muted); border-left: 3px solid var(--warn);
+  padding: 8px 0 8px 12px; border-radius: 0;
+}
+.note code { font-family: var(--font-mono); font-size: .95em; }
+:is(button, [tabindex]):focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <span class="eyebrow" id="day">Tournée</span>
+  <span class="count"><b id="n-done">0</b> / <span id="n-tot">0</span> points</span>
+</div></div>
+
+<div class="wrap">
+  <div class="track"><i id="prog"></i></div>
+
+  <div class="point">
+    <span class="eyebrow" id="state-lbl">Recherche du point…</span>
+    <h1 id="site-nm">—</h1>
+    <span class="code" id="site-cd"></span>
+    <div class="flux" id="site-flux"></div>
+    <span class="gps" id="gps-txt">GPS en cours d'acquisition</span>
+  </div>
+
+  <div class="pick" id="pick" hidden></div>
+
+  <button class="shoot" id="shoot">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <span id="shoot-lbl">Photographier</span>
+  </button>
+  <p class="hint" id="hint">Photographie chaque point, même quand tout va bien.</p>
+  <button type="button" class="changer" id="changer" hidden>Ce n'est pas le bon point ?</button>
+  <button type="button" class="changer" id="galerie">Importer des photos depuis la galerie</button>
+
+  <div class="imp" id="import" hidden>
+    <span class="imp-t" id="imp-t">Photos à associer</span>
+    <div class="imp" id="imp-list"></div>
+    <div class="imp-a">
+      <button type="button" class="shoot" id="imp-ok" style="padding-block:16px;font-size:1.05rem">Enregistrer</button>
+      <button type="button" class="q-btn" id="imp-no">Annuler</button>
+    </div>
+  </div>
+
+  <div class="busy" id="busy" hidden><i aria-hidden="true"></i><span id="busy-txt">Enregistrement…</span></div>
+
+  <div class="flash" id="flash" hidden>
+    <img id="flash-img" alt="">
+    <div class="t"><strong id="flash-t"></strong><span id="flash-s"></span></div>
+  </div>
+
+  <div>
+    <span class="eyebrow">Points restants aujourd'hui</span>
+    <ul class="round" id="round"></ul>
+  </div>
+
+  <div class="queue" id="queue">
+    <div class="q-l">
+      <span id="q-txt">Aucune photo en attente</span>
+      <span class="q-sub" id="q-sub"></span>
+    </div>
+    <button type="button" class="q-btn" id="q-send" hidden>Envoyer</button>
+  </div>
+
+  <p class="note" id="note"></p>
+  <input type="file" accept="image/*" capture="environment" id="file" hidden>
+  <input type="file" accept="image/*" id="file-gal" multiple hidden>
+</div>
+
+<script>
+/* ──────────────────────────────────────────────────────────────────────────
+   RÉFÉRENTIEL D'EXEMPLE — à remplacer par ton relevé GPS des 10 points.
+   Récupère lat/lon avec cette page elle-même (elles s'affichent en bas),
+   ou exporte ta carte My Maps / uMap en GeoJSON.
+   ────────────────────────────────────────────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────────────────────
+   LE RÉFÉRENTIEL NE VIT PAS ICI.
+
+   Il est chargé depuis REFERENTIEL_URL (vue `site` + `poste` exposée par
+   Supabase ou n8n), mis en cache localement pour fonctionner hors ligne, et
+   rafraîchi à chaque ouverture. Un site ajouté ou un nb_unites corrigé dans
+   la base arrive ici sans toucher au code.
+
+   Format attendu, un objet par site :
+     { code, nom, lat, lon, postes: { <flux>: <nombre de colonnes>, … } }
+
+   Le tableau ci-dessous n'est qu'un JEU DE SECOURS, utilisé au premier
+   lancement avant le premier chargement réussi. Chaque site a sa propre
+   composition : aucun gabarit, aucun minimum, aucun maximum.
+   ────────────────────────────────────────────────────────────────────────── */
+const REFERENTIEL_URL = null;   // ex. "https://xxx.supabase.co/rest/v1/v_referentiel"
+
+/* Les 6 îlots de propreté d'Albon. Positions : ALB-04 et ALB-05 relevées sur
+   le terrain, ALB-01 et ALB-02 reprises du site de la mairie, ALB-03 et
+   ALB-06 géocodées sur la Base Adresse Nationale (à confirmer).
+   Écart minimal entre deux sites : 921 m — le plus-proche-voisin est sûr.
+
+   ⚠️ Les comptages de colonnes ci-dessous sont une HYPOTHÈSE, pas un relevé.
+   Corrige-les sur place : un contrôle n'entre dans le dénominateur que si
+   l'agent a cadré TOUTES les colonnes du flux. */
+let SITES = [
+  { code:"ALB-01", nom:"Îlot École Louise Michel",        lat:45.242644, lon:4.851511, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
+  { code:"ALB-02", nom:"Îlot Saint-Martin-des-Rosiers",   lat:45.237630, lon:4.871429, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
+  { code:"ALB-03", nom:"Îlot Route de l'Argentelle",      lat:45.249818, lon:4.845634, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
+  { code:"ALB-04", nom:"Îlot Parking du restaurant routier", lat:45.241359, lon:4.820709, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
+  { code:"ALB-05", nom:"Îlot La Tour d'Albon",            lat:45.249859, lon:4.865426, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
+  { code:"ALB-06", nom:"Îlot Creux de la Thine",          lat:45.261132, lon:4.825427, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
+];
+const nbColonnes = s => Object.values(s.postes).reduce((a, b) => a + b, 0);
+
+/* Les clés de flux viennent de l'énumération SQL (ordures_menageres…) : on ne
+   les affiche jamais brutes à l'agent. */
+const FLUX_NOM = {
+  verre: "verre", ordures_menageres: "ordures", emballages: "emballages",
+  papier: "papier", carton: "carton", textile: "textile", biodechets: "biodéchets"
+};
+const nomFlux = f => FLUX_NOM[f] || String(f).replace(/_/g, " ");
+
+/* Cache local du référentiel : la tournée doit marcher sans réseau. */
+try { const c = JSON.parse(localStorage.getItem("pav-referentiel") || "null");
+      if (Array.isArray(c) && c.length) SITES = c; } catch {}
+
+async function chargerReferentiel() {
+  if (!REFERENTIEL_URL) return;
+  try {
+    const r = await fetch(REFERENTIEL_URL, { headers: { accept: "application/json" } });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!Array.isArray(d) || !d.length) return;
+    SITES = d;
+    try { localStorage.setItem("pav-referentiel", JSON.stringify(d)); } catch {}
+    rendre(); majGps();
+  } catch {}   // hors ligne : on garde le cache, la tournée continue
+}
+
+/* Mets ici l'URL de ton webhook n8n ou de ton endpoint Supabase.
+   À null, les photos restent en file locale : c'est le mode prototype. */
+const ENDPOINT = null;
+
+const RAYON_M = 100, PRECISION_MAX_M = 30;
+
+/* ── géométrie ─────────────────────────────────────────────────────────── */
+const R = 6371000, rad = d => d * Math.PI / 180;
+const distance = (a, b) => {
+  const dLat = rad(b.lat - a.lat), dLon = rad(b.lon - a.lon);
+  const x = Math.sin(dLat/2)**2 + Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+};
+function identifierSite(pos) {
+  const classes = SITES.map(s => ({ site:s, d: Math.round(distance(pos, s)) }))
+                       .sort((a,b) => a.d - b.d);
+  if (pos.precision_m > PRECISION_MAX_M) return { statut:"precision_insuffisante", candidats: classes.slice(0,3) };
+  const [p1, p2] = classes;
+  if (!p1 || p1.d > RAYON_M)             return { statut:"hors_zone", candidats: classes.slice(0,3) };
+  if (p2 && (p2.d - p1.d) < 2 * pos.precision_m) return { statut:"ambigu", candidats: [p1, p2] };
+  return { statut:"ok", site:p1.site, d:p1.d };
+}
+
+/* ── file hors ligne (IndexedDB, repli en mémoire) ──────────────────────── */
+const DB="pav", ST="file", CFG="config"; let memoire = [];
+const idb = () => new Promise((ok,ko) => {
+  const r = indexedDB.open(DB,2);
+  r.onupgradeneeded = () => {
+    const d = r.result;
+    if (!d.objectStoreNames.contains(ST))  d.createObjectStore(ST,{keyPath:"uuid"});
+    // Le service worker lit l'URL d'envoi ici : pas de constante dupliquée
+    // entre index.html et sw.js, donc pas de risque de désynchronisation.
+    if (!d.objectStoreNames.contains(CFG)) d.createObjectStore(CFG);
+  };
+  r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error);
+});
+async function cfgPut(k,v){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(CFG,"readwrite");t.objectStore(CFG).put(v,k);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
+async function qPut(v){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(ST,"readwrite");t.objectStore(ST).put(v);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch { memoire.push(v); } }
+async function qAll(){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(ST,"readonly").objectStore(ST).getAll();q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return memoire; } }
+async function qDel(k){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(ST,"readwrite");t.objectStore(ST).delete(k);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch { memoire = memoire.filter(x=>x.uuid!==k); } }
+
+/* ── points faits aujourd'hui ──────────────────────────────────────────── */
+const jour = () => new Date().toISOString().slice(0,10);
+let faits = new Map();   // code du site → nombre de photos prises aujourd'hui
+try { const r = JSON.parse(localStorage.getItem("pav-faits") || "{}"); if (r.d === jour()) faits = new Map(r.c); } catch {}
+const sauverFaits = () => { try { localStorage.setItem("pav-faits", JSON.stringify({ d: jour(), c: [...faits] })); } catch {} };
+
+/* ── état ──────────────────────────────────────────────────────────────── */
+let position = null, courant = null, demo = false, envoiEnCours = false;
+/* Un point choisi à la main l'emporte sur le GPS. Sans ce verrou, chaque
+   nouvelle position émise par watchPosition — c'est-à-dire en continu sur un
+   téléphone — écraserait le choix de l'agent et refermerait le bouton.
+   Il est relâché après la photo, pour que la détection reprenne la main au
+   point suivant de la tournée. */
+let choixManuel = false;
+const $ = id => document.getElementById(id);
+
+/* ── photo ─────────────────────────────────────────────────────────────── */
+async function compresser(file, maxCote = 1280, qualite = .7) {
+  const img = await createImageBitmap(file);
+  const r = Math.min(1, maxCote / Math.max(img.width, img.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(ok => c.toBlob(ok, "image/jpeg", qualite));
+}
+const positionFraiche = () => new Promise((ok, ko) =>
+  navigator.geolocation.getCurrentPosition(
+    p => ok({ lat:p.coords.latitude, lon:p.coords.longitude, precision_m: Math.round(p.coords.accuracy) }),
+    ko, { enableHighAccuracy:true, maximumAge:0, timeout:10000 }));
+
+/* ── rendu ─────────────────────────────────────────────────────────────── */
+function rendre() {
+  const total = SITES.length, n = faits.size;
+  $("n-done").textContent = n; $("n-tot").textContent = total;
+  $("prog").style.width = (100 * n / total) + "%";
+  $("day").textContent = "Tournée du " + new Date().toLocaleDateString("fr-FR", { day:"numeric", month:"long" });
+
+  if (courant) {
+    $("site-nm").textContent = courant.nom;
+    $("site-cd").textContent = courant.code;
+    $("site-flux").innerHTML = Object.entries(courant.postes)
+      .map(([f, n]) => `<span class="chip">${nomFlux(f)}${n > 1 ? ` &times;${n}` : ""}</span>`).join("");
+    $("shoot-lbl").textContent = faits.has(courant.code) ? "Ajouter une photo" : "Photographier";
+    const multi = Object.entries(courant.postes).filter(([, n]) => n > 1);
+    const tot = nbColonnes(courant);
+    $("hint").textContent = multi.length
+      ? `Cadre les ${multi.map(([f, n]) => `${n} ${nomFlux(f)}`).join(" et les ")} en entier, sinon le contrôle ne compte pas.`
+      : `${tot} colonne${tot > 1 ? "s" : ""} ici. Photographie le point même quand tout va bien.`;
+  } else {
+    $("shoot-lbl").textContent = "Choisir le point";
+    $("hint").textContent = "Le GPS n'a pas reconnu de point : appuie pour le choisir dans la liste.";
+  }
+  /* Le bouton n'est JAMAIS désactivé par le GPS : sans point reconnu il ouvre
+     la liste au lieu de l'appareil photo. Un agent devant une colonne ne doit
+     jamais se retrouver bloqué par un signal capricieux. */
+  $("shoot").disabled = envoiEnCours;
+  $("changer").hidden = !courant;
+
+  $("round").innerHTML = SITES.map(s => {
+    const k = faits.get(s.code) || 0;
+    const cls = [k ? "done" : "", courant && s.code === courant.code ? "here" : ""].join(" ").trim();
+    const droite = k > 1 ? `${k} photos` : (k === 1 && nbColonnes(s) > 1 ? `1 photo · ${nbColonnes(s)} col.` : s.code);
+    return `<li class="${cls}"><span class="dot"></span><span class="nm">${s.nom}</span><span class="cd">${droite}</span></li>`;
+  }).join("");
+
+  majFile();
+}
+
+function majGps() {
+  if (demo) { $("gps-txt").textContent = "Mode démo — position simulée sur " + (courant ? courant.code : "—"); return; }
+  if (!position) { $("gps-txt").textContent = "GPS en cours d'acquisition"; return; }
+  const r = identifierSite(position);
+  $("gps-txt").textContent = `${position.lat.toFixed(5)}, ${position.lon.toFixed(5)} · ±${position.precision_m} m`
+    + (r.statut === "ok" ? ` · ${r.d} m du point` : "");
+
+  // Le choix de l'agent ne se fait pas écraser par la position suivante.
+  if (choixManuel) return;
+
+  if (r.statut === "ok") { $("state-lbl").textContent = "Point détecté"; courant = r.site; $("pick").hidden = true; }
+  else {
+    courant = null;
+    $("state-lbl").textContent = { ambigu:"Deux points possibles", hors_zone:"Aucun point à proximité", precision_insuffisante:"Signal GPS trop imprécis" }[r.statut];
+    $("site-nm").textContent = r.statut === "ambigu" ? "Lequel ?" : "Choisis le point";
+    $("site-cd").textContent = ""; $("site-flux").innerHTML = "";
+    ouvrirChoix();
+  }
+  rendre();
+}
+
+/* Liste TOUS les sites, du plus proche au plus lointain quand la position est
+   connue. On ne limite pas à trois candidats : si le GPS se trompe de point,
+   l'agent doit pouvoir atteindre le bon. */
+function ouvrirChoix() {
+  const liste = position
+    ? SITES.map(s => ({ s, d: Math.round(distance(position, s)) })).sort((a, b) => a.d - b.d)
+    : SITES.map(s => ({ s, d: null }));
+  $("pick").hidden = false;
+  $("pick").innerHTML = liste.map(c =>
+    `<button type="button" data-code="${c.s.code}">${c.s.nom}` +
+    `<span class="d">${c.d === null ? c.s.code : c.d + " m"}</span></button>`).join("");
+}
+
+/* ── capture ───────────────────────────────────────────────────────────── */
+$("shoot").addEventListener("click", () => {
+  if (!courant) { ouvrirChoix(); $("pick").scrollIntoView({ block: "nearest" }); return; }
+  $("file").click();
+});
+$("changer").addEventListener("click", () => {
+  choixManuel = false;            // on redonne sa chance au GPS
+  ouvrirChoix(); $("pick").scrollIntoView({ block: "nearest" });
+});
+
+/* L'import ne dépend pas du point courant : on associe photo par photo. */
+$("galerie").addEventListener("click", () => $("file-gal").click());
+
+async function traiter(e, source) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!file || !courant) return;
+  const site = courant;
+  /* Une photo de 12 Mpx met plusieurs secondes à se compresser : sans retour
+     visible, l'agent croit que rien ne se passe et appuie deux fois. */
+  const occupe = t => { $("busy-txt").textContent = t; $("busy").hidden = false; };
+  $("shoot").disabled = true; $("shoot-lbl").textContent = "Enregistrement…";
+  $("flash").hidden = true;
+  occupe("Compression de la photo…");
+
+  let photo = file, pos = position;
+  try {
+    const tache = Promise.all([
+      compresser(file),
+      demo ? Promise.resolve(position) : positionFraiche().catch(() => position)
+    ]);
+    const minuteur = setTimeout(() => occupe("Lecture de la position GPS…"), 900);
+    const t = await tache;
+    clearTimeout(minuteur);
+    photo = t[0]; pos = t[1] || position;
+  } catch {}
+  occupe("Enregistrement…");
+
+  const item = {
+    uuid: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+    horodatage: new Date().toISOString(),
+    site_code: site.code,
+    lat: pos ? pos.lat : null, lon: pos ? pos.lon : null,
+    precision_m: pos ? pos.precision_m : null,
+    /* Une photo tirée de la galerie n'a pas été prise ici, maintenant : sa
+       position et son horodatage sont ceux de la SAISIE, pas de la prise de
+       vue. La base doit pouvoir la traiter avec prudence, d'où ce champ. */
+    source,
+    photo
+  };
+  await qPut(item);
+  faits.set(site.code, (faits.get(site.code) || 0) + 1); sauverFaits();
+  // La photo est prise : le GPS reprend la main pour le point suivant.
+  choixManuel = false;
+
+  $("busy").hidden = true;
+  $("flash-img").src = URL.createObjectURL(photo);
+  $("flash-t").textContent = site.nom + (source === "galerie" ? " enregistré (galerie)" : " enregistré");
+  $("flash-s").textContent = Math.round(photo.size / 1024) + " Ko · " +
+    (ENDPOINT ? "envoi en cours" : "conservé sur le téléphone");
+  $("flash").hidden = false;
+
+  const suivant = SITES.find(s => !faits.has(s.code));
+  if (demo && suivant) courant = suivant;
+  else if (demo) courant = site;
+
+  rendre(); majGps();
+  vider(); demanderSync();        // envoi immédiat, sans attendre la fin de la tournée
+  $("shoot").disabled = false;
+}
+
+$("file").addEventListener("change", e => traiter(e, "camera"));
+$("file-gal").addEventListener("change", e => {
+  const fs = Array.from(e.target.files || []); e.target.value = "";
+  importerGalerie(fs);
+});
+
+/* ── lecture EXIF : position et heure de PRISE DE VUE ──────────────────────
+   C'est ce qui rend l'import par lots honnête. Une photo prise à 9h12 devant
+   la colonne à verre porte cette heure et ce point dans ses métadonnées : on
+   les utilise plutôt que l'heure et la position de l'import, qui seraient
+   fausses. Lecteur minimal volontairement — pas de bibliothèque à charger,
+   la page doit rester utilisable hors ligne. */
+async function lireExif(file) {
+  const vide = { lat: null, lon: null, date: null };
+  try {
+    const buf = await file.slice(0, 256 * 1024).arrayBuffer();
+    const v = new DataView(buf);
+    if (v.getUint16(0) !== 0xFFD8) return vide;            // pas un JPEG
+    let o = 2, tiff = -1;
+    while (o + 4 < v.byteLength) {
+      if (v.getUint8(o) !== 0xFF) break;
+      const marq = v.getUint8(o + 1), taille = v.getUint16(o + 2);
+      if (marq === 0xE1 && v.getUint32(o + 4) === 0x45786966) { tiff = o + 10; break; }
+      o += 2 + taille;
+    }
+    if (tiff < 0) return vide;
+    const pe = v.getUint16(tiff) === 0x4949;               // petit-boutiste
+    const u16 = x => v.getUint16(x, pe), u32 = x => v.getUint32(x, pe);
+    const rat = x => u32(x) / (u32(x + 4) || 1);
+
+    const champs = (base) => {
+      const n = u16(base), out = {};
+      for (let i = 0; i < n; i++) {
+        const e = base + 2 + i * 12;
+        out[u16(e)] = { type: u16(e + 2), nb: u32(e + 4), val: e + 8 };
+      }
+      return out;
+    };
+    const texte = (c) => {
+      const d = c.nb > 4 ? tiff + u32(c.val) : c.val;
+      let t = "";
+      for (let i = 0; i < c.nb - 1; i++) t += String.fromCharCode(v.getUint8(d + i));
+      return t;
+    };
+    const degres = (c) => {
+      const d = tiff + u32(c.val);
+      return rat(d) + rat(d + 8) / 60 + rat(d + 16) / 3600;
+    };
+
+    const ifd0 = champs(tiff + u32(tiff + 4));
+    let lat = null, lon = null, date = null;
+
+    if (ifd0[0x8825]) {
+      const g = champs(tiff + u32(ifd0[0x8825].val));
+      if (g[0x0002] && g[0x0004]) {
+        lat = degres(g[0x0002]); lon = degres(g[0x0004]);
+        if (g[0x0001] && texte(g[0x0001]).trim().toUpperCase().startsWith("S")) lat = -lat;
+        if (g[0x0003] && texte(g[0x0003]).trim().toUpperCase().startsWith("W")) lon = -lon;
+      }
+    }
+    const src = ifd0[0x8769] ? champs(tiff + u32(ifd0[0x8769].val)) : {};
+    const brut = (src[0x9003] && texte(src[0x9003])) || (ifd0[0x0132] && texte(ifd0[0x0132]));
+    if (brut) {
+      const m = brut.match(/(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+      if (m) date = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    }
+    return { lat, lon, date };
+  } catch { return vide; }
+}
+
+/* ── import par lots ───────────────────────────────────────────────────── */
+let aImporter = [];
+
+async function importerGalerie(files) {
+  if (!files.length) return;
+  $("busy-txt").textContent = `Lecture de ${files.length} photo${files.length > 1 ? "s" : ""}…`;
+  $("busy").hidden = false;
+  aImporter = [];
+  for (const f of files) {
+    const ex = await lireExif(f);
+    let site = null, d = null, auto = false;
+    if (ex.lat !== null) {
+      const r = identifierSite({ lat: ex.lat, lon: ex.lon, precision_m: 10 });
+      if (r.statut === "ok") { site = r.site; d = r.d; auto = true; }
+    }
+    aImporter.push({
+      file: f, exif: ex, site, d, auto,
+      url: URL.createObjectURL(f),
+      quand: ex.date || new Date(f.lastModified || Date.now())
+    });
+  }
+  aImporter.sort((a, b) => a.quand - b.quand);
+  $("busy").hidden = true;
+  rendreImport();
+}
+
+function rendreImport() {
+  const n = aImporter.length;
+  const auto = aImporter.filter(x => x.auto).length;
+  $("imp-t").textContent = auto
+    ? `${n} photo${n > 1 ? "s" : ""} — ${auto} placée${auto > 1 ? "s" : ""} par leur position GPS`
+    : `${n} photo${n > 1 ? "s" : ""} à associer`;
+  const opts = s => SITES.map(x =>
+    `<option value="${x.code}"${s && s.code === x.code ? " selected" : ""}>${x.nom}</option>`).join("");
+  $("imp-list").innerHTML = aImporter.map((x, i) => {
+    const h = x.quand.toLocaleString("fr-FR",
+      { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    const info = x.auto ? `${h} · reconnu à ${x.d} m`
+      : (x.exif.lat !== null ? `${h} · hors zone, à choisir` : `${h} · sans position, à choisir`);
+    return `<div class="imp-i${x.auto ? " auto" : ""}"><img src="${x.url}" alt="">` +
+      `<div class="imp-c"><span class="imp-h">${info}</span>` +
+      `<select data-i="${i}"><option value="">— choisir le point —</option>${opts(x.site)}</select>` +
+      `</div></div>`;
+  }).join("");
+  $("import").hidden = false;
+  $("imp-ok").textContent = `Enregistrer ${n} photo${n > 1 ? "s" : ""}`;
+  $("import").scrollIntoView({ block: "start", behavior: "smooth" });
+}
+
+$("imp-list").addEventListener("change", e => {
+  const sel = e.target.closest("select[data-i]"); if (!sel) return;
+  aImporter[+sel.dataset.i].site = SITES.find(x => x.code === sel.value) || null;
+});
+
+$("imp-no").addEventListener("click", () => {
+  aImporter.forEach(x => URL.revokeObjectURL(x.url));
+  aImporter = []; $("import").hidden = true; $("imp-list").innerHTML = "";
+});
+
+$("imp-ok").addEventListener("click", async () => {
+  const sans = aImporter.filter(x => !x.site).length;
+  if (sans) {
+    $("imp-t").textContent = `${sans} photo${sans > 1 ? "s" : ""} sans point : choisis-le avant d'enregistrer`;
+    return;
+  }
+  $("imp-ok").disabled = true;
+  for (let i = 0; i < aImporter.length; i++) {
+    const x = aImporter[i];
+    $("busy-txt").textContent = `Enregistrement ${i + 1} / ${aImporter.length}…`;
+    $("busy").hidden = false;
+    let photo = x.file;
+    try { photo = await compresser(x.file); } catch {}
+    await qPut({
+      uuid: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+      horodatage: x.quand.toISOString(),
+      site_code: x.site.code,
+      lat: x.exif.lat, lon: x.exif.lon,
+      precision_m: x.exif.lat !== null ? 10 : null,
+      source: x.auto ? "galerie_exif" : "galerie_manuelle",
+      photo
+    });
+    faits.set(x.site.code, (faits.get(x.site.code) || 0) + 1);
+  }
+  sauverFaits();
+  aImporter.forEach(x => URL.revokeObjectURL(x.url));
+  const n = aImporter.length; aImporter = [];
+  $("import").hidden = true; $("imp-list").innerHTML = "";
+  $("busy").hidden = true; $("imp-ok").disabled = false;
+  $("flash-t").textContent = `${n} photo${n > 1 ? "s" : ""} importée${n > 1 ? "s" : ""}`;
+  $("flash-s").textContent = ENDPOINT ? "envoi en cours" : "conservées sur le téléphone";
+  $("flash-img").removeAttribute("src");
+  $("flash").hidden = false;
+  rendre(); vider(); demanderSync();
+});
+
+
+$("pick").addEventListener("click", e => {
+  const b = e.target.closest("button[data-code]"); if (!b) return;
+  courant = SITES.find(s => s.code === b.dataset.code);
+  choixManuel = true;
+  $("pick").hidden = true; $("state-lbl").textContent = "Point choisi à la main";
+  rendre();
+  $("shoot").scrollIntoView({ block: "center", behavior: "smooth" });
+});
+
+/* ── envoi ─────────────────────────────────────────────────────────────── */
+let dernierEtat = "";
+
+async function majFile() {
+  const q = await qAll();
+  const n = q.length;
+  $("q-txt").textContent = n === 0
+    ? "Aucune photo en attente"
+    : `${n} photo${n > 1 ? "s" : ""} en attente d'envoi`;
+  $("q-sub").textContent = !ENDPOINT
+    ? "Aucun serveur configuré — les photos restent sur ce téléphone"
+    : (dernierEtat || (n ? (navigator.onLine ? "" : "hors ligne, envoi à la reconnexion") : ""));
+  $("queue").classList.toggle("actif", envoiEnCours);
+  const b = $("q-send");
+  b.hidden = !(n > 0 && ENDPOINT);
+  b.disabled = envoiEnCours || !navigator.onLine;
+  b.textContent = envoiEnCours ? "Envoi…" : "Envoyer";
+}
+
+/* L'envoi démarre dès la photo enregistrée, sans attendre la fin de la
+   tournée, et se relance à la reconnexion, au retour sur la page, et toutes
+   les 30 s tant qu'il reste quelque chose. */
+async function vider() {
+  if (!ENDPOINT || envoiEnCours || !navigator.onLine) { majFile(); return; }
+  const q = await qAll();
+  if (!q.length) { dernierEtat = ""; majFile(); return; }
+  envoiEnCours = true; dernierEtat = ""; majFile();
+  let envoyees = 0;
+  try {
+    for (const it of q) {
+      const fd = new FormData();
+      fd.append("photo", it.photo, it.uuid + ".jpg");
+      for (const k of ["uuid","horodatage","site_code","lat","lon","precision_m"]) fd.append(k, it[k]);
+      const r = await fetch(ENDPOINT, { method: "POST", body: fd });
+      if (!r.ok) { dernierEtat = `Le serveur a répondu ${r.status} — nouvelle tentative plus tard`; break; }
+      await qDel(it.uuid); envoyees++;
+      majFile();
+    }
+    if (!dernierEtat && envoyees) dernierEtat = `${envoyees} photo${envoyees > 1 ? "s" : ""} envoyée${envoyees > 1 ? "s" : ""}`;
+  } catch (e) {
+    dernierEtat = "Réseau indisponible — nouvelle tentative plus tard";
+  } finally {
+    envoiEnCours = false; majFile();
+  }
+}
+
+$("q-send").addEventListener("click", () => { dernierEtat = ""; vider(); });
+window.addEventListener("online", vider);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) vider(); });
+setInterval(() => { qAll().then(q => { if (q.length) vider(); }); }, 30000);
+
+/* Service worker : met la page en cache pour qu'elle s'ouvre sans réseau au
+   point suivant, et surtout reprend l'envoi via Background Sync quand le
+   téléphone est en veille ou la page fermée — sur Android uniquement, iOS
+   n'implémente pas cette API. */
+async function demanderSync() {
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if (reg.sync) await reg.sync.register("envoi-pav");
+  } catch {}
+}
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+  navigator.serviceWorker.addEventListener("message", e => {
+    if (e.data && e.data.type === "pav-envoye") { dernierEtat = "Envoyé en arrière-plan"; majFile(); }
+  });
+}
+cfgPut("endpoint", ENDPOINT);
+
+/* ── démarrage ─────────────────────────────────────────────────────────── */
+/* Le mode démo n'existe que pour un appareil SANS géolocalisation utilisable.
+   Il ne doit jamais s'activer après coup : sur un téléphone, watchPosition
+   émet régulièrement des erreurs passagères (timeout, position indisponible),
+   et chacune ferait sauter le point en cours. */
+function demarrerDemo(raison) {
+  if (demo) return;                       // une seule fois
+  demo = true;
+  if (!choixManuel) {
+    courant = SITES.find(s => !faits.has(s.code)) || SITES[0];
+    position = { lat: courant.lat, lon: courant.lon, precision_m: 8 };
+    $("state-lbl").textContent = "Point détecté";
+  }
+  $("note").innerHTML = `<strong>Mode démo :</strong> ${raison} Le point avance tout seul après chaque photo. Sur un téléphone, avec la géolocalisation autorisée, la page utilise le GPS réel.`;
+  rendre(); majGps();
+}
+
+if (!navigator.geolocation) {
+  demarrerDemo("ce navigateur ne fournit pas de géolocalisation.");
+} else {
+  let premiere = true;
+  const secours = setTimeout(() => {
+    if (premiere) demarrerDemo("la géolocalisation n'a pas répondu.");
+  }, 6000);
+
+  navigator.geolocation.watchPosition(
+    p => {
+      premiere = false; clearTimeout(secours); demo = false;
+      position = { lat: p.coords.latitude, lon: p.coords.longitude,
+                   precision_m: Math.round(p.coords.accuracy) };
+      $("note").textContent = "";
+      majGps();
+    },
+    err => {
+      clearTimeout(secours);
+      // Erreur APRÈS une première position : signal momentanément perdu.
+      // On garde le point en cours et on le dit, sans rien basculer.
+      if (!premiere) {
+        $("gps-txt").textContent = "Signal GPS momentanément indisponible — le point reste celui affiché";
+        return;
+      }
+      premiere = false;
+      demarrerDemo(err && err.code === 1
+        ? "la géolocalisation a été refusée pour ce site."
+        : "la géolocalisation n'est pas disponible ici.");
+    },
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+  );
+}
+rendre();
+chargerReferentiel();
+</script>
+
+</body>
+</html>
