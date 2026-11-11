@@ -159,6 +159,17 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 }
 .imp-i.auto { border-color: var(--ok); }
 .imp-i.auto .imp-h { color: var(--ok); }
+.imp-all {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border: 1px solid var(--signal); border-radius: 12px;
+  padding: 10px 12px;
+}
+.imp-all label { font-size: .9rem; font-weight: 600; color: var(--ink); flex: none; }
+.imp-all select {
+  font-family: var(--font-ui); font-size: .92rem; font-weight: 500; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px; flex: 1; min-width: 0;
+}
 .imp-a { display: flex; gap: 8px; flex-wrap: wrap; }
 .imp-a button { flex: 1 1 auto; }
 .q-l { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -194,11 +205,16 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .pick .d { font-family: var(--font-mono); font-size: .85rem; color: var(--muted); flex: none; }
 
 .round { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
-.round li {
-  display: flex; align-items: center; gap: 10px;
-  padding-block: 11px; border-bottom: 1px solid var(--line);
-  font-size: .95rem; min-width: 0;
+.round li { border-bottom: 1px solid var(--line); min-width: 0; }
+/* Toute la ligne est un bouton : c'est la façon la plus directe de changer de
+   point, bien avant le lien « Changer de point ». */
+.round li > button {
+  appearance: none; border: 0; background: none; cursor: pointer; width: 100%;
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  padding: 13px 0; font-family: var(--font-ui); font-size: .95rem;
+  color: inherit; font-weight: inherit; min-width: 0;
 }
+.round li > button:active { background: color-mix(in srgb, var(--signal) 12%, transparent); }
 .round { list-style: none; padding: 0; margin: 0; }
 .round .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .round .cd { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); flex: none; }
@@ -248,7 +264,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <span id="shoot-lbl">Photographier</span>
   </button>
   <p class="hint" id="hint">Photographie chaque point, même quand tout va bien.</p>
-  <button type="button" class="changer" id="changer" hidden>Ce n'est pas le bon point ?</button>
+  <button type="button" class="changer" id="changer" hidden>Changer de point</button>
   <button type="button" class="shoot second" id="galerie">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
     <span>Importer depuis la galerie</span>
@@ -256,6 +272,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
   <div class="imp" id="import" hidden>
     <span class="imp-t" id="imp-t">Photos à associer</span>
+    <div class="imp-all">
+      <label for="imp-tout">Tout mettre sur</label>
+      <select id="imp-tout"><option value="">— choisir un point —</option></select>
+    </div>
     <div class="imp" id="imp-list"></div>
     <div class="imp-a">
       <button type="button" class="shoot" id="imp-ok" style="padding-block:16px;font-size:1.05rem">Ajouter à la tournée</button>
@@ -275,7 +295,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   </div>
 
   <div>
-    <span class="eyebrow">Points restants aujourd'hui</span>
+    <span class="eyebrow">Points de la tournée — appuie pour en changer</span>
     <ul class="round" id="round"></ul>
   </div>
 
@@ -462,7 +482,7 @@ function rendre() {
     $("site-cd").textContent = courant.code;
     $("site-flux").innerHTML = Object.entries(courant.postes)
       .map(([f, n]) => `<span class="chip">${nomFlux(f)}${n > 1 ? ` &times;${n}` : ""}</span>`).join("");
-    $("shoot-lbl").textContent = faits.has(courant.code) ? "Ajouter une photo" : "Photographier";
+    $("shoot-lbl").textContent = "Prendre une photo";
     const multi = Object.entries(courant.postes).filter(([, n]) => n > 1);
     const tot = nbColonnes(courant);
     $("hint").textContent = multi.length
@@ -482,7 +502,9 @@ function rendre() {
     const k = faits.get(s.code) || 0;
     const cls = [k ? "done" : "", courant && s.code === courant.code ? "here" : ""].join(" ").trim();
     const droite = k > 1 ? `${k} photos` : (k === 1 && nbColonnes(s) > 1 ? `1 photo · ${nbColonnes(s)} col.` : s.code);
-    return `<li class="${cls}"><span class="dot"></span><span class="nm">${s.nom}</span><span class="cd">${droite}</span></li>`;
+    return `<li class="${cls}"><button type="button" data-code="${s.code}">` +
+      `<span class="dot"></span><span class="nm">${s.nom}</span><span class="cd">${droite}</span>` +
+      `</button></li>`;
   }).join("");
 
   majFile();
@@ -530,6 +552,28 @@ $("shoot").addEventListener("click", () => {
 $("changer").addEventListener("click", () => {
   choixManuel = false;            // on redonne sa chance au GPS
   ouvrirChoix(); $("pick").scrollIntoView({ block: "nearest" });
+});
+
+/* La liste de la tournée sert aussi à choisir : un appui sur une ligne fixe le
+   point courant. Et si un import est en attente, il bascule entier sur ce
+   point — c'est le geste le plus court pour « ces photos-là vont ici ». */
+$("round").addEventListener("click", e => {
+  const b = e.target.closest("button[data-code]"); if (!b) return;
+  const site = SITES.find(s => s.code === b.dataset.code); if (!site) return;
+  courant = site;
+  choixManuel = true;
+  $("pick").hidden = true;
+
+  if (!$("import").hidden && aImporter.length) {
+    aImporter.forEach(x => { x.site = site; x.auto = false; x.defaut = false; x.note = "choisi"; });
+    const n = aImporter.length;
+    rendre(); rendreImport(-1);
+    $("imp-t").textContent = `${n} photo${n > 1 ? "s" : ""} sur ${site.nom}`;
+    $("import").scrollIntoView({ block: "start", behavior: "smooth" });
+    return;
+  }
+  rendre();
+  $("shoot").scrollIntoView({ block: "center", behavior: "smooth" });
 });
 
 /* L'import ne dépend pas du point courant : on associe photo par photo. */
@@ -696,6 +740,9 @@ async function importerGalerie(files) {
     const vig = await compresser(f, 200, .55);
     aImporter.push({
       file: f, exif: ex, site, d, auto, defaut,
+      note: auto ? `reconnu à ${d} m`
+          : defaut ? "point en cours"
+          : (ex.lat !== null ? "hors zone, à choisir" : "à choisir"),
       // vig === f : le format n'a pas pu être décodé, pas de vignette à afficher
       url: vig === f ? null : URL.createObjectURL(vig),
       quand: ex.date || new Date(f.lastModified || Date.now())
@@ -719,16 +766,14 @@ function rendreImport(trop = 0) {
   let t = `${n} photo${n > 1 ? "s" : ""} — ${bouts.join(", ")}`;
   if (trop > 0) t += ` (${trop} photo${trop > 1 ? "s" : ""} au-delà de ${MAX_LOT} ignorée${trop > 1 ? "s" : ""})`;
   $("imp-t").textContent = t;
+  $("imp-tout").innerHTML = `<option value="">— choisir un point —</option>` +
+    SITES.map(x => `<option value="${x.code}">${x.nom}</option>`).join("");
   const opts = s => SITES.map(x =>
     `<option value="${x.code}"${s && s.code === x.code ? " selected" : ""}>${x.nom}</option>`).join("");
   $("imp-list").innerHTML = aImporter.map((x, i) => {
     const h = x.quand.toLocaleString("fr-FR",
       { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-    const info =
-        x.auto   ? `${h} · reconnu à ${x.d} m`
-      : x.defaut ? `${h} · point en cours`
-      : x.site   ? `${h} · même rafale`
-      : (x.exif.lat !== null ? `${h} · hors zone, à choisir` : `${h} · à choisir`);
+    const info = `${h} · ${x.note}`;
     const vign = x.url
       ? `<img src="${x.url}" alt="" width="54" height="54" loading="lazy" decoding="async">`
       : `<span class="imp-v" aria-hidden="true">?</span>`;
@@ -756,6 +801,7 @@ $("imp-list").addEventListener("change", e => {
   const site = SITES.find(x => x.code === sel.value) || null;
   aImporter[i].site = site;
   aImporter[i].defaut = false;          // ce point-là est désormais un choix, pas une proposition
+  aImporter[i].note = site ? "choisi" : "à choisir";
   if (!site) return;
 
   let propage = 0;
@@ -763,13 +809,27 @@ $("imp-list").addEventListener("change", e => {
   aImporter.forEach((x, j) => {
     // On ne touche ni aux photos placées par leur GPS, ni à un choix déjà fait.
     if (j === i || x.auto || (x.site && !x.defaut)) return;
-    if (Math.abs(x.quand.getTime() - t0) <= RAFALE_MIN * 60000) { x.site = site; x.defaut = false; propage++; }
+    if (Math.abs(x.quand.getTime() - t0) <= RAFALE_MIN * 60000) {
+      x.site = site; x.defaut = false; x.note = "même rafale"; propage++;
+    }
   });
   if (propage) {
     rendreImport(-1);
     $("imp-t").textContent =
       `${propage} photo${propage > 1 ? "s" : ""} de la même minute placée${propage > 1 ? "s" : ""} sur ${site.nom}`;
   }
+});
+
+/* Le raccourci qui manquait : importer les photos d'un autre îlot sans devoir
+   d'abord changer le point affiché à l'écran. Un choix explicite ici l'emporte
+   sur tout le reste, y compris sur une reconnaissance GPS. */
+$("imp-tout").addEventListener("change", e => {
+  const site = SITES.find(x => x.code === e.target.value);
+  if (!site) return;
+  aImporter.forEach(x => { x.site = site; x.auto = false; x.defaut = false; x.note = "choisi"; });
+  const n = aImporter.length;
+  rendreImport(-1);
+  $("imp-t").textContent = `${n} photo${n > 1 ? "s" : ""} sur ${site.nom}`;
 });
 
 $("imp-no").addEventListener("click", () => {
