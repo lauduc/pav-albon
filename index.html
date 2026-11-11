@@ -1,8 +1,29 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<!-- SANS cette balise, le téléphone rend la page en largeur bureau (≈785 px)
+     puis la réduit : tout devient minuscule. C'est la ligne la plus
+     importante du fichier pour un outil de terrain. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E8B000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tournée PAV">
 <title>Tournée PAV</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Colonne unique : bandeau d'état en haut, bouton dans la zone du pouce, tournée en dessous. */
+/* Fourni par la plateforme d'artifact, absent d'une page autonome : sans lui
+   les paddings s'ajoutent à la largeur et la page déborde de 32 px. */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Dégage les encoches et la barre de geste, maintenant que la page est en
+   viewport-fit=cover. */
+:root {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 :root {
   --bg: #E8EAE6; --surface: #FFFFFF; --ink: #1A1F1C; --muted: #6A716B;
   --line: #CFD4CD; --signal: #E8B000; --signal-ink: #2A2000;
@@ -21,6 +42,11 @@
   --line: #30362F; --signal: #F2C230; --signal-ink: #241B00;
   --ok: #5FBE85; --warn: #E8A94A; --alert: #E8766A; color-scheme: dark;
 }
+/* Indispensable hors plateforme d'artifact : les règles de classe ci-dessous
+   (.flash, .pick en display:flex) l'emportent sinon sur le display:none que
+   le navigateur applique à l'attribut hidden, et les blocs masqués
+   s'affichent vides. */
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--font-ui);
@@ -83,6 +109,12 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .shoot svg { width: 28px; height: 28px; flex: none; }
 .hint { font-size: .85rem; color: var(--muted); text-align: center; margin: -6px 0 0; }
 
+.changer {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-ui); font-size: .85rem; color: var(--muted);
+  text-decoration: underline; text-underline-offset: 3px;
+  padding: 2px 0; margin: -8px auto 0; display: block;
+}
 .flash {
   background: var(--surface); border: 1px solid var(--ok); border-left: 4px solid var(--ok);
   border-radius: 0 12px 12px 0; padding: 12px 14px;
@@ -133,6 +165,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 :is(button, [tabindex]):focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
+</head>
+<body>
 
 <div class="bar"><div class="bar-in">
   <span class="eyebrow" id="day">Tournée</span>
@@ -152,11 +186,12 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
   <div class="pick" id="pick" hidden></div>
 
-  <button class="shoot" id="shoot" disabled>
+  <button class="shoot" id="shoot">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     <span id="shoot-lbl">Photographier</span>
   </button>
   <p class="hint" id="hint">Photographie chaque point, même quand tout va bien.</p>
+  <button type="button" class="changer" id="changer" hidden>Ce n'est pas le bon point ?</button>
 
   <div class="flash" id="flash" hidden>
     <img id="flash-img" alt="">
@@ -217,6 +252,14 @@ let SITES = [
   { code:"ALB-06", nom:"Îlot Creux de la Thine",          lat:45.261132, lon:4.825427, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
 ];
 const nbColonnes = s => Object.values(s.postes).reduce((a, b) => a + b, 0);
+
+/* Les clés de flux viennent de l'énumération SQL (ordures_menageres…) : on ne
+   les affiche jamais brutes à l'agent. */
+const FLUX_NOM = {
+  verre: "verre", ordures_menageres: "ordures", emballages: "emballages",
+  papier: "papier", carton: "carton", textile: "textile", biodechets: "biodéchets"
+};
+const nomFlux = f => FLUX_NOM[f] || String(f).replace(/_/g, " ");
 
 /* Cache local du référentiel : la tournée doit marcher sans réseau. */
 try { const c = JSON.parse(localStorage.getItem("pav-referentiel") || "null");
@@ -304,14 +347,22 @@ function rendre() {
     $("site-nm").textContent = courant.nom;
     $("site-cd").textContent = courant.code;
     $("site-flux").innerHTML = Object.entries(courant.postes)
-      .map(([f, n]) => `<span class="chip">${f}${n > 1 ? ` &times;${n}` : ""}</span>`).join("");
-    $("shoot").disabled = false;
+      .map(([f, n]) => `<span class="chip">${nomFlux(f)}${n > 1 ? ` &times;${n}` : ""}</span>`).join("");
     $("shoot-lbl").textContent = faits.has(courant.code) ? "Ajouter une photo" : "Photographier";
     const multi = Object.entries(courant.postes).filter(([, n]) => n > 1);
+    const tot = nbColonnes(courant);
     $("hint").textContent = multi.length
-      ? `Cadre les ${multi.map(([f, n]) => `${n} ${f}`).join(" et les ")} en entier, sinon le contrôle ne compte pas.`
-      : `${nbColonnes(courant)} colonne(s) ici. Photographie le point même quand tout va bien.`;
+      ? `Cadre les ${multi.map(([f, n]) => `${n} ${nomFlux(f)}`).join(" et les ")} en entier, sinon le contrôle ne compte pas.`
+      : `${tot} colonne${tot > 1 ? "s" : ""} ici. Photographie le point même quand tout va bien.`;
+  } else {
+    $("shoot-lbl").textContent = "Choisir le point";
+    $("hint").textContent = "Le GPS n'a pas reconnu de point : appuie pour le choisir dans la liste.";
   }
+  /* Le bouton n'est JAMAIS désactivé par le GPS : sans point reconnu il ouvre
+     la liste au lieu de l'appareil photo. Un agent devant une colonne ne doit
+     jamais se retrouver bloqué par un signal capricieux. */
+  $("shoot").disabled = envoiEnCours;
+  $("changer").hidden = !courant;
 
   $("round").innerHTML = SITES.map(s => {
     const k = faits.get(s.code) || 0;
@@ -332,19 +383,36 @@ function majGps() {
 
   if (r.statut === "ok") { $("state-lbl").textContent = "Point détecté"; courant = r.site; $("pick").hidden = true; }
   else {
-    courant = null; $("shoot").disabled = true;
+    courant = null;
     $("state-lbl").textContent = { ambigu:"Deux points possibles", hors_zone:"Aucun point à proximité", precision_insuffisante:"Signal GPS trop imprécis" }[r.statut];
     $("site-nm").textContent = r.statut === "ambigu" ? "Lequel ?" : "Choisis le point";
     $("site-cd").textContent = ""; $("site-flux").innerHTML = "";
-    $("pick").hidden = false;
-    $("pick").innerHTML = (r.candidats || []).map(c =>
-      `<button type="button" data-code="${c.site.code}">${c.site.nom}<span class="d">${c.d} m</span></button>`).join("");
+    ouvrirChoix();
   }
   rendre();
 }
 
+/* Liste TOUS les sites, du plus proche au plus lointain quand la position est
+   connue. On ne limite pas à trois candidats : si le GPS se trompe de point,
+   l'agent doit pouvoir atteindre le bon. */
+function ouvrirChoix() {
+  const liste = position
+    ? SITES.map(s => ({ s, d: Math.round(distance(position, s)) })).sort((a, b) => a.d - b.d)
+    : SITES.map(s => ({ s, d: null }));
+  $("pick").hidden = false;
+  $("pick").innerHTML = liste.map(c =>
+    `<button type="button" data-code="${c.s.code}">${c.s.nom}` +
+    `<span class="d">${c.d === null ? c.s.code : c.d + " m"}</span></button>`).join("");
+}
+
 /* ── capture ───────────────────────────────────────────────────────────── */
-$("shoot").addEventListener("click", () => $("file").click());
+$("shoot").addEventListener("click", () => {
+  if (!courant) { ouvrirChoix(); $("pick").scrollIntoView({ block: "nearest" }); return; }
+  $("file").click();
+});
+$("changer").addEventListener("click", () => {
+  ouvrirChoix(); $("pick").scrollIntoView({ block: "nearest" });
+});
 
 $("file").addEventListener("change", async e => {
   const file = e.target.files && e.target.files[0];
@@ -433,3 +501,6 @@ else {
 rendre();
 chargerReferentiel();
 </script>
+
+</body>
+</html>
