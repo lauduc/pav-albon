@@ -241,13 +241,25 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff;
   font-size: 1.6rem; line-height: 1; padding: 0;
 }
-.vg-all, .raz {
+.vg-all {
   appearance: none; border: 0; background: none; cursor: pointer;
   font-family: var(--font-ui); font-size: .85rem; color: var(--muted);
   text-decoration: underline; text-underline-offset: 3px;
   padding: 10px 0 0; display: block;
 }
-.raz { margin: 14px auto 0; }
+/* Effacer n'est pas un lien discret : c'est un bouton, et il porte la couleur
+   de ce qu'il fait. Bordé plutôt que plein, pour ne pas rivaliser avec les
+   deux actions du haut. */
+.raz {
+  appearance: none; cursor: pointer; margin: 18px auto 0;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  background: var(--surface); color: var(--alert);
+  border: 1.5px solid color-mix(in srgb, var(--alert) 55%, transparent);
+  border-radius: 12px; padding: 13px 20px;
+  font-family: var(--font-ui); font-size: .95rem; font-weight: 600;
+}
+.raz svg { width: 19px; height: 19px; flex: none; }
+.raz:active { background: color-mix(in srgb, var(--alert) 10%, var(--surface)); }
 .round { list-style: none; padding: 0; margin: 0; }
 .round .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .round .cd { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); flex: none; }
@@ -288,6 +300,14 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 </div></div>
 
 <div class="wrap">
+
+  <!-- En tête de page : tant que des photos attendent, c'est la première
+       chose qu'on voit. Masqué dès que la file est vide, pour ne pas occuper
+       la place en permanence. -->
+  <button type="button" class="shoot envoi" id="q-send" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+    <span id="q-send-lbl">Envoyer</span>
+  </button>
 
   <div class="point">
     <span class="eyebrow" id="state-lbl">Recherche du point…</span>
@@ -336,16 +356,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   <div>
     <span class="eyebrow">Points de collecte — appuie pour en choisir un</span>
     <ul class="round" id="round"></ul>
-    <button type="button" class="raz" id="raz" hidden>Réinitialiser le relevé du jour</button>
+    <button type="button" class="raz" id="raz" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      <span>Tout effacer</span>
+    </button>
   </div>
-
-  <!-- L'envoi est un geste, pas un automatisme : c'est lui qui engage les
-       photos en base, après relecture. D'où un bouton de la taille du bouton
-       photo, et non une pastille au coin d'un encadré. -->
-  <button type="button" class="shoot envoi" id="q-send" hidden>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
-    <span id="q-send-lbl">Envoyer</span>
-  </button>
 
   <div class="queue" id="queue">
     <div class="q-l">
