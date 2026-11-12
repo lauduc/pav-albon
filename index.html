@@ -198,6 +198,26 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   color: inherit; font-weight: inherit; min-width: 0;
 }
 .round li > button:active { background: color-mix(in srgb, var(--signal) 12%, transparent); }
+
+/* ── photos d'un point ─────────────────────────────────────────────────── */
+.round li.vgs { padding: 10px 0 14px; }
+.vg-liste { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.vg { position: relative; margin: 0; flex: none; width: 72px; }
+.vg img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; display: block; background: var(--bg); }
+.vg figcaption { font-family: var(--font-mono); font-size: .72rem; color: var(--muted); text-align: center; margin-top: 3px; }
+.vg-x {
+  position: absolute; top: -6px; right: -6px; width: 26px; height: 26px;
+  display: grid; place-items: center; cursor: pointer;
+  border: 2px solid var(--bg); border-radius: 50%;
+  background: var(--alert); color: #fff; font-size: 1rem; line-height: 1; padding: 0;
+}
+.vg-all, .raz {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-ui); font-size: .85rem; color: var(--muted);
+  text-decoration: underline; text-underline-offset: 3px;
+  padding: 10px 0 0; display: block;
+}
+.raz { margin: 14px auto 0; }
 .round { list-style: none; padding: 0; margin: 0; }
 .round .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .round .cd { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); flex: none; }
@@ -225,12 +245,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 <body>
 
 <div class="bar"><div class="bar-in">
-  <span class="eyebrow" id="day">Tournée</span>
-  <span class="count"><b id="n-done">0</b> / <span id="n-tot">0</span> points</span>
+  <span class="eyebrow" id="day">Relevé</span>
+  <span class="count" id="compte">—</span>
 </div></div>
 
 <div class="wrap">
-  <div class="track"><i id="prog"></i></div>
 
   <div class="point">
     <span class="eyebrow" id="state-lbl">Recherche du point…</span>
@@ -276,8 +295,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   </div>
 
   <div>
-    <span class="eyebrow">Points de la tournée — appuie pour en changer</span>
+    <span class="eyebrow">Points de collecte — appuie pour en choisir un</span>
     <ul class="round" id="round"></ul>
+    <button type="button" class="raz" id="raz" hidden>Réinitialiser le relevé du jour</button>
   </div>
 
   <div class="queue" id="queue">
@@ -383,15 +403,18 @@ function identifierSite(pos) {
 }
 
 /* ── file hors ligne (IndexedDB, repli en mémoire) ──────────────────────── */
-const DB="pav", ST="file", CFG="config"; let memoire = [];
+const DB="pav", ST="file", CFG="config", VG="vignette"; let memoire = [];
 const idb = () => new Promise((ok,ko) => {
-  const r = indexedDB.open(DB,2);
+  const r = indexedDB.open(DB,3);
   r.onupgradeneeded = () => {
     const d = r.result;
     if (!d.objectStoreNames.contains(ST))  d.createObjectStore(ST,{keyPath:"uuid"});
     // Le service worker lit l'URL d'envoi ici : pas de constante dupliquée
     // entre index.html et sw.js, donc pas de risque de désynchronisation.
     if (!d.objectStoreNames.contains(CFG)) d.createObjectStore(CFG);
+    /* Les vignettes survivent à l'envoi, contrairement aux photos de la file.
+       C'est ce qui permet de revoir et de corriger un point après coup. */
+    if (!d.objectStoreNames.contains(VG))  d.createObjectStore(VG,{keyPath:"uuid"});
   };
   r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error);
 });
@@ -400,11 +423,42 @@ async function qPut(v){ try { const d=await idb(); await new Promise((ok,ko)=>{c
 async function qAll(){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(ST,"readonly").objectStore(ST).getAll();q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return memoire; } }
 async function qDel(k){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(ST,"readwrite");t.objectStore(ST).delete(k);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch { memoire = memoire.filter(x=>x.uuid!==k); } }
 
-/* ── points faits aujourd'hui ──────────────────────────────────────────── */
+async function vPut(v){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).put(v);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
+async function vAll(){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(VG,"readonly").objectStore(VG).getAll();q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return []; } }
+async function vDel(k){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).delete(k);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
+
+/* ── points relevés aujourd'hui ────────────────────────────────────────── */
 const jour = () => new Date().toISOString().slice(0,10);
 let faits = new Map();   // code du site → nombre de photos prises aujourd'hui
 try { const r = JSON.parse(localStorage.getItem("pav-faits") || "{}"); if (r.d === jour()) faits = new Map(r.c); } catch {}
 const sauverFaits = () => { try { localStorage.setItem("pav-faits", JSON.stringify({ d: jour(), c: [...faits] })); } catch {} };
+
+/* Les vignettes du jour, et une URL d'affichage par vignette. C'est la source
+   de vérité : le compteur des points relevés en est recalculé, de sorte qu'une
+   suppression ne puisse pas laisser un point au vert sans photo derrière. */
+let vignettes = [], urlsVign = new Map();
+
+async function rechargerVignettes() {
+  const tout = await vAll();
+  const aujourdhui = jour();
+  // Les vignettes des jours passés ne servent plus à rien : on fait le ménage.
+  for (const v of tout) if (v.jour !== aujourdhui) vDel(v.uuid);
+  vignettes = tout.filter(v => v.jour === aujourdhui)
+                  .sort((a, b) => a.horodatage.localeCompare(b.horodatage));
+  urlsVign.forEach(u => URL.revokeObjectURL(u));
+  urlsVign = new Map(vignettes.map(v => [v.uuid, URL.createObjectURL(v.vig)]));
+  faits = new Map();
+  for (const v of vignettes) faits.set(v.site_code, (faits.get(v.site_code) || 0) + 1);
+  sauverFaits();
+}
+
+/* Supprimer une photo, c'est aussi la retirer de la file d'envoi : sans ça,
+   elle partirait quand même au serveur quelques secondes plus tard. */
+async function supprimerPhotos(uuids) {
+  for (const u of uuids) { await qDel(u); await vDel(u); }
+  await rechargerVignettes();
+  rendre();
+}
 
 /* ── état ──────────────────────────────────────────────────────────────── */
 let position = null, courant = null, demo = false, envoiEnCours = false;
@@ -453,10 +507,13 @@ const positionFraiche = () => new Promise((ok, ko) =>
 
 /* ── rendu ─────────────────────────────────────────────────────────────── */
 function rendre() {
-  const total = SITES.length, n = faits.size;
-  $("n-done").textContent = n; $("n-tot").textContent = total;
-  $("prog").style.width = (100 * n / total) + "%";
-  $("day").textContent = "Tournée du " + new Date().toLocaleDateString("fr-FR", { day:"numeric", month:"long" });
+  /* Le relevé n'est pas une liste à finir : un agent passe où il passe. Le
+     compteur décrit donc ce qui a été fait, il ne réclame rien. */
+  const n = faits.size, ph = vignettes.length;
+  $("compte").textContent = n === 0 ? "aucun point relevé"
+    : `${n} point${n > 1 ? "s" : ""} · ${ph} photo${ph > 1 ? "s" : ""}`;
+  $("day").textContent = new Date().toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
+  $("raz").hidden = !ph;
 
   if (courant) {
     $("site-nm").textContent = courant.nom;
@@ -487,9 +544,23 @@ function rendre() {
     const droite = k > 1 ? `${k} photos`
       : k === 1 ? (nbColonnes(s) > 1 ? `1 photo · ${nbColonnes(s)} col.` : "1 photo")
       : d !== null ? `${d} m` : s.code;
-    return `<li class="${cls}"><button type="button" data-code="${s.code}">` +
+    let bloc = `<li class="${cls}"><button type="button" data-code="${s.code}">` +
       `<span class="dot"></span><span class="nm">${s.nom}</span><span class="cd">${droite}</span>` +
       `</button></li>`;
+    /* Les photos du point sélectionné sont dépliées sous sa ligne : pas de
+       second écran à ouvrir, et on voit tout de suite ce qu'on a pris. */
+    if (courant && s.code === courant.code && k) {
+      const v = vignettes.filter(x => x.site_code === s.code);
+      bloc += `<li class="vgs"><div class="vg-liste">` +
+        v.map(x => {
+          const h = new Date(x.horodatage).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+          return `<figure class="vg"><img src="${urlsVign.get(x.uuid)}" alt="" width="72" height="72" loading="lazy" decoding="async">` +
+            `<figcaption>${h}</figcaption>` +
+            `<button type="button" class="vg-x" data-uuid="${x.uuid}" aria-label="Supprimer la photo de ${h}">&times;</button></figure>`;
+        }).join("") +
+        `</div><button type="button" class="vg-all" data-code="${s.code}">Supprimer les ${v.length} photo${v.length > 1 ? "s" : ""} de ce point</button></li>`;
+    }
+    return bloc;
   }).join("");
 
   majFile();
@@ -527,7 +598,23 @@ $("shoot").addEventListener("click", () => {
 /* La liste de la tournée EST le sélecteur de point : un appui sur une ligne
    fixe le point courant. Et si un import est en attente, il bascule entier sur
    ce point — c'est le geste le plus court pour « ces photos-là vont ici ». */
-$("round").addEventListener("click", e => {
+/* Une photo déjà partie au serveur ne revient pas : on le dit, plutôt que de
+   laisser croire que la suppression efface aussi ce qui a été transmis. */
+const AVERTI_ENVOI = () => ENDPOINT ? "\n\nLes photos déjà transmises au serveur ne seront pas retirées de la base." : "";
+
+$("round").addEventListener("click", async e => {
+  const x = e.target.closest(".vg-x");
+  if (x) { await supprimerPhotos([x.dataset.uuid]); return; }
+
+  const all = e.target.closest(".vg-all");
+  if (all) {
+    const v = vignettes.filter(y => y.site_code === all.dataset.code);
+    const s = SITES.find(y => y.code === all.dataset.code);
+    if (!confirm(`Supprimer les ${v.length} photo${v.length > 1 ? "s" : ""} de ${s ? s.nom : all.dataset.code} ?${AVERTI_ENVOI()}`)) return;
+    await supprimerPhotos(v.map(y => y.uuid));
+    return;
+  }
+
   const b = e.target.closest("button[data-code]"); if (!b) return;
   const site = SITES.find(s => s.code === b.dataset.code); if (!site) return;
   courant = site;
@@ -544,6 +631,17 @@ $("round").addEventListener("click", e => {
   }
   rendre();
   $("shoot").scrollIntoView({ block: "center", behavior: "smooth" });
+});
+
+$("raz").addEventListener("click", async () => {
+  const n = vignettes.length;
+  if (!n) return;
+  if (!confirm(`Effacer le relevé du jour : ${n} photo${n > 1 ? "s" : ""} sur ${faits.size} point${faits.size > 1 ? "s" : ""} ?${AVERTI_ENVOI()}`)) return;
+  await supprimerPhotos(vignettes.map(v => v.uuid));
+  $("flash-t").textContent = "Relevé du jour effacé";
+  $("flash-s").textContent = `${n} photo${n > 1 ? "s" : ""} supprimée${n > 1 ? "s" : ""}`;
+  $("flash-img").removeAttribute("src");
+  $("flash").hidden = false;
 });
 
 /* L'import ne dépend pas du point courant : on associe photo par photo. */
@@ -587,7 +685,9 @@ async function traiter(e, source) {
     photo
   };
   await qPut(item);
-  faits.set(site.code, (faits.get(site.code) || 0) + 1); sauverFaits();
+  await vPut({ uuid: item.uuid, site_code: site.code, jour: jour(),
+               horodatage: item.horodatage, vig: await compresser(photo, 200, .55) });
+  await rechargerVignettes();
   // La photo est prise : le GPS reprend la main pour le point suivant.
   choixManuel = false;
 
@@ -710,6 +810,7 @@ async function importerGalerie(files) {
     const vig = await compresser(f, 200, .55);
     aImporter.push({
       file: f, exif: ex, site, d, auto, defaut,
+      vig: vig === f ? null : vig,
       note: auto ? `reconnu à ${d} m`
           : defaut ? "point en cours"
           : (ex.lat !== null ? "hors zone, à choisir" : "à choisir"),
@@ -820,19 +921,22 @@ $("imp-ok").addEventListener("click", async () => {
     $("busy").hidden = false;
     let photo = x.file;
     try { photo = await compresser(x.file); } catch {}
+    const uuid = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
+    const horodatage = x.quand.toISOString();
     await qPut({
-      uuid: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
-      horodatage: x.quand.toISOString(),
+      uuid, horodatage,
       site_code: x.site.code,
       lat: x.exif.lat, lon: x.exif.lon,
       precision_m: x.exif.lat !== null ? 10 : null,
       source: x.auto ? "galerie_exif" : "galerie_manuelle",
       photo
     });
-    faits.set(x.site.code, (faits.get(x.site.code) || 0) + 1);
+    // La vignette a déjà été fabriquée à la lecture du fichier : on la réutilise.
+    await vPut({ uuid, site_code: x.site.code, jour: jour(), horodatage,
+                 vig: x.vig || await compresser(photo, 200, .55) });
     await new Promise(r => setTimeout(r, 0));   // laisse respirer l'interface
   }
-  sauverFaits();
+  await rechargerVignettes();
   /* On garde en vie la vignette de la dernière photo : c'est elle qui va
      s'afficher dans le bandeau de confirmation, comme après une prise de vue.
      Les autres sont libérées tout de suite. */
@@ -978,6 +1082,8 @@ if (!navigator.geolocation) {
 }
 rendre();
 chargerReferentiel();
+// Les photos du jour sont relues au démarrage : rouvrir la page ne perd rien.
+rechargerVignettes().then(rendre).catch(() => {});
 </script>
 
 </body>
