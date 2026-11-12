@@ -290,12 +290,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     </div>
     <div class="imp" id="imp-list"></div>
     <div class="imp-a">
-      <button type="button" class="shoot" id="imp-ok" style="padding-block:16px;font-size:1.05rem">Enregistrer</button>
       <button type="button" class="q-btn" id="imp-no">Annuler</button>
     </div>
     <p class="hint" style="text-align:left;margin-top:2px">
       Ces photos n'ont pas pu être rattachées seules. Désigne leur point —
-      dans la liste ci-dessous ou ici — puis enregistre.
+      ici ou dans la liste ci-dessous : elles sont enregistrées aussitôt.
     </p>
   </div>
 
@@ -639,10 +638,8 @@ $("round").addEventListener("click", async e => {
 
   if (!$("import").hidden && aImporter.length) {
     aImporter.forEach(x => { x.site = site; x.auto = false; x.defaut = false; x.note = "choisi"; });
-    const n = aImporter.length;
-    rendre(); rendreImport(-1);
-    $("imp-t").textContent = `${n} photo${n > 1 ? "s" : ""} sur ${site.nom}`;
-    $("import").scrollIntoView({ block: "start", behavior: "smooth" });
+    rendre();
+    await viderPlaces();
     return;
   }
   rendre();
@@ -839,15 +836,19 @@ async function importerGalerie(files) {
   aImporter.sort((a, b) => a.quand - b.quand);
   $("busy").hidden = true;
 
-  /* Tout ce qui a déjà un point part sans demander : la vignette sous le point
-     EST la confirmation, et elle se supprime d'un appui. Seules les photos
-     qu'on ne sait pas rattacher — ni GPS dans le fichier, ni point à l'écran —
-     restent à l'écran pour être désignées. */
+  await viderPlaces(trop);
+}
+
+/* Tout ce qui a un point part sans demander : la vignette sous le point EST la
+   confirmation, et elle se supprime d'un appui. Seules les photos qu'on ne
+   sait pas rattacher — ni GPS dans le fichier, ni point à l'écran — restent
+   affichées, et elles partent dès qu'on leur en désigne un. */
+async function viderPlaces(trop = -1) {
   const prets = aImporter.filter(x => x.site);
   aImporter = aImporter.filter(x => !x.site);
   if (aImporter.length) rendreImport(trop);
   else { $("import").hidden = true; $("imp-list").innerHTML = ""; }
-  await enregistrerImport(prets);
+  if (prets.length) await enregistrerImport(prets);
 }
 
 function rendreImport(trop = 0) {
@@ -877,7 +878,6 @@ function rendreImport(trop = 0) {
       `</div></div>`;
   }).join("");
   $("import").hidden = false;
-  $("imp-ok").textContent = `Enregistrer ${n} photo${n > 1 ? "s" : ""}`;
   // On ne remonte la liste qu'à son ouverture : pas à chaque choix de point.
   if (trop !== -1) $("import").scrollIntoView({ block: "start", behavior: "smooth" });
 }
@@ -907,11 +907,8 @@ $("imp-list").addEventListener("change", e => {
       x.site = site; x.defaut = false; x.note = "même rafale"; propage++;
     }
   });
-  if (propage) {
-    rendreImport(-1);
-    $("imp-t").textContent =
-      `${propage} photo${propage > 1 ? "s" : ""} de la même minute placée${propage > 1 ? "s" : ""} sur ${site.nom}`;
-  }
+  // Désigner un point vaut enregistrement : il n'y a plus rien à valider.
+  viderPlaces();
 });
 
 /* Le raccourci qui manquait : importer les photos d'un autre îlot sans devoir
@@ -921,9 +918,7 @@ $("imp-tout").addEventListener("change", e => {
   const site = SITES.find(x => x.code === e.target.value);
   if (!site) return;
   aImporter.forEach(x => { x.site = site; x.auto = false; x.defaut = false; x.note = "choisi"; });
-  const n = aImporter.length;
-  rendreImport(-1);
-  $("imp-t").textContent = `${n} photo${n > 1 ? "s" : ""} sur ${site.nom}`;
+  viderPlaces();
 });
 
 $("imp-no").addEventListener("click", () => {
@@ -936,7 +931,7 @@ $("imp-no").addEventListener("click", () => {
    d'un appui — c'est moins de gestes que de confirmer chaque lot. */
 async function enregistrerImport(lot) {
   if (!lot.length) return;
-  $("imp-ok").disabled = true;
+
   for (let i = 0; i < lot.length; i++) {
     const x = lot[i];
     $("busy-txt").textContent = `Enregistrement ${i + 1} / ${lot.length}…`;
@@ -964,7 +959,7 @@ async function enregistrerImport(lot) {
      ne dirait rien que la vignette ne dise déjà, et il faudrait le chasser. */
   const derniere = lot[lot.length - 1];
   lot.forEach(x => { if (x.url) URL.revokeObjectURL(x.url); });
-  $("busy").hidden = true; $("imp-ok").disabled = false;
+  $("busy").hidden = true;
   $("flash").hidden = true;
   /* Le point des dernières photos devient le point courant : ses vignettes
      s'affichent donc tout de suite sous sa ligne, sans rien chercher. */
@@ -976,16 +971,6 @@ async function enregistrerImport(lot) {
   }
 }
 
-$("imp-ok").addEventListener("click", async () => {
-  const sans = aImporter.filter(x => !x.site).length;
-  if (sans) {
-    $("imp-t").textContent = `${sans} photo${sans > 1 ? "s" : ""} sans point : choisis-le avant d'enregistrer`;
-    return;
-  }
-  const lot = aImporter; aImporter = [];
-  $("import").hidden = true; $("imp-list").innerHTML = "";
-  await enregistrerImport(lot);
-});
 
 
 
