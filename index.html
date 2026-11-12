@@ -460,9 +460,11 @@ async function qPut(v){ try { const d=await idb(); await new Promise((ok,ko)=>{c
 async function qAll(){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(ST,"readonly").objectStore(ST).getAll();q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return memoire; } }
 async function qDel(k){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(ST,"readwrite");t.objectStore(ST).delete(k);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch { memoire = memoire.filter(x=>x.uuid!==k); } }
 
+async function qVider(){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(ST,"readwrite");t.objectStore(ST).clear();t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} memoire = []; }
 async function qGet(k){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(ST,"readonly").objectStore(ST).get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return memoire.find(x=>x.uuid===k); } }
 async function vPut(v){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).put(v);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
 async function vAll(){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(VG,"readonly").objectStore(VG).getAll();q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return []; } }
+async function vVider(){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).clear();t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
 async function vDel(k){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).delete(k);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
 
 /* ── points relevés aujourd'hui ────────────────────────────────────────── */
@@ -541,7 +543,6 @@ function rendre() {
   $("compte").textContent = n === 0 ? "aucun point relevé"
     : `${n} point${n > 1 ? "s" : ""} · ${ph} photo${ph > 1 ? "s" : ""}`;
   $("day").textContent = new Date().toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
-  $("raz").hidden = !ph;
 
   if (courant) {
     $("site-nm").textContent = courant.nom;
@@ -705,14 +706,24 @@ $("round").addEventListener("click", async e => {
   $("shoot").scrollIntoView({ block: "center", behavior: "smooth" });
 });
 
+/* La réinitialisation vide tout : les vignettes ET la file d'envoi, y compris
+   ce qui traîne d'un jour précédent resté sans réseau. Sinon on croit avoir
+   effacé, et des photos partent quand même à la prochaine connexion. */
 $("raz").addEventListener("click", async () => {
+  const enFile = (await qAll()).length;
   const n = vignettes.length;
-  if (!n) return;
-  if (!confirm(`Effacer le relevé du jour : ${n} photo${n > 1 ? "s" : ""} sur ${faits.size} point${faits.size > 1 ? "s" : ""} ?${AVERTI_ENVOI()}`)) return;
-  await supprimerPhotos(vignettes.map(v => v.uuid));
-  $("flash-t").textContent = "Relevé du jour effacé";
-  $("flash-s").textContent = `${n} photo${n > 1 ? "s" : ""} supprimée${n > 1 ? "s" : ""}`;
+  if (!n && !enFile) return;
+  const bouts = [];
+  if (n) bouts.push(`${n} photo${n > 1 ? "s" : ""} sur ${faits.size} point${faits.size > 1 ? "s" : ""}`);
+  if (enFile) bouts.push(`${enFile} en attente d'envoi`);
+  if (!confirm(`Tout effacer : ${bouts.join(", ")} ?${AVERTI_ENVOI()}`)) return;
 
+  await qVider();
+  await vVider();
+  await rechargerVignettes();
+  rendre();
+  $("flash-t").textContent = "Relevé effacé";
+  $("flash-s").textContent = `${Math.max(n, enFile)} photo${Math.max(n, enFile) > 1 ? "s" : ""} supprimée${Math.max(n, enFile) > 1 ? "s" : ""}, file d'envoi vidée`;
   $("flash").hidden = false;
 });
 
@@ -1047,6 +1058,9 @@ async function majFile() {
     ? "Aucun serveur configuré — les photos restent sur ce téléphone"
     : (dernierEtat || (n ? (navigator.onLine ? "" : "hors ligne, envoi à la reconnexion") : ""));
   $("queue").classList.toggle("actif", envoiEnCours);
+  /* Le bouton d'effacement doit rester accessible même sans vignette : une
+     file héritée d'un jour sans réseau partirait sinon à la reconnexion. */
+  $("raz").hidden = !vignettes.length && !n;
   const b = $("q-send");
   b.hidden = !(n > 0 && ENDPOINT);
   b.disabled = envoiEnCours || !navigator.onLine;
