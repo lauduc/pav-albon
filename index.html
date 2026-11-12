@@ -607,7 +607,11 @@ function rendre() {
     const multi = Object.entries(courant.postes).filter(([, n]) => n > 1);
     const tot = nbColonnes(courant);
     $("hint").textContent = multi.length
-      ? `Cadre les ${multi.map(([f, n]) => `${n} ${nomFlux(f)}`).join(" et les ")} en entier, sinon le contrôle ne compte pas.`
+      /* Sur le terrain, tout ne tient pas dans un cadre, et un zoom sur le
+         conteneur à problème masque les autres. Une photo ne parle donc que
+         de ce qu'elle montre : mieux vaut en prendre plusieurs qu'une seule
+         mal cadrée. */
+      ? `${multi.map(([f, n]) => `${n} ${nomFlux(f)}`).join(" et ")} ici. Si tout ne tient pas dans le cadre, prends plusieurs photos.`
       : `${tot} colonne${tot > 1 ? "s" : ""} ici. Photographie le point même quand tout va bien.`;
   } else {
     /* Sans point, le bouton n'est pas un appareil photo : il le dit. Un bouton
