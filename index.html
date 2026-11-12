@@ -577,8 +577,14 @@ function majGps() {
   if (choixManuel) return;
 
   if (r.statut === "ok") { $("state-lbl").textContent = "Point détecté"; courant = r.site; }
+  else if (courant) {
+    /* Le GPS a perdu le point, mais un point est ouvert à l'écran : on le
+       garde. Sans ça, une dérive de quelques mètres transformait le bouton
+       photo en bouton « descends dans la liste », l'agent étant pourtant
+       toujours devant la même colonne. La photo ira sur le point affiché. */
+    $("state-lbl").textContent = "Point affiché — GPS sans confirmation";
+  }
   else {
-    courant = null;
     $("state-lbl").textContent = { ambigu:"Deux points possibles", hors_zone:"Aucun point à proximité", precision_insuffisante:"Signal GPS trop imprécis" }[r.statut];
     $("site-nm").textContent = r.statut === "ambigu" ? "Lequel ?" : "Choisis le point";
     $("site-cd").textContent = ""; $("site-flux").innerHTML = "";
