@@ -188,6 +188,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   padding: 7px 15px;
 }
 .q-btn:disabled { opacity: .5; cursor: default; }
+.shoot.envoi { background: var(--ok); color: #06240f; }
+.shoot.envoi:disabled { opacity: .45; }
 .queue.actif { border-style: solid; border-color: var(--signal); }
 .flash {
   background: var(--surface); border: 1px solid var(--ok); border-left: 4px solid var(--ok);
@@ -253,6 +255,14 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .round li.done { color: var(--muted); }
 .round li.done .dot { background: var(--ok); border-color: var(--ok); }
 .round li.here .dot { background: var(--signal); border-color: var(--signal); box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 28%, transparent); }
+/* Tout parti : la pastille devient une coche. Elle passe AVANT la pastille du
+   point courant, sinon l'état disparaît dès qu'on se tient sur l'îlot — le
+   moment où l'on a justement besoin de savoir si quelque chose reste. */
+.round li.envoye .dot {
+  background: none; border: 0; box-shadow: none; width: 13px; height: 13px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235FBE85' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+}
 .round li.here { font-weight: 600; }
 
 .queue {
@@ -329,12 +339,19 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <button type="button" class="raz" id="raz" hidden>Réinitialiser le relevé du jour</button>
   </div>
 
+  <!-- L'envoi est un geste, pas un automatisme : c'est lui qui engage les
+       photos en base, après relecture. D'où un bouton de la taille du bouton
+       photo, et non une pastille au coin d'un encadré. -->
+  <button type="button" class="shoot envoi" id="q-send" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+    <span id="q-send-lbl">Envoyer</span>
+  </button>
+
   <div class="queue" id="queue">
     <div class="q-l">
       <span id="q-txt">Aucune photo en attente</span>
       <span class="q-sub" id="q-sub"></span>
     </div>
-    <button type="button" class="q-btn" id="q-send" hidden>Envoyer</button>
   </div>
 
   <p class="note" id="note"></p>
@@ -465,6 +482,18 @@ async function qGet(k){ try { const d=await idb(); return await new Promise((ok,
 async function vPut(v){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).put(v);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
 async function vAll(){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(VG,"readonly").objectStore(VG).getAll();q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return []; } }
 async function vVider(){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).clear();t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
+/* On garde la trace du passage, pas l'image : le blob est libéré, le compteur
+   de l'îlot et sa coche survivent. */
+async function marquerEnvoyee(uuid){
+  try {
+    const d = await idb();
+    await new Promise((ok,ko)=>{
+      const t = d.transaction(VG,"readwrite"), s = t.objectStore(VG), q = s.get(uuid);
+      q.onsuccess = () => { const v = q.result; if (v) { v.envoye = true; v.vig = null; s.put(v); } };
+      t.oncomplete = ok; t.onerror = () => ko(t.error);
+    });
+  } catch {}
+}
 async function vDel(k){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).delete(k);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
 
 /* ── points relevés aujourd'hui ────────────────────────────────────────── */
@@ -486,7 +515,8 @@ async function rechargerVignettes() {
   vignettes = tout.filter(v => v.jour === aujourdhui)
                   .sort((a, b) => a.horodatage.localeCompare(b.horodatage));
   urlsVign.forEach(u => URL.revokeObjectURL(u));
-  urlsVign = new Map(vignettes.map(v => [v.uuid, URL.createObjectURL(v.vig)]));
+  // Une vignette envoyée n'a plus de blob : rien à afficher, rien à libérer.
+  urlsVign = new Map(vignettes.filter(v => v.vig).map(v => [v.uuid, URL.createObjectURL(v.vig)]));
   faits = new Map();
   for (const v of vignettes) faits.set(v.site_code, (faits.get(v.site_code) || 0) + 1);
   sauverFaits();
@@ -573,20 +603,31 @@ function rendre() {
 
   $("round").innerHTML = SITES.map(s => {
     const k = faits.get(s.code) || 0;
-    const cls = [k ? "done" : "", courant && s.code === courant.code ? "here" : ""].join(" ").trim();
+    const duSite = vignettes.filter(x => x.site_code === s.code);
+    const attente = duSite.filter(x => !x.envoye).length;
+    const partis  = k - attente;
+    /* Tout envoyé : l'îlot passe à la coche. L'écran se vide de ce qui est
+       parti, mais le passage reste lisible — sinon on repasse deux fois. */
+    const cls = [k ? "done" : "", k && !attente ? "envoye" : "",
+                 courant && s.code === courant.code ? "here" : ""].filter(Boolean).join(" ");
     /* La distance remplace le code tant que le point n'est pas fait : c'est la
        seule chose utile que l'ancienne liste en double apportait. */
     const d = position ? Math.round(distance(position, s)) : null;
-    const droite = k > 1 ? `${k} photos`
-      : k === 1 ? (nbColonnes(s) > 1 ? `1 photo · ${nbColonnes(s)} col.` : "1 photo")
-      : d !== null ? `${d} m` : s.code;
+    const droite =
+        !k       ? (d !== null ? `${d} m` : s.code)
+      : !attente ? `${k} envoyée${k > 1 ? "s" : ""}`
+      : partis   ? `${attente} en attente · ${partis} envoyée${partis > 1 ? "s" : ""}`
+      : attente > 1 ? `${attente} photos`
+      : (nbColonnes(s) > 1 ? `1 photo · ${nbColonnes(s)} col.` : "1 photo");
     let bloc = `<li class="${cls}"><button type="button" data-code="${s.code}">` +
       `<span class="dot"></span><span class="nm">${s.nom}</span><span class="cd">${droite}</span>` +
       `</button></li>`;
     /* Les photos du point sélectionné sont dépliées sous sa ligne : pas de
        second écran à ouvrir, et on voit tout de suite ce qu'on a pris. */
-    if (courant && s.code === courant.code && k) {
-      const v = vignettes.filter(x => x.site_code === s.code);
+    if (courant && s.code === courant.code && attente) {
+      // Seules les photos encore sur le téléphone s'affichent : une fois
+      // partie, l'image n'existe plus ici, il n'y a plus rien à montrer.
+      const v = duSite.filter(x => !x.envoye);
       bloc += `<li class="vgs"><div class="vg-liste">` +
         v.map(x => {
           const h = new Date(x.horodatage).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
@@ -683,7 +724,9 @@ $("round").addEventListener("click", async e => {
 
   const all = e.target.closest(".vg-all");
   if (all) {
-    const v = vignettes.filter(y => y.site_code === all.dataset.code);
+    // Seules les photos encore sur le téléphone : une photo envoyée ne se
+    // retire plus d'ici, et sa trace de passage doit survivre.
+    const v = vignettes.filter(y => y.site_code === all.dataset.code && !y.envoye);
     const s = SITES.find(y => y.code === all.dataset.code);
     if (!confirm(`Supprimer les ${v.length} photo${v.length > 1 ? "s" : ""} de ${s ? s.nom : all.dataset.code} ?${AVERTI_ENVOI()}`)) return;
     await supprimerPhotos(v.map(y => y.uuid));
@@ -786,7 +829,7 @@ async function traiter(e, source) {
   courant = site;
 
   rendre(); majGps();
-  vider(); demanderSync();        // envoi immédiat, sans attendre la fin de la tournée
+  majFile();   // rien ne part : l’envoi attend un appui sur « Envoyer »
   $("shoot").disabled = false;
 }
 
@@ -1034,7 +1077,7 @@ async function enregistrerImport(lot) {
   /* Le point des dernières photos devient le point courant : ses vignettes
      s'affichent donc tout de suite sous sa ligne, sans rien chercher. */
   if (derniere) { courant = derniere.site; choixManuel = true; }
-  rendre(); vider(); demanderSync();
+  rendre(); majFile();
   if (derniere) {
     const li = document.querySelector(`#round button[data-code="${derniere.site.code}"]`);
     if (li) li.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -1056,21 +1099,37 @@ async function majFile() {
     : `${n} photo${n > 1 ? "s" : ""} en attente d'envoi`;
   $("q-sub").textContent = !ENDPOINT
     ? "Aucun serveur configuré — les photos restent sur ce téléphone"
-    : (dernierEtat || (n ? (navigator.onLine ? "" : "hors ligne, envoi à la reconnexion") : ""));
+    : dernierEtat
+      || (envoiArme && n ? (navigator.onLine ? "envoi en cours" : "hors ligne, reprise à la reconnexion") : "")
+      || (n ? "rien ne part tant que tu n'as pas envoyé" : "");
   $("queue").classList.toggle("actif", envoiEnCours);
   /* Le bouton d'effacement doit rester accessible même sans vignette : une
      file héritée d'un jour sans réseau partirait sinon à la reconnexion. */
   $("raz").hidden = !vignettes.length && !n;
+  /* Le bouton reste visible dès qu'il y a quelque chose à envoyer, même sans
+     serveur : savoir que des photos attendent vaut mieux que de ne rien voir. */
   const b = $("q-send");
-  b.hidden = !(n > 0 && ENDPOINT);
-  b.disabled = envoiEnCours || !navigator.onLine;
-  b.textContent = envoiEnCours ? "Envoi…" : "Envoyer";
+  b.hidden = n === 0;
+  b.disabled = envoiEnCours || !navigator.onLine || !ENDPOINT;
+  $("q-send-lbl").textContent = envoiEnCours
+    ? "Envoi en cours…"
+    : `Envoyer ${n} photo${n > 1 ? "s" : ""}`;
 }
 
 /* L'envoi démarre dès la photo enregistrée, sans attendre la fin de la
    tournée, et se relance à la reconnexion, au retour sur la page, et toutes
    les 30 s tant qu'il reste quelque chose. */
+/* Rien ne part tant que l'agent n'a pas appuyé sur « Envoyer ». C'est ce qui
+   donne un sens à la relecture : vignette, loupe et suppression ne servent à
+   vérifier avant de s'engager que si l'engagement vient après. Une fois armé,
+   en revanche, l'envoi se poursuit tout seul — un échec réseau ne doit pas
+   obliger à rester devant le téléphone. */
+let envoiArme = false;
+try { envoiArme = localStorage.getItem("pav-arme") === "1"; } catch {}
+const armer = v => { envoiArme = v; try { localStorage.setItem("pav-arme", v ? "1" : "0"); } catch {} };
+
 async function vider() {
+  if (!envoiArme) { majFile(); return; }
   if (!ENDPOINT || envoiEnCours || !navigator.onLine) { majFile(); return; }
   const q = await qAll();
   if (!q.length) { dernierEtat = ""; majFile(); return; }
@@ -1083,18 +1142,28 @@ async function vider() {
       for (const k of ["uuid","horodatage","site_code","lat","lon","precision_m"]) fd.append(k, it[k]);
       const r = await fetch(ENDPOINT, { method: "POST", body: fd });
       if (!r.ok) { dernierEtat = `Le serveur a répondu ${r.status} — nouvelle tentative plus tard`; break; }
-      await qDel(it.uuid); envoyees++;
+      await qDel(it.uuid);
+      /* La photo est partie : sa vignette quitte l'îlot, mais le passage
+         reste inscrit. Sans cette trace, l'agent ne saurait plus où il est
+         déjà allé et photographierait deux fois le même point. */
+      await marquerEnvoyee(it.uuid);
+      envoyees++;
       majFile();
     }
     if (!dernierEtat && envoyees) dernierEtat = `${envoyees} photo${envoyees > 1 ? "s" : ""} envoyée${envoyees > 1 ? "s" : ""}`;
+    if (!(await qAll()).length) armer(false);   // file vide : il faudra réarmer
   } catch (e) {
     dernierEtat = "Réseau indisponible — nouvelle tentative plus tard";
   } finally {
-    envoiEnCours = false; majFile();
+    envoiEnCours = false;
+    await rechargerVignettes();
+    rendre();
   }
 }
 
-$("q-send").addEventListener("click", () => { dernierEtat = ""; vider(); });
+// L'appui arme l'envoi : à partir de là, la file se vide seule si le réseau
+// revient. Tant qu'il n'a pas eu lieu, rien ne quitte le téléphone.
+$("q-send").addEventListener("click", () => { dernierEtat = ""; armer(true); vider(); demanderSync(); });
 window.addEventListener("online", vider);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) vider(); });
 setInterval(() => { qAll().then(q => { if (q.length) vider(); }); }, 30000);
@@ -1133,7 +1202,7 @@ function demarrerDemo(raison) {
     position = { lat: courant.lat, lon: courant.lon, precision_m: 8 };
     $("state-lbl").textContent = "Point détecté";
   }
-  $("note").innerHTML = `<strong>Mode démo :</strong> ${raison} Le point avance tout seul après chaque photo. Sur un téléphone, avec la géolocalisation autorisée, la page utilise le GPS réel.`;
+  $("note").innerHTML = `<strong>Mode démo :</strong> ${raison} Choisis un îlot dans la liste pour photographier. Sur un téléphone, avec la géolocalisation autorisée, la page utilise le GPS réel.`;
   rendre(); majGps();
 }
 
