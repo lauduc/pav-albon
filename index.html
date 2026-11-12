@@ -182,7 +182,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   border-radius: 0 12px 12px 0; padding: 12px 14px;
   display: flex; align-items: center; gap: 12px;
 }
-.flash img { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; flex: none; max-width: 100%; }
 .flash .t { min-width: 0; }
 .flash strong { font-weight: 600; display: block; }
 .flash span { font-size: .85rem; color: var(--muted); }
@@ -289,8 +288,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
   <div class="busy" id="busy" hidden><i aria-hidden="true"></i><span id="busy-txt">Enregistrement…</span></div>
 
+  <!-- Ne sert plus qu'à confirmer une suppression : les photos, elles, se
+       regardent sous leur point. -->
   <div class="flash" id="flash" hidden>
-    <img id="flash-img" alt="">
     <div class="t"><strong id="flash-t"></strong><span id="flash-s"></span></div>
   </div>
 
@@ -490,16 +490,6 @@ async function compresser(file, maxCote = 1280, qualite = .7) {
   } catch { return file; }
   finally { if (img && img.close) img.close(); }
 }
-/* Le bandeau de confirmation affiche une image servie par une URL d'objet.
-   Chaque nouvelle vignette libère la précédente : sans ça, une tournée de
-   trente photos laisse trente images en mémoire. */
-let urlFlash = null;
-function poserFlash(url) {
-  if (urlFlash && urlFlash !== url) URL.revokeObjectURL(urlFlash);
-  urlFlash = url;
-  $("flash-img").src = url;
-}
-
 const positionFraiche = () => new Promise((ok, ko) =>
   navigator.geolocation.getCurrentPosition(
     p => ok({ lat:p.coords.latitude, lon:p.coords.longitude, precision_m: Math.round(p.coords.accuracy) }),
@@ -646,7 +636,7 @@ $("raz").addEventListener("click", async () => {
   await supprimerPhotos(vignettes.map(v => v.uuid));
   $("flash-t").textContent = "Relevé du jour effacé";
   $("flash-s").textContent = `${n} photo${n > 1 ? "s" : ""} supprimée${n > 1 ? "s" : ""}`;
-  $("flash-img").removeAttribute("src");
+
   $("flash").hidden = false;
 });
 
@@ -697,16 +687,16 @@ async function traiter(e, source) {
   // La photo est prise : le GPS reprend la main pour le point suivant.
   choixManuel = false;
 
+  /* Pas d'aperçu après la prise de vue : la photo apparaît sous son point,
+     avec son heure, et s'y supprime. Un second exemplaire au-dessus du bouton
+     n'apprenait rien et restait là jusqu'à la photo suivante. */
   $("busy").hidden = true;
-  poserFlash(URL.createObjectURL(photo));
-  $("flash-t").textContent = site.nom + (source === "galerie" ? " enregistré (galerie)" : " enregistré");
-  $("flash-s").textContent = Math.round(photo.size / 1024) + " Ko · " +
-    (ENDPOINT ? "envoi en cours" : "conservé sur le téléphone");
-  $("flash").hidden = false;
+  $("flash").hidden = true;
 
-  const suivant = SITES.find(s => !faits.has(s.code));
-  if (demo && suivant) courant = suivant;
-  else if (demo) courant = site;
+  /* Le point qu'on vient de photographier reste affiché : c'est sous sa ligne
+     que la vignette apparaît, et il faut la voir. L'ancien enchaînement
+     automatique vers le point suivant la faisait disparaître aussitôt. */
+  courant = site;
 
   rendre(); majGps();
   vider(); demanderSync();        // envoi immédiat, sans attendre la fin de la tournée
