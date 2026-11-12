@@ -943,21 +943,13 @@ async function enregistrerImport(lot) {
     await new Promise(r => setTimeout(r, 0));   // laisse respirer l'interface
   }
   await rechargerVignettes();
-  /* On garde en vie la vignette de la dernière photo : c'est elle qui va
-     s'afficher dans le bandeau de confirmation, comme après une prise de vue.
-     Les autres sont libérées tout de suite. */
+  /* Plus de bandeau de confirmation à l'import : la photo est désormais sous
+     son point, c'est là qu'elle doit être regardée. Un aperçu de plus à côté
+     ne dirait rien que la vignette ne dise déjà, et il faudrait le chasser. */
   const derniere = lot[lot.length - 1];
-  const vignetteFlash = derniere ? derniere.url : null;
-  lot.forEach(x => { if (x.url && x.url !== vignetteFlash) URL.revokeObjectURL(x.url); });
-  const sites = [...new Set(lot.map(x => x.site.code))];
-  const n = lot.length;
+  lot.forEach(x => { if (x.url) URL.revokeObjectURL(x.url); });
   $("busy").hidden = true; $("imp-ok").disabled = false;
-  $("flash-t").textContent = `${n} photo${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""}` +
-    (sites.length === 1 ? ` · ${sites[0]}` : ` · ${sites.length} points`);
-  $("flash-s").textContent = ENDPOINT ? "envoi en cours" : "conservées sur le téléphone";
-  if (vignetteFlash) { poserFlash(vignetteFlash); }
-  else $("flash-img").removeAttribute("src");
-  $("flash").hidden = false;
+  $("flash").hidden = true;
   /* Le point des dernières photos devient le point courant : ses vignettes
      s'affichent donc tout de suite sous sa ligne, sans rien chercher. */
   if (derniere) { courant = derniere.site; choixManuel = true; }
