@@ -200,20 +200,29 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .flash strong { font-weight: 600; display: block; }
 .flash span { font-size: .85rem; color: var(--muted); }
 
-.round { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
-.round li { border-bottom: 1px solid var(--line); min-width: 0; }
-/* Toute la ligne est un bouton : c'est la façon la plus directe de changer de
-   point, bien avant le lien « Changer de point ». */
-.round li > button {
-  appearance: none; border: 0; background: none; cursor: pointer; width: 100%;
-  display: flex; align-items: center; gap: 10px; text-align: left;
-  padding: 13px 0; font-family: var(--font-ui); font-size: .95rem;
+.round { display: flex; flex-direction: column; gap: 8px; }
+.round li { min-width: 0; }
+/* Chaque point est une vraie cible : fond, bordure, coin arrondi et 64 px de
+   haut au minimum. Une ligne de texte séparée d'un filet se touche mal avec
+   des gants ou un doigt large, et rien n'y dit qu'elle est cliquable — d'où
+   aussi le chevron à droite. */
+.round li:not(.vgs) > button {
+  appearance: none; cursor: pointer; width: 100%; min-height: 64px;
+  display: flex; align-items: center; gap: 11px; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 15px; font-family: var(--font-ui); font-size: 1rem;
   color: inherit; font-weight: inherit; min-width: 0;
 }
-.round li > button:active { background: color-mix(in srgb, var(--signal) 12%, transparent); }
+.round li:not(.vgs) > button::after {
+  content: ""; width: 8px; height: 8px; flex: none; opacity: .55;
+  border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(-45deg); margin-left: 1px;
+}
+.round li.here > button { border-color: var(--signal); border-width: 2px; padding: 13px 14px; }
+.round li:not(.vgs) > button:active { background: color-mix(in srgb, var(--signal) 14%, var(--surface)); }
 
 /* ── photos d'un point ─────────────────────────────────────────────────── */
-.round li.vgs { padding: 10px 0 14px; }
+.round li.vgs { padding: 4px 2px 8px; }
 .vg-liste { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
 .vg { position: relative; margin: 0; flex: none; width: 72px; }
 .vg img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; display: block; background: var(--bg); }
@@ -263,7 +272,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .round { list-style: none; padding: 0; margin: 0; }
 .round .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .round .cd { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); flex: none; }
-.dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--line); flex: none; }
+.dot { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid var(--line); flex: none; }
 .round li.done { color: var(--muted); }
 .round li.done .dot { background: var(--ok); border-color: var(--ok); }
 .round li.here .dot { background: var(--signal); border-color: var(--signal); box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 28%, transparent); }
@@ -650,7 +659,9 @@ function rendre() {
             `<figcaption>${h}</figcaption>` +
             `<button type="button" class="vg-x" data-uuid="${x.uuid}" aria-label="Supprimer la photo de ${h}">&times;</button></figure>`;
         }).join("") +
-        `</div><button type="button" class="vg-all" data-code="${s.code}">Supprimer les ${v.length} photo${v.length > 1 ? "s" : ""} de ce point</button></li>`;
+        `</div><button type="button" class="vg-all" data-code="${s.code}">` +
+        (v.length > 1 ? `Supprimer les ${v.length} photos de ce point` : "Supprimer la photo de ce point") +
+        `</button></li>`;
     }
     return bloc;
   }).join("");
@@ -846,6 +857,7 @@ async function traiter(e, source) {
   rendre(); majGps();
   majFile();   // rien ne part : l’envoi attend un appui sur « Envoyer »
   $("shoot").disabled = false;
+  remonter();
 }
 
 $("file").addEventListener("change", e => traiter(e, "camera"));
@@ -1093,10 +1105,14 @@ async function enregistrerImport(lot) {
      s'affichent donc tout de suite sous sa ligne, sans rien chercher. */
   if (derniere) { courant = derniere.site; choixManuel = true; }
   rendre(); majFile();
-  if (derniere) {
-    const li = document.querySelector(`#round button[data-code="${derniere.site.code}"]`);
-    if (li) li.scrollIntoView({ block: "center", behavior: "smooth" });
-  }
+  remonter();
+}
+
+/* Après chaque enregistrement on revient en tête : c'est là que se trouvent le
+   compteur du relevé et le bouton « Envoyer ». Sans ce retour, on enchaîne les
+   photos sans jamais revoir la file, et on repart avec tout sur le téléphone. */
+function remonter() {
+  try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch { window.scrollTo(0, 0); }
 }
 
 
