@@ -222,6 +222,23 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   border: 2px solid var(--bg); border-radius: 50%;
   background: var(--alert); color: #fff; font-size: 1rem; line-height: 1; padding: 0;
 }
+.vg img { cursor: zoom-in; }
+.loupe {
+  position: fixed; inset: 0; z-index: 50; background: #000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  gap: 14px;
+}
+.loupe img { max-width: 100%; max-height: 78vh; object-fit: contain; border-radius: 8px; }
+.loupe-t { text-align: center; color: #fff; }
+.loupe-t strong { display: block; font-weight: 600; }
+.loupe-t span { font-family: var(--font-mono); font-size: .85rem; color: #b9b9b9; }
+#loupe-x {
+  position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px;
+  width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer;
+  border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff;
+  font-size: 1.6rem; line-height: 1; padding: 0;
+}
 .vg-all, .raz {
   appearance: none; border: 0; background: none; cursor: pointer;
   font-family: var(--font-ui); font-size: .85rem; color: var(--muted);
@@ -323,6 +340,14 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   <p class="note" id="note"></p>
   <input type="file" accept="image/*" capture="environment" id="file" hidden>
   <input type="file" accept="image/*" id="file-gal" multiple hidden>
+</div>
+
+<!-- La photo réellement en file d'envoi, pas la vignette : c'est elle qui
+     partira en base, et c'est donc elle qu'il faut pouvoir juger. -->
+<div class="loupe" id="loupe" hidden>
+  <button type="button" id="loupe-x" aria-label="Fermer">&times;</button>
+  <img id="loupe-img" alt="">
+  <div class="loupe-t"><strong id="loupe-nm"></strong><span id="loupe-s"></span></div>
 </div>
 
 <script>
@@ -435,6 +460,7 @@ async function qPut(v){ try { const d=await idb(); await new Promise((ok,ko)=>{c
 async function qAll(){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(ST,"readonly").objectStore(ST).getAll();q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return memoire; } }
 async function qDel(k){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(ST,"readwrite");t.objectStore(ST).delete(k);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch { memoire = memoire.filter(x=>x.uuid!==k); } }
 
+async function qGet(k){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(ST,"readonly").objectStore(ST).get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return memoire.find(x=>x.uuid===k); } }
 async function vPut(v){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).put(v);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
 async function vAll(){ try { const d=await idb(); return await new Promise((ok,ko)=>{const q=d.transaction(VG,"readonly").objectStore(VG).getAll();q.onsuccess=()=>ok(q.result);q.onerror=()=>ko(q.error);}); } catch { return []; } }
 async function vDel(k){ try { const d=await idb(); await new Promise((ok,ko)=>{const t=d.transaction(VG,"readwrite");t.objectStore(VG).delete(k);t.oncomplete=ok;t.onerror=()=>ko(t.error);}); } catch {} }
@@ -563,7 +589,7 @@ function rendre() {
       bloc += `<li class="vgs"><div class="vg-liste">` +
         v.map(x => {
           const h = new Date(x.horodatage).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
-          return `<figure class="vg"><img src="${urlsVign.get(x.uuid)}" alt="" width="72" height="72" loading="lazy" decoding="async">` +
+          return `<figure class="vg" data-uuid="${x.uuid}"><img src="${urlsVign.get(x.uuid)}" alt="Photo de ${h}, appuie pour l'agrandir" width="72" height="72" loading="lazy" decoding="async">` +
             `<figcaption>${h}</figcaption>` +
             `<button type="button" class="vg-x" data-uuid="${x.uuid}" aria-label="Supprimer la photo de ${h}">&times;</button></figure>`;
         }).join("") +
@@ -613,6 +639,36 @@ $("shoot").addEventListener("click", () => {
 /* La liste de la tournée EST le sélecteur de point : un appui sur une ligne
    fixe le point courant. Et si un import est en attente, il bascule entier sur
    ce point — c'est le geste le plus court pour « ces photos-là vont ici ». */
+/* ── la photo en grand ─────────────────────────────────────────────────── */
+/* La vignette fait 200 px : elle dit qu'une photo existe, pas si elle est
+   nette ni si le conteneur tient dans le cadre. On va donc chercher la photo
+   de la file d'envoi — celle qui partira vraiment en base. */
+let urlLoupe = null;
+
+async function ouvrirLoupe(uuid) {
+  const v = vignettes.find(x => x.uuid === uuid); if (!v) return;
+  const item = await qGet(uuid);
+  const blob = item ? item.photo : v.vig;
+  if (urlLoupe) URL.revokeObjectURL(urlLoupe);
+  urlLoupe = URL.createObjectURL(blob);
+  $("loupe-img").src = urlLoupe;
+  const s = SITES.find(y => y.code === v.site_code);
+  const h = new Date(v.horodatage).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+  $("loupe-nm").textContent = `${s ? s.nom : v.site_code} · ${h}`;
+  $("loupe-s").textContent = item
+    ? `${Math.round(blob.size / 1024)} Ko · ${ENDPOINT ? "en attente d'envoi" : "conservée sur le téléphone"}`
+    : "photo déjà transmise — il ne reste que la vignette";
+  $("loupe").hidden = false;
+}
+
+function fermerLoupe() {
+  $("loupe").hidden = true;
+  $("loupe-img").removeAttribute("src");
+  if (urlLoupe) { URL.revokeObjectURL(urlLoupe); urlLoupe = null; }
+}
+$("loupe").addEventListener("click", fermerLoupe);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("loupe").hidden) fermerLoupe(); });
+
 /* Une photo déjà partie au serveur ne revient pas : on le dit, plutôt que de
    laisser croire que la suppression efface aussi ce qui a été transmis. */
 const AVERTI_ENVOI = () => ENDPOINT ? "\n\nLes photos déjà transmises au serveur ne seront pas retirées de la base." : "";
@@ -620,6 +676,9 @@ const AVERTI_ENVOI = () => ENDPOINT ? "\n\nLes photos déjà transmises au serve
 $("round").addEventListener("click", async e => {
   const x = e.target.closest(".vg-x");
   if (x) { await supprimerPhotos([x.dataset.uuid]); return; }
+
+  const vg = e.target.closest("figure.vg");
+  if (vg) { await ouvrirLoupe(vg.dataset.uuid); return; }
 
   const all = e.target.closest(".vg-all");
   if (all) {
