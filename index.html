@@ -107,6 +107,18 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .shoot:disabled { opacity: .45; cursor: default; box-shadow: none; }
 .shoot:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
 .shoot svg { width: 28px; height: 28px; flex: none; }
+/* Tant qu'aucun point n'est choisi, c'est LE geste à faire : le bouton prend
+   plus de place et bat doucement, pour qu'on ne cherche pas quoi toucher. */
+.shoot.choisir { padding-block: 34px; font-size: 1.35rem; animation: respire 2.4s ease-in-out infinite; }
+.shoot.choisir svg { width: 32px; height: 32px; }
+#ic-point { display: none; }
+.shoot.choisir #ic-photo { display: none; }
+.shoot.choisir #ic-point { display: block; }
+@keyframes respire {
+  0%, 100% { box-shadow: 0 2px 0 rgba(0,0,0,.18); }
+  50%      { box-shadow: 0 2px 0 rgba(0,0,0,.18), 0 0 0 7px color-mix(in srgb, var(--signal) 26%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) { .shoot.choisir { animation: none; } }
 .hint { font-size: .85rem; color: var(--muted); text-align: center; margin: -6px 0 0; }
 
 /* Même gabarit que le bouton principal — c'est la deuxième façon d'alimenter
@@ -260,7 +272,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
 
   <button class="shoot" id="shoot">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <svg id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <svg id="ic-point" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
     <span id="shoot-lbl">Photographier</span>
   </button>
   <p class="hint" id="hint">Photographie chaque point, même quand tout va bien.</p>
@@ -517,9 +530,16 @@ function rendre() {
       ? `Cadre les ${multi.map(([f, n]) => `${n} ${nomFlux(f)}`).join(" et les ")} en entier, sinon le contrôle ne compte pas.`
       : `${tot} colonne${tot > 1 ? "s" : ""} ici. Photographie le point même quand tout va bien.`;
   } else {
-    $("shoot-lbl").textContent = "Prendre une photo";
-    $("hint").textContent = "Le GPS n'a pas reconnu de point : appuie sur un îlot dans la liste ci-dessous.";
+    /* Sans point, le bouton n'est pas un appareil photo : il le dit. Un bouton
+       « Prendre une photo » qui renvoie vers une liste est un mensonge, et
+       l'agent appuie deux fois avant de comprendre. */
+    $("shoot-lbl").textContent = "Choisir un point de collecte";
+    $("hint").textContent = "Aucun point reconnu par le GPS. Choisis-le pour pouvoir photographier.";
   }
+  /* La bascule des pictogrammes passe par une classe, pas par .hidden :
+     SVGElement n'a pas cette propriété, l'affectation ne posait aucun
+     attribut et l'appareil photo restait affiché sans point. */
+  $("shoot").classList.toggle("choisir", !courant);
   /* Le bouton n'est JAMAIS désactivé par le GPS : sans point reconnu il emmène
      à la liste au lieu de l'appareil photo. Un agent devant une colonne ne doit
      jamais se retrouver bloqué par un signal capricieux. */
