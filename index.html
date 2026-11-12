@@ -287,9 +287,16 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .round li.here { font-weight: 600; }
 
 .queue {
+  position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   font-size: .85rem; color: var(--muted);
   border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px;
+}
+/* Posée en absolu : la barre apparaît et disparaît sans décaler le texte. */
+.q-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--line); }
+.q-bar b {
+  display: block; height: 100%; width: 100%; background: var(--ok);
+  transform-origin: left; transform: scaleX(0); transition: transform .25s linear;
 }
 .queue b { font-family: var(--font-mono); color: var(--ink); font-weight: 500; }
 .note {
@@ -376,6 +383,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       <span id="q-txt">Aucune photo en attente</span>
       <span class="q-sub" id="q-sub"></span>
     </div>
+    <!-- Une seule barre, animée par une transformation CSS : pas de bibliothèque,
+         pas de reflow à chaque photo. -->
+    <i class="q-bar" id="q-bar" hidden><b id="q-jauge"></b></i>
   </div>
 
   <p class="note" id="note"></p>
@@ -428,7 +438,13 @@ let SITES = [
   { code:"ALB-03", nom:"Îlot Route de l'Argentelle",      lat:45.249818, lon:4.845634, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
   { code:"ALB-04", nom:"Îlot Parking du restaurant routier", lat:45.241359, lon:4.820709, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
   { code:"ALB-05", nom:"Îlot La Tour d'Albon",            lat:45.249859, lon:4.865426, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
-  { code:"ALB-06", nom:"Îlot Creux de la Thine",          lat:45.261132, lon:4.825427, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
+  /* Relevé sur place le 12/11 : moyenne de deux photos à 11 m l'une de l'autre,
+     précision GPS 7 m. L'ancien point venait d'un géocodage et tombait 161 m
+     plus loin — assez pour que le GPS ne reconnaisse pas l'îlot en arrivant.
+     Les comptes viennent de ces mêmes photos : 2 colonnes à verre (sûr) et
+     3 dômes semi-enterrés que le modèle n'a pas su attribuer avec certitude
+     aux ordures ménagères. À confirmer sur place. */
+  { code:"ALB-06", nom:"Îlot Creux de la Thine",          lat:45.260100, lon:4.823983, postes:{ verre:2, ordures_menageres:3, emballages:1 } },
 ];
 const nbColonnes = s => Object.values(s.postes).reduce((a, b) => a + b, 0);
 
@@ -556,6 +572,10 @@ async function supprimerPhotos(uuids) {
 
 /* ── état ──────────────────────────────────────────────────────────────── */
 let position = null, courant = null, demo = false, envoiEnCours = false;
+/* Deux compteurs suffisent à la barre de progression : le lot au départ et
+   ce qui est parti. Rien à stocker, rien à restaurer — un envoi interrompu
+   repart de la file, qui est déjà la source de vérité. */
+let envoiTotal = 0, envoiFaites = 0;
 /* Un point choisi à la main l'emporte sur le GPS. Sans ce verrou, chaque
    nouvelle position émise par watchPosition — c'est-à-dire en continu sur un
    téléphone — écraserait le choix de l'agent et refermerait le bouton.
@@ -1147,8 +1167,13 @@ async function majFile() {
   b.hidden = n === 0;
   b.disabled = envoiEnCours || !navigator.onLine || !ENDPOINT;
   $("q-send-lbl").textContent = envoiEnCours
-    ? "Envoi en cours…"
+    ? `Envoi ${Math.min(envoiFaites + 1, envoiTotal)}/${envoiTotal}…`
     : `Envoyer ${n} photo${n > 1 ? "s" : ""}`;
+  /* La barre ne vit que pendant l'envoi : hors envoi, le compte de photos en
+     attente dit déjà tout. */
+  const bar = $("q-bar");
+  bar.hidden = !envoiEnCours || !envoiTotal;
+  if (!bar.hidden) $("q-jauge").style.transform = `scaleX(${envoiFaites / envoiTotal})`;
 }
 
 /* L'envoi démarre dès la photo enregistrée, sans attendre la fin de la
@@ -1168,7 +1193,9 @@ async function vider() {
   if (!ENDPOINT || envoiEnCours || !navigator.onLine) { majFile(); return; }
   const q = await qAll();
   if (!q.length) { dernierEtat = ""; majFile(); return; }
-  envoiEnCours = true; dernierEtat = ""; majFile();
+  envoiEnCours = true; dernierEtat = "";
+  envoiTotal = q.length; envoiFaites = 0;
+  majFile();
   let envoyees = 0;
   try {
     for (const it of q) {
@@ -1182,7 +1209,7 @@ async function vider() {
          reste inscrit. Sans cette trace, l'agent ne saurait plus où il est
          déjà allé et photographierait deux fois le même point. */
       await marquerEnvoyee(it.uuid);
-      envoyees++;
+      envoyees++; envoiFaites = envoyees;
       majFile();
     }
     if (!dernierEtat && envoyees) dernierEtat = `${envoyees} photo${envoyees > 1 ? "s" : ""} envoyée${envoyees > 1 ? "s" : ""}`;
@@ -1190,7 +1217,7 @@ async function vider() {
   } catch (e) {
     dernierEtat = "Réseau indisponible — nouvelle tentative plus tard";
   } finally {
-    envoiEnCours = false;
+    envoiEnCours = false; envoiTotal = 0; envoiFaites = 0;
     await rechargerVignettes();
     rendre();
   }
