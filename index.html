@@ -306,6 +306,46 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .note code { font-family: var(--font-mono); font-size: .95em; }
 :is(button, [tabindex]):focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ── Partage de l'application ──────────────────────────────────────────────
+   Le QR est écrit en dur dans la page : aucune bibliothèque à charger, donc
+   il s'affiche aussi en bord de route sans réseau. */
+.share-l {
+  appearance: none; cursor: pointer; margin: 4px auto 2px;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  background: var(--surface); color: var(--muted);
+  border: 1px solid var(--line); border-radius: 12px; padding: 11px 18px;
+  font-family: var(--font-ui); font-size: .9rem; font-weight: 600;
+}
+.share-l svg { width: 18px; height: 18px; flex: none; }
+.share-l:active { background: var(--bg); color: var(--ink); }
+.sheet {
+  position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.62);
+  display: flex; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+}
+.sheet-c {
+  background: var(--surface); color: var(--ink); border-radius: 16px;
+  width: 100%; max-width: 21rem; padding: 20px; text-align: center;
+  display: flex; flex-direction: column; gap: 13px;
+  max-height: 100%; overflow: auto;
+}
+.sheet-c h2 {
+  font-family: var(--font-label); text-transform: uppercase;
+  letter-spacing: .07em; font-size: 1.05rem; margin: 0;
+}
+/* Noir sur blanc même en thème sombre : c'est le contraste que les appareils
+   photo savent lire, pas celui du thème. */
+.qr { background: #fff; border-radius: 10px; padding: 12px; margin: 0 auto; width: 100%; max-width: 14rem; }
+.qr svg { display: block; width: 100%; height: auto; }
+.sheet-u {
+  font-family: var(--font-mono); font-size: .9rem; overflow-wrap: anywhere; margin: 0;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px;
+}
+.sheet-h { font-size: .85rem; color: var(--muted); margin: 0; }
+.sheet-a { display: flex; flex-direction: column; gap: 8px; }
+.sheet-a .q-btn { width: 100%; padding: 12px 15px; font-size: .95rem; }
+.sheet-a .q-btn.prim { background: var(--signal); color: var(--signal-ink); border-color: transparent; }
 </style>
 </head>
 <body>
@@ -389,6 +429,13 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   </div>
 
   <p class="note" id="note"></p>
+
+  <!-- Partage : action occasionnelle, donc en pied de page — la zone du pouce
+       reste réservée à la photo. -->
+  <button type="button" class="share-l" id="share">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg>
+    <span>Partager l'application</span>
+  </button>
   <input type="file" accept="image/*" capture="environment" id="file" hidden>
   <input type="file" accept="image/*" id="file-gal" multiple hidden>
 </div>
@@ -399,6 +446,28 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   <button type="button" id="loupe-x" aria-label="Fermer">&times;</button>
   <img id="loupe-img" alt="">
   <div class="loupe-t"><strong id="loupe-nm"></strong><span id="loupe-s"></span></div>
+</div>
+
+<!-- Partage : le QR pointe sur l'adresse publique collecte.mairie-albon.fr,
+     pas sur l'URL GitHub. Les modules sont figés dans le fichier, générés
+     une fois pour toutes — rien à télécharger pour l'afficher. -->
+<div class="sheet" id="share-s" hidden>
+  <div class="sheet-c" role="dialog" aria-modal="true" aria-labelledby="share-t">
+    <h2 id="share-t">Partager l'application</h2>
+    <p class="sheet-h">Fais scanner ce code avec l'appareil photo d'un autre téléphone&nbsp;: la tournée s'ouvre directement.</p>
+    <div class="qr">
+      <svg viewBox="0 0 29 29" shape-rendering="crispEdges" role="img" aria-label="QR code vers collecte.mairie-albon.fr">
+        <path fill="#fff" d="M0 0h29v29H0z"/>
+        <path stroke="#000" d="M0 0.5h7m2 0h2m1 0h1m2 0h2m1 0h3m1 0h7M0 1.5h1m5 0h1m2 0h1m1 0h2m7 0h1m1 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h2m4 0h1m1 0h1m5 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m3 0h1m3 0h4m2 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h3m1 0h4m1 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h2m1 0h6m5 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h1m4 0h1m1 0h1m3 0h1M0 8.5h1m1 0h5m4 0h2m1 0h2m1 0h1m2 0h1m1 0h5M3 9.5h3m6 0h1m2 0h2m1 0h7m3 0h1M0 10.5h1m1 0h2m2 0h2m3 0h1m6 0h1m1 0h1m3 0h1M0 11.5h2m2 0h1m2 0h5m2 0h1m1 0h1m6 0h1m1 0h1m1 0h1M0 12.5h2m1 0h1m2 0h2m9 0h1m1 0h1m5 0h2M1 13.5h1m2 0h1m3 0h3m1 0h4m1 0h8m3 0h1M0 14.5h1m1 0h8m1 0h6m3 0h2m2 0h3M0 15.5h2m1 0h3m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m3 0h2m3 0h1M4 16.5h1m1 0h1m1 0h1m2 0h1m2 0h1m2 0h1m7 0h2M0 17.5h1m1 0h1m1 0h2m1 0h1m3 0h1m6 0h3m1 0h3m1 0h1m1 0h1M0 18.5h1m1 0h2m2 0h1m2 0h2m1 0h1m2 0h1m1 0h2m1 0h1m2 0h1m2 0h1M0 19.5h1m2 0h3m2 0h1m2 0h1m2 0h1m3 0h1m1 0h2m1 0h1m3 0h1M0 20.5h1m3 0h1m1 0h2m1 0h1m2 0h1m2 0h3m1 0h6m1 0h3M8 21.5h7m1 0h3m1 0h1m3 0h5M0 22.5h7m2 0h3m1 0h3m1 0h1m1 0h2m1 0h1m1 0h3M0 23.5h1m5 0h1m1 0h1m1 0h4m2 0h1m2 0h2m3 0h1M0 24.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m2 0h5m1 0h2M0 25.5h1m1 0h3m1 0h1m1 0h1m2 0h2m3 0h3m1 0h1m4 0h4M0 26.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h9M0 27.5h1m5 0h1m3 0h1m5 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1M0 28.5h7m1 0h5m1 0h1m2 0h2m5 0h1m1 0h1"/>
+      </svg>
+    </div>
+    <p class="sheet-u" id="share-u">https://collecte.mairie-albon.fr/</p>
+    <div class="sheet-a">
+      <button type="button" class="q-btn prim" id="share-n" hidden>Partager le lien…</button>
+      <button type="button" class="q-btn" id="share-c">Copier le lien</button>
+      <button type="button" class="q-btn" id="share-x">Fermer</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1304,6 +1373,44 @@ rendre();
 chargerReferentiel();
 // Les photos du jour sont relues au démarrage : rouvrir la page ne perd rien.
 rechargerVignettes().then(rendre).catch(() => {});
+
+/* ──────────────────────────────────────────────────────────────────────────
+   PARTAGE DE L'APPLICATION
+   L'adresse est écrite en clair et non déduite de location.href : ouverte
+   depuis l'ancienne URL GitHub, la page doit quand même partager la bonne.
+   ────────────────────────────────────────────────────────────────────────── */
+const URL_PARTAGE = "https://collecte.mairie-albon.fr/";
+
+function ouvrirPartage() { $("share-s").hidden = false; }
+function fermerPartage() { $("share-s").hidden = true; $("share-c").textContent = "Copier le lien"; }
+
+$("share").addEventListener("click", ouvrirPartage);
+$("share-x").addEventListener("click", fermerPartage);
+// Un clic sur le fond ferme ; un clic dans la carte ne doit rien faire.
+$("share-s").addEventListener("click", e => { if (e.target === $("share-s")) fermerPartage(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("share-s").hidden) fermerPartage(); });
+
+$("share-c").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(URL_PARTAGE);
+    $("share-c").textContent = "Lien copié";
+  } catch {
+    // Pas de presse-papiers (http, vieux navigateur) : on sélectionne le texte
+    // pour que l'appui long « Copier » du téléphone fonctionne quand même.
+    const r = document.createRange(); r.selectNodeContents($("share-u"));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    $("share-c").textContent = "Appuie longuement sur le lien";
+  }
+});
+
+// Feuille de partage native : seulement là où elle existe.
+if (navigator.share) {
+  $("share-n").hidden = false;
+  $("share-n").addEventListener("click", () => {
+    navigator.share({ title: "Tournée PAV — Albon", text: "Relevé des points de collecte d'Albon", url: URL_PARTAGE })
+      .catch(() => {});
+  });
+}
 </script>
 
 </body>
