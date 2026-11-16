@@ -227,9 +227,10 @@ details[open] summary{margin-bottom:8px}
 
 <script>
 const REF = [
- ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"verre",0],
- ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"ordures_menageres",0],
- ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"emballages",0],
+ ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"verre",1],
+ ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"ordures_menageres",4],
+ ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"emballages",1],
+ ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"papier",1],
  ["ALB-02","Îlot Saint-Martin-des-Rosiers",45.237630,4.871429,"verre",0],
  ["ALB-02","Îlot Saint-Martin-des-Rosiers",45.237630,4.871429,"ordures_menageres",0],
  ["ALB-02","Îlot Saint-Martin-des-Rosiers",45.237630,4.871429,"emballages",0],
@@ -239,9 +240,9 @@ const REF = [
  ["ALB-04","Îlot Parking du restaurant routier",45.241359,4.820709,"verre",0],
  ["ALB-04","Îlot Parking du restaurant routier",45.241359,4.820709,"ordures_menageres",0],
  ["ALB-04","Îlot Parking du restaurant routier",45.241359,4.820709,"emballages",0],
- ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"verre",0],
- ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"ordures_menageres",0],
- ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"emballages",0],
+ ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"verre",1],
+ ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"ordures_menageres",1],
+ ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"emballages",1],
  ["ALB-06","Îlot Creux de la Thine",45.261132,4.825427,"verre",2],
  ["ALB-06","Îlot Creux de la Thine",45.261132,4.825427,"ordures_menageres",0],
  ["ALB-06","Îlot Creux de la Thine",45.261132,4.825427,"emballages",0]
@@ -268,7 +269,16 @@ const OBS = [
  ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","ordures_menageres","18LKlStVsQib0xLTcTpVVl5od1Pb6WHjO",0,3,0,0,0,1,5,"inadequation",0.70,"Trois conteneurs d'ordures ménagères, rien posé dessus ; cinq sacs déposés au sol à leur pied."],
  ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","verre","18LKlStVsQib0xLTcTpVVl5od1Pb6WHjO",0,1,0,0,0,0,0,"",0.70,"Une colonne à verre visible dans le cadre, rien posé dessus ni au sol."],
  ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","emballages","18LKlStVsQib0xLTcTpVVl5od1Pb6WHjO",0,0,0,0,0,0,0,"",0.50,"Aucune colonne à emballages identifiable dans le cadre."],
- ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","papier","18LKlStVsQib0xLTcTpVVl5od1Pb6WHjO",0,0,0,0,0,0,0,"",0.50,"Aucune colonne à papier identifiable dans le cadre."]
+ ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","papier","18LKlStVsQib0xLTcTpVVl5od1Pb6WHjO",0,0,0,0,0,0,0,"",0.50,"Aucune colonne à papier identifiable dans le cadre."],
+ ["6788e7d8","2026-11-16T07:51:32.493Z","ALB-01","verre","1ja2fsm8yy3i_o-R4WQ5SnzEcQEg-Or2n",0,1,0,0,0,0,0,"",0.85,"Une colonne verte à verre au fond à droite, ouvertures rondes visibles, rien posé dessus ni à son pied."],
+ ["6788e7d8","2026-11-16T07:51:32.493Z","ALB-01","emballages","1ja2fsm8yy3i_o-R4WQ5SnzEcQEg-Or2n",0,1,0,0,0,0,0,"",0.88,"Une colonne à ouvertures jaunes au centre, ouvertures dégagées, rien au sol."],
+ ["6788e7d8","2026-11-16T07:51:32.493Z","ALB-01","papier","1ja2fsm8yy3i_o-R4WQ5SnzEcQEg-Or2n",0,1,0,0,0,0,0,"",0.40,"Colonne bleue étiquetée « papier cartonnette » à gauche, rien au sol."],
+ ["f3a2e4bf","2026-11-16T07:51:20.124Z","ALB-01","ordures_menageres","1OTOxhS4M5hXf4B1wQ4UTCnEQ6yhiIpE_",0,4,0,0,0,0,0,"",0.50,"Quatre colonnes semi-enterrées à dôme gris foncé, aucune saturation visible, rien au sol."],
+ ["7ca26150","2026-11-16T07:55:21.208Z","ALB-05","emballages","1gkxSOC2U36S7EL6ilyK8ST_F3msNSGT7",0,1,0,0,0,0,0,"",0.75,"Une colonne emballages (plaquette jaune), rien posé dessus ni au sol."],
+ ["ff8d11a2","2026-11-16T07:55:05.818Z","ALB-05","verre","1Xduic0y1xhvbanV8-VOB_EpF6oOLB6P0",0,1,0,0,0,0,0,"",0.85,"Colonne grise à opercule vert avec deux ouvertures rondes, rien au sol."],
+ ["ff8d11a2","2026-11-16T07:55:05.818Z","ALB-05","ordures_menageres","1Xduic0y1xhvbanV8-VOB_EpF6oOLB6P0",0,1,0,0,0,0,0,"",0.65,"Petit conteneur gris semi-enterré à tambour métallique, rien au sol."],
+ ["ff8d11a2","2026-11-16T07:55:05.818Z","ALB-05","emballages","1Xduic0y1xhvbanV8-VOB_EpF6oOLB6P0",0,1,0,0,0,0,0,"",0.80,"Colonne grise à opercule jaune et blanc avec consignes de tri, rien au sol."],
+ ["ff8d11a2","2026-11-16T07:55:05.818Z","ALB-05","papier","1Xduic0y1xhvbanV8-VOB_EpF6oOLB6P0",0,1,0,0,0,0,0,"",0.40,"Colonne grise à opercule bleu ; le flux papier est absent du référentiel de ce point, lecture à confirmer."]
 ].map(r=>({uuid:r[0],ts:r[1],site:r[2],flux:r[3],photo:r[4],inaccessible:!!r[5],vues:r[6],dessus:r[7],bloquees:r[8],pleines:r[9],depotSol:!!r[10],sacs:r[11],cause:r[12],confiance:r[13],texte:r[14],
   test:r[0].startsWith("test-")||r[0].startsWith("cors-")}));
 

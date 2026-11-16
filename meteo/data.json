@@ -1,21 +1,21 @@
 {
   "commune": "Albon",
-  "maj": "2026-11-16T07:18:17.284Z",
+  "maj": "2026-11-16T08:33:21.017Z",
   "global": {
-    "lettre": "C",
-    "lab": "Moyen",
-    "pts": 4.3,
-    "notes": 3
+    "lettre": "B",
+    "lab": "Bon",
+    "pts": 3.3,
+    "notes": 4
   },
   "total": 6,
   "points": [
     {
       "code": "ALB-01",
       "nom": "Îlot École Louise Michel",
-      "lettre": null,
-      "lab": null,
-      "pts": null,
-      "dernier": null
+      "lettre": "A",
+      "lab": "Impeccable",
+      "pts": 0,
+      "dernier": "2026-11-16T07:51:32.493Z"
     },
     {
       "code": "ALB-02",
@@ -47,7 +47,7 @@
       "lettre": "A",
       "lab": "Impeccable",
       "pts": 0,
-      "dernier": "2026-11-11T10:07:45.000Z"
+      "dernier": "2026-11-16T07:55:21.208Z"
     },
     {
       "code": "ALB-06",
