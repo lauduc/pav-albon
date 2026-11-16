@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propreté des points de collecte</title>
+<!-- VIGNETTE À HAUTEUR FIXE (420 px).
+     Elle est faite pour vivre dans une iframe sur le site d'une mairie, sur un
+     CMS qu'on ne maîtrise pas. Deux conséquences qui expliquent tout le reste :
+
+     1. La hauteur ne doit JAMAIS bouger, sinon il faudrait un script de
+        redimensionnement entre les deux domaines — et c'est précisément ce que
+        les CMS verrouillés bloquent. D'où les lignes à hauteur imposée et les
+        noms coupés à l'ellipse plutôt qu'au retour à la ligne.
+     2. Le thème est CLAIR par défaut, même si l'appareil du visiteur est en
+        sombre : une vignette sombre dans une page claire se voit comme le nez
+        au milieu de la figure. ?theme=dark ou ?theme=auto pour en décider.
+
+     Les données viennent de data.json, à côté. La vignette ne calcule rien :
+     le Bac-Score est déjà calculé en amont, pour que la page détaillée et la
+     vignette ne puissent pas diverger. -->
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+  --bg: #FFFFFF; --ink: #1A1F1C; --muted: #6A716B; --line: #D8DCD7; --soft: #F1F3F0;
+  --sA: #1b7a3e; --sB: #74a524; --sC: #d7a208; --sD: #d96a18; --sE: #bd2a1d; --sOff: #b9c2bf;
+  --font-ui: "Barlow", system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-label: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+/* Le sombre ne s'applique que si l'intégrateur l'a demandé. */
+:root[data-theme="dark"] {
+  --bg: #1E221F; --ink: #E9EDE8; --muted: #9AA39B; --line: #333B34; --soft: #262B27;
+  --sA: #3fa763; --sB: #8cc23a; --sC: #e8bb34; --sD: #ef8a43; --sE: #e8574a; --sOff: #3a4a46;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) { :root[data-theme="auto"] {
+  --bg: #1E221F; --ink: #E9EDE8; --muted: #9AA39B; --line: #333B34; --soft: #262B27;
+  --sA: #3fa763; --sB: #8cc23a; --sC: #e8bb34; --sD: #ef8a43; --sE: #e8574a; --sOff: #3a4a46;
+  color-scheme: dark;
+} }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-ui); font-size: 15px; line-height: 1.4;
+  display: flex; flex-direction: column;
+  padding: 14px 15px 12px; gap: 10px;
+  overflow: hidden;              /* la hauteur est un contrat : rien ne déborde */
+}
+a { color: inherit; }
+
+/* ── En-tête : la note, puis ce qu'elle veut dire ─────────────────────────── */
+.hd { display: flex; align-items: center; gap: 12px; }
+.note {
+  flex: none; width: 58px; height: 58px; border-radius: 13px;
+  display: grid; place-items: center; color: #fff;
+  font-family: var(--font-label); font-size: 2.3rem; font-weight: 600; line-height: 1;
+  background: var(--sOff);
+}
+.hd-t { min-width: 0; }
+.eyebrow {
+  font-family: var(--font-label); text-transform: uppercase; letter-spacing: .08em;
+  font-size: .78rem; font-weight: 600; color: var(--muted);
+  display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lab { font-size: 1.15rem; font-weight: 600; display: block; }
+.sub { font-size: .82rem; color: var(--muted); display: block; }
+
+/* ── Échelle A→E ──────────────────────────────────────────────────────────── */
+.ech { display: flex; gap: 3px; }
+.ech b {
+  flex: 1; text-align: center; border-radius: 4px; padding: 3px 0;
+  font-family: var(--font-label); font-weight: 600; font-size: .85rem;
+  color: #fff; opacity: .34;
+}
+.ech b.on { opacity: 1; outline: 2px solid var(--ink); outline-offset: 1px; }
+
+/* ── Liste des points ─────────────────────────────────────────────────────── */
+.pts { flex: 1; min-height: 0; list-style: none; margin: 0; padding: 0; overflow: hidden; }
+.pts li {
+  display: flex; align-items: center; gap: 9px;
+  height: 30px;                  /* hauteur imposée : 6 lignes = 180 px, toujours */
+  border-top: 1px solid var(--line);
+}
+.pts li:first-child { border-top: 0; }
+.pts .chip {
+  flex: none; width: 21px; height: 21px; border-radius: 6px;
+  display: grid; place-items: center; background: var(--sOff); color: #fff;
+  font-family: var(--font-label); font-weight: 600; font-size: .82rem; line-height: 1;
+}
+.pts .nm {
+  flex: 1; min-width: 0; font-size: .88rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pts .cd { flex: none; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); }
+.pts li.vide .nm { color: var(--muted); }
+
+/* ── Pied ─────────────────────────────────────────────────────────────────── */
+.ft {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border-top: 1px solid var(--line); padding-top: 9px;
+}
+.ft span { font-size: .74rem; color: var(--muted); }
+.ft a {
+  flex: none; text-decoration: none; font-weight: 600; font-size: .82rem;
+  background: var(--soft); border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 13px;
+}
+.ft a:hover { background: var(--bg); }
+.err { margin: auto; text-align: center; color: var(--muted); font-size: .9rem; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+</head>
+<body>
+<div id="app"><p class="err">Chargement…</p></div>
+
+<script>
+const COULEUR = { A: "--sA", B: "--sB", C: "--sC", D: "--sD", E: "--sE" };
+const PAGE = "https://collecte.mairie-albon.fr/meteo/";   // la page détaillée
+
+const theme = new URLSearchParams(location.search).get("theme");
+if (theme === "dark" || theme === "auto") document.documentElement.dataset.theme = theme;
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const dateFR = iso => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+
+function rendre(d) {
+  const g = d.global;
+  const releves = d.points.filter(p => p.lettre);
+  const dernier = releves.map(p => p.dernier).sort().pop();
+
+  // Le dénominateur est affiché tel quel : tant que la moitié des points n'a
+  // pas été photographiée, la note ne vaut que pour ceux qui l'ont été, et le
+  // lecteur doit le voir du premier coup d'œil.
+  const couv = releves.length + " des " + d.total + " points relevé" + (releves.length > 1 ? "s" : "");
+
+  // La hauteur est fixe, donc le nombre de lignes l'est aussi : MAX_LIGNES tient
+  // dans la vignette quelle que soit la commune. Au-delà on remplace la dernière
+  // ligne par un compteur, plutôt que de laisser la liste déborder.
+  // Les points les plus dégradés passent en tête : c'est ce qu'un habitant veut
+  // voir, et ce qui n'a pas encore été relevé ferme la marche.
+  const ordonne = d.points.slice().sort((a, b) =>
+    (b.pts ?? -1) - (a.pts ?? -1) || a.code.localeCompare(b.code));
+  const MAX_LIGNES = 6;
+  const tiennent = d.points.length > MAX_LIGNES ? MAX_LIGNES - 1 : MAX_LIGNES;
+  const liste = ordonne.slice(0, tiennent);
+  const reste = ordonne.length - liste.length;
+
+  document.getElementById("app").outerHTML = `
+    <div class="hd">
+      <div class="note" style="background:var(${g ? COULEUR[g.lettre] : "--sOff"})">${g ? g.lettre : "?"}</div>
+      <div class="hd-t">
+        <span class="eyebrow">Points de collecte — ${esc(d.commune)}</span>
+        <strong class="lab">${g ? esc(g.lab) : "Pas encore noté"}</strong>
+        <span class="sub">${esc(couv)}${dernier ? " · dernier le " + dateFR(dernier) : ""}</span>
+      </div>
+    </div>
+
+    <div class="ech" role="img" aria-label="Bac-Score ${g ? g.lettre : "non attribué"} sur une échelle de A à E">
+      ${d.echelle.map(x => `<b class="${g && x.l === g.lettre ? "on" : ""}" style="background:var(${COULEUR[x.l]})">${x.l}</b>`).join("")}
+    </div>
+
+    <ul class="pts">
+      ${liste.map(p => `
+        <li class="${p.lettre ? "" : "vide"}">
+          <span class="chip" style="background:var(${p.lettre ? COULEUR[p.lettre] : "--sOff"})"
+                title="${p.lettre ? "Bac-Score " + p.lettre + " — " + esc(p.lab) : "Aucun relevé"}">${p.lettre || "–"}</span>
+          <span class="nm">${esc(p.nom)}</span>
+          <span class="cd">${p.lettre ? esc(p.lab) : "sans relevé"}</span>
+        </li>`).join("")}
+      ${reste > 0 ? `<li class="vide"><span class="chip">+</span><span class="nm">${reste} autre${reste > 1 ? "s" : ""} point${reste > 1 ? "s" : ""}</span><span class="cd">voir le détail</span></li>` : ""}
+    </ul>
+
+    <div class="ft">
+      <span>Bac-Score · relevés citoyens</span>
+      <a href="${PAGE}" target="_blank" rel="noopener">Voir le détail</a>
+    </div>`;
+}
+
+fetch("data.json", { cache: "no-cache" })
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(rendre)
+  .catch(() => {
+    document.getElementById("app").innerHTML =
+      '<p class="err">Les relevés ne sont pas disponibles pour le moment.</p>';
+  });
+</script>
+</body>
+</html>

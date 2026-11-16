@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intégrer la propreté des points de collecte sur votre site</title>
+<!-- Page destinée à la personne qui édite le site d'une mairie — souvent une
+     secrétaire ou un élu, dans un éditeur WYSIWYG, sur un CMS qu'elle ne peut
+     pas modifier. Donc : trois moyens classés du plus universel au plus
+     exigeant, chacun avec un bouton Copier, et aucune étape technique. -->
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+  --bg: #F4F5F2; --surface: #FFFFFF; --ink: #1A1F1C; --muted: #6A716B;
+  --line: #D8DCD7; --soft: #EFF1ED; --signal: #E8B000; --ok: #2E7D4F;
+  --font-ui: "Barlow", system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-label: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141714; --surface: #1E221F; --ink: #E9EDE8; --muted: #9AA39B;
+  --line: #30362F; --soft: #262B27; --signal: #F2C230; --ok: #5FBE85;
+  color-scheme: dark;
+} }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-ui); font-size: 16px; line-height: 1.5;
+}
+.wrap { max-width: 44rem; margin: 0 auto; padding: 28px 18px 60px; }
+h1 { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .04em; font-size: 1.8rem; margin: 0 0 6px; }
+.chapo { color: var(--muted); margin: 0 0 26px; }
+h2 { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .05em; font-size: 1.15rem; margin: 0 0 4px; }
+.step {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; margin-bottom: 16px;
+}
+.rank {
+  display: inline-block; background: var(--signal); color: #2A2000;
+  font-family: var(--font-label); font-weight: 600; font-size: .82rem;
+  border-radius: 999px; padding: 2px 10px; margin-bottom: 8px;
+}
+.step p { margin: 0 0 12px; }
+.step p:last-of-type { margin-bottom: 0; }
+.q { color: var(--muted); font-size: .9rem; }
+code, pre {
+  font-family: var(--font-mono); font-size: .85rem;
+}
+pre {
+  background: var(--soft); border: 1px solid var(--line); border-radius: 9px;
+  padding: 11px 12px; margin: 0; overflow-x: auto; white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.row { display: flex; gap: 9px; align-items: flex-start; margin-top: 10px; }
+.row pre { flex: 1; min-width: 0; }
+button {
+  appearance: none; cursor: pointer; flex: none;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 9px;
+  font-family: var(--font-ui); font-size: .85rem; font-weight: 600;
+  padding: 10px 14px;
+}
+button:active { background: var(--soft); }
+button.ok { border-color: var(--ok); color: var(--ok); }
+.demo { margin-top: 14px; border: 1px solid var(--line); border-radius: 11px; overflow: hidden; background: var(--surface); }
+.demo iframe { display: block; width: 100%; height: 420px; border: 0; }
+.note { font-size: .88rem; color: var(--muted); border-left: 3px solid var(--line); padding-left: 12px; margin-top: 22px; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+</head>
+<body>
+<div class="wrap">
+
+<h1>Mettre la propreté des points de collecte sur votre site</h1>
+<p class="chapo">Trois moyens, du plus simple au plus complet. Prenez le premier qui marche
+chez vous&nbsp;: aucun ne demande d'installer quoi que ce soit.</p>
+
+<div class="step">
+  <span class="rank">1 · marche partout</span>
+  <h2>Un lien</h2>
+  <p>Collez cette adresse dans une actualité, une page ou le menu de votre site.
+  Les habitants arrivent sur la page complète, avec la carte et les photos.</p>
+  <div class="row">
+    <pre id="s1">https://collecte.mairie-albon.fr/meteo/</pre>
+    <button type="button" data-copy="s1">Copier</button>
+  </div>
+</div>
+
+<div class="step">
+  <span class="rank">2 · presque partout</span>
+  <h2>Une image</h2>
+  <p>Si votre éditeur permet d'insérer une image <em>par son adresse</em> — c'est
+  presque toujours le cas, même sur les sites les plus verrouillés —, utilisez
+  celle-ci. Elle est <strong>regénérée à chaque mise à jour des relevés</strong>&nbsp;:
+  une fois l'adresse collée, vous n'avez plus rien à refaire.</p>
+  <div class="row">
+    <pre id="s2">https://collecte.mairie-albon.fr/meteo/widget.png</pre>
+    <button type="button" data-copy="s2">Copier</button>
+  </div>
+  <p class="q" style="margin-top:10px">Pensez à mettre le lien du point 1 sur cette image,
+  pour que le clic mène au détail.</p>
+</div>
+
+<div class="step">
+  <span class="rank">3 · si votre site accepte le code</span>
+  <h2>Un encart vivant</h2>
+  <p>Cherchez dans votre éditeur un bloc nommé «&nbsp;HTML libre&nbsp;»,
+  «&nbsp;Code&nbsp;» ou «&nbsp;Intégration&nbsp;», et collez cette ligne. L'encart
+  se met à jour tout seul, sans passer par l'image.</p>
+  <div class="row">
+    <pre id="s3">&lt;iframe src="https://collecte.mairie-albon.fr/meteo/widget.html" width="100%" height="420" style="border:0" loading="lazy" title="Propreté des points de collecte"&gt;&lt;/iframe&gt;</pre>
+    <button type="button" data-copy="s3">Copier</button>
+  </div>
+  <p class="q" style="margin-top:10px">La hauteur de 420&nbsp;pixels n'est pas à changer&nbsp;:
+  l'encart est dessiné pour tenir exactement dedans, sur mobile comme sur ordinateur.
+  Pour un fond sombre, ajoutez <code>?theme=dark</code> à la fin de l'adresse.</p>
+
+  <div class="demo">
+    <iframe src="widget.html" title="Aperçu de l'encart" loading="lazy"></iframe>
+  </div>
+</div>
+
+<p class="note">Si rien de tout cela ne passe sur votre site, écrivez-nous&nbsp;:
+le lien du point 1 fonctionne toujours, et on peut vous fournir l'image par mail
+chaque mois pour le bulletin municipal.</p>
+
+</div>
+
+<script>
+document.querySelectorAll("button[data-copy]").forEach(b => {
+  b.addEventListener("click", async () => {
+    const txt = document.getElementById(b.dataset.copy).textContent;
+    try {
+      await navigator.clipboard.writeText(txt);
+      b.textContent = "Copié"; b.classList.add("ok");
+    } catch {
+      // Pas de presse-papiers : on sélectionne, l'utilisateur fait Ctrl+C.
+      const r = document.createRange(); r.selectNodeContents(document.getElementById(b.dataset.copy));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      b.textContent = "Faites Ctrl+C";
+    }
+    setTimeout(() => { b.textContent = "Copier"; b.classList.remove("ok"); }, 2500);
+  });
+});
+</script>
+</body>
+</html>

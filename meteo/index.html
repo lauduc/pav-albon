@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#E8B000">
+<link rel="icon" href="../favicon.png" sizes="32x32" type="image/png">
+<title>Météo des points de collecte</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout : bandeau de synthèse, grille d'îlots, carte schématique, statistiques, galerie. */
+:root{
+  --bg:#f4f6f5; --surface:#ffffff; --surface-2:#eceeed; --line:#d7dcda;
+  --ink:#16201d; --ink-2:#4a5853; --ink-3:#77837e;
+  --accent:#0d6a66; --accent-soft:#d8ebe9;
+  --good:#2b7a4b; --good-bg:#e2f1e7;
+  --warn:#9a6a07; --warn-bg:#f7eed7;
+  --bad:#b4530d; --bad-bg:#fae7d6;
+  --crit:#ab2318; --crit-bg:#fae0dd;
+  --none:#7b8783; --none-bg:#e7eae9;
+  --sA:#1b7a3e; --sB:#74a524; --sC:#d7a208; --sD:#d96a18; --sE:#bd2a1d; --sOff:#b9c2bf;
+  --font:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101614; --surface:#182220; --surface-2:#1f2b28; --line:#2d3b37;
+  --ink:#eaf0ee; --ink-2:#b2c0bb; --ink-3:#83918c;
+  --accent:#4fb3ad; --accent-soft:#17312f;
+  --good:#6fcb92; --good-bg:#15291e;
+  --warn:#e3b457; --warn-bg:#2c2415;
+  --bad:#ef9355; --bad-bg:#302014;
+  --crit:#f0756a; --crit-bg:#331a18;
+  --none:#8d9a95; --none-bg:#222c29;
+  --sA:#3fa763; --sB:#8cc23a; --sC:#e8bb34; --sD:#ef8a43; --sE:#e8574a; --sOff:#3a4a46;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#101614; --surface:#182220; --surface-2:#1f2b28; --line:#2d3b37;
+  --ink:#eaf0ee; --ink-2:#b2c0bb; --ink-3:#83918c;
+  --accent:#4fb3ad; --accent-soft:#17312f;
+  --good:#6fcb92; --good-bg:#15291e;
+  --warn:#e3b457; --warn-bg:#2c2415;
+  --bad:#ef9355; --bad-bg:#302014;
+  --crit:#f0756a; --crit-bg:#331a18;
+  --none:#8d9a95; --none-bg:#222c29;
+  --sA:#3fa763; --sB:#8cc23a; --sC:#e8bb34; --sD:#ef8a43; --sE:#e8574a; --sOff:#3a4a46;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+h1{font-size:clamp(1.5rem,4vw,2rem);font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-size:1.05rem;font-weight:600;letter-spacing:-.01em;margin:0}
+.eyebrow{font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+.sub{color:var(--ink-2);margin:8px 0 0;max-width:62ch}
+header .meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;font-size:.82rem;color:var(--ink-3);font-family:var(--mono)}
+section{margin-top:40px}
+.sechead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.sechead p{margin:0;font-size:.82rem;color:var(--ink-3);max-width:52ch}
+
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;color:var(--ink-2);cursor:pointer;user-select:none}
+.toggle input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.site{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.site-top{display:flex;gap:12px;align-items:flex-start}
+.site-name{font-weight:600;font-size:.98rem;line-height:1.3}
+.site-code{font-family:var(--mono);font-size:.72rem;color:var(--ink-3);letter-spacing:.04em}
+.site-when{font-family:var(--mono);font-size:.72rem;color:var(--ink-3);margin-top:3px}
+.wx{flex:0 0 auto;width:46px;height:46px;border-radius:9px;display:grid;place-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.lv0{color:var(--good);background:var(--good-bg)} .lv1{color:var(--warn);background:var(--warn-bg)}
+.lv2{color:var(--bad);background:var(--bad-bg)} .lv3{color:var(--crit);background:var(--crit-bg)}
+.lvx{color:var(--none);background:var(--none-bg)}
+.scorebox{display:flex;align-items:center;gap:12px;background:var(--surface-2);border-radius:9px;padding:10px 12px}
+.bac{flex:0 0 auto;display:grid;place-items:center}
+.scoreside{min-width:0;display:flex;flex-direction:column;gap:5px}
+.score{display:flex;align-items:flex-end;gap:2px}
+.score b{width:18px;height:23px;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:.74rem;color:#fff;border-radius:3px;opacity:.34}
+.score b:first-child{border-radius:6px 3px 3px 6px}
+.score b:last-child{border-radius:3px 6px 6px 3px}
+.score b.on{opacity:1;width:25px;height:31px;font-size:.95rem;border-radius:6px}
+.scoretxt{font-size:.76rem;color:var(--ink-2)}
+.scoretxt b{font-weight:600;color:var(--ink)}
+.fscore{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;font-family:var(--mono);font-size:.72rem;font-weight:600;color:#fff;flex:0 0 auto}
+.lanes{display:grid;gap:9px}
+.lane{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;font-size:.8rem}
+.lane .lbl{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lane .cells{display:flex;gap:3px}
+.lane .cells i{flex:1;height:10px;border-radius:2px;background:var(--surface-2)}
+@media (max-width:420px){.lane{grid-template-columns:104px 1fr}}
+.flux{display:flex;flex-direction:column;gap:7px;border-top:1px solid var(--line);padding-top:11px}
+.frow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;min-width:0}
+.fname{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--ink-2);min-width:0}
+.fname b{font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;border:1px solid rgba(0,0,0,.18)}
+.fdetail{font-family:var(--mono);font-size:.7rem;color:var(--ink-3);grid-column:1/-1;margin-top:-3px}
+.badge{font-size:.64rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+
+.mapwrap{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.mapwrap svg{display:block;width:100%;height:auto;max-width:100%}
+.maplegend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:12px;font-size:.76rem;color:var(--ink-2)}
+.maplegend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--surface)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.tile .k{font-size:.72rem;color:var(--ink-3);letter-spacing:.03em}
+.tile .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.7rem;font-weight:600;line-height:1.1;margin-top:5px}
+.tile .n{font-size:.74rem;color:var(--ink-2);margin-top:5px}
+.tile.alert{border-color:var(--crit);background:var(--crit-bg)}
+.tile.alert .v,.tile.alert .k,.tile.alert .n{color:var(--crit)}
+
+.bars{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:12px}
+.bar{display:grid;grid-template-columns:132px 1fr 42px;gap:10px;align-items:center;margin-top:9px;font-size:.8rem}
+.bar:first-of-type{margin-top:0}
+.bar .track{background:var(--surface-2);border-radius:3px;height:12px;overflow:hidden}
+.bar .fill{height:100%;border-radius:3px 4px 4px 3px;background:var(--accent)}
+.bar .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--ink-2)}
+.bar .lab{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.photo{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.thumb{aspect-ratio:4/3;max-width:100%;background:var(--surface-2);display:grid;place-items:center;position:relative;border-bottom:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .ph{text-align:center;padding:14px;color:var(--ink-3);font-size:.74rem;line-height:1.4}
+.pbody{padding:13px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.pmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ptext{font-size:.79rem;color:var(--ink-2);margin:0}
+.plink{font-size:.77rem;font-weight:600;color:var(--accent);text-decoration:none;align-self:flex-start}
+.plink:hover{text-decoration:underline}
+a:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+.note{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:14px 16px;margin-top:14px}
+.note h3{margin:0 0 6px;font-size:.86rem;font-weight:600}
+.note p,.note li{font-size:.81rem;color:var(--ink-2);margin:5px 0}
+.note ul{margin:6px 0 0;padding-left:18px}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);font-size:.76rem;color:var(--ink-3)}
+footer p{margin:5px 0}
+details summary{cursor:pointer;font-size:.82rem;color:var(--ink-2);font-weight:500}
+details[open] summary{margin-bottom:8px}
+@media (max-width:420px){.bar{grid-template-columns:96px 1fr 36px}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Pack mairies · module points de collecte</p>
+  <h1>Météo des points de collecte</h1>
+  <p class="sub">Chaque îlot d'apport volontaire porte deux indications. Le <b>Bac-Score</b>, de A à E, note la situation durable du point sur trente jours. La <b>météo</b>, à côté, donne l'état constaté au dernier passage. Un point peut être beau aujourd'hui et noté D parce qu'il déborde toutes les semaines.</p>
+  <div class="meta">
+    <span id="m-commune">Commune d'Albon (26)</span>
+    <span id="m-maj"></span>
+    <span id="m-nb"></span>
+  </div>
+  <div style="margin-top:14px">
+    <label class="toggle"><input type="checkbox" id="opt-test"> Inclure les relevés de test</label>
+  </div>
+</header>
+
+<section>
+  <div class="sechead">
+    <h2>État des îlots</h2>
+    <p>Cliquez le détail d'un îlot pour voir le raisonnement flux par flux.</p>
+  </div>
+  <div class="grid" id="sites"></div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Carte des îlots</h2>
+    <p>Positions réelles, à l'échelle, d'après les coordonnées du référentiel.</p>
+  </div>
+  <div class="mapwrap">
+    <svg id="map" viewBox="0 0 800 520" role="img" aria-label="Carte schématique des six îlots de collecte de la commune"></svg>
+    <div class="maplegend" id="maplegend"></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Statistiques</h2>
+    <p>Sur la période couverte par les relevés.</p>
+  </div>
+  <div class="tiles" id="tiles"></div>
+  <div class="bars" id="bars"></div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Derniers relevés photo</h2>
+    <p>Analyse rédigée par le modèle au moment du dépôt.</p>
+  </div>
+  <div class="photos" id="photos"></div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Comment se calcule le Bac-Score</h2>
+    <p>Une note de A à E par flux ; l'îlot retient la moins bonne.</p>
+  </div>
+  <div class="mapwrap">
+    <p style="margin:0 0 14px;font-size:.84rem;color:var(--ink-2);max-width:66ch">Le score additionne des <b>points de pénalité</b> sur trois critères, puis convertit le total en lettre. Zéro point donne A, dix points ou plus donnent E. Le détail est affiché sur chaque îlot, de sorte qu'une note se vérifie toujours contre les photos.</p>
+    <div class="lanes" id="bareme"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)" id="echelle"></div>
+    <p style="margin:14px 0 0;font-size:.78rem;color:var(--ink-3);max-width:66ch">La récidive est ce qui distingue un incident d'un problème de fond : c'est elle qui permet de montrer au syndicat de collecte qu'un point revient sans cesse, même quand chaque constat pris isolément paraît modeste.</p>
+  </div>
+</section>
+
+<section>
+  <div class="note">
+    <h3>Trois points à traiter avant d'exposer ces chiffres</h3>
+    <ul>
+      <li><b>Le nombre de conteneurs n'est renseigné que pour 1 couple îlot×flux sur 18.</b> Sans lui, le taux de remplissage ne peut pas être calculé : la page se rabat sur le maximum d'unités déjà observées, ce qui est provisoire et sous-estime les manques.</li>
+      <li><b>L'îlot Route de l'Argentelle n'a jamais été photographié</b>, et il manque le verre à La Tour d'Albon comme les emballages au Creux de la Thine.</li>
+      <li><b>Un flux « papier » est remonté au Parking du restaurant routier</b> alors qu'il n'existe pas dans le référentiel. À ajouter, ou à corriger dans la consigne d'analyse.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <p>Source : classeur « PAV Albon — relevés points de collecte », feuilles Référentiel et Observations. Page calculée à partir des données brutes, sans saisie manuelle.</p>
+  <p>Les vignettes photo s'affichent lorsque la page est hébergée hors de l'environnement d'artefact et que le dossier Drive est partagé par lien. Le lien « Ouvrir la photo » fonctionne dans tous les cas pour les comptes autorisés.</p>
+</footer>
+</div>
+
+<script>
+const REF = [
+ ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"verre",0],
+ ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"ordures_menageres",0],
+ ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"emballages",0],
+ ["ALB-02","Îlot Saint-Martin-des-Rosiers",45.237630,4.871429,"verre",0],
+ ["ALB-02","Îlot Saint-Martin-des-Rosiers",45.237630,4.871429,"ordures_menageres",0],
+ ["ALB-02","Îlot Saint-Martin-des-Rosiers",45.237630,4.871429,"emballages",0],
+ ["ALB-03","Îlot Route de l'Argentelle",45.249818,4.845634,"verre",0],
+ ["ALB-03","Îlot Route de l'Argentelle",45.249818,4.845634,"ordures_menageres",0],
+ ["ALB-03","Îlot Route de l'Argentelle",45.249818,4.845634,"emballages",0],
+ ["ALB-04","Îlot Parking du restaurant routier",45.241359,4.820709,"verre",0],
+ ["ALB-04","Îlot Parking du restaurant routier",45.241359,4.820709,"ordures_menageres",0],
+ ["ALB-04","Îlot Parking du restaurant routier",45.241359,4.820709,"emballages",0],
+ ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"verre",0],
+ ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"ordures_menageres",0],
+ ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"emballages",0],
+ ["ALB-06","Îlot Creux de la Thine",45.261132,4.825427,"verre",2],
+ ["ALB-06","Îlot Creux de la Thine",45.261132,4.825427,"ordures_menageres",0],
+ ["ALB-06","Îlot Creux de la Thine",45.261132,4.825427,"emballages",0]
+].map(r=>({site:r[0],nom:r[1],lat:r[2],lon:r[3],flux:r[4],nbUnites:r[5]}));
+
+// uuid, horodatage, site, flux, photoId, inaccessible, vues, dessus, bloquees, pleines, depotSol, sacs, cause, confiance, justification
+const OBS = [
+ ["test-1794508854738","2026-11-12T18:40:54.738Z","ALB-01","verre","1dY2Rz6IcIEPSzVnbK2aMSWq6H3L3RGEN",0,1,0,0,0,0,0,"",0.60,"Une colonne verte avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, identification du flux déduite de la couleur."],
+ ["test-1794508854738","2026-11-12T18:40:54.738Z","ALB-01","emballages","1dY2Rz6IcIEPSzVnbK2aMSWq6H3L3RGEN",0,1,0,0,0,0,0,"",0.60,"Une colonne jaune avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, flux déduit de la couleur."],
+ ["test-1794508854738","2026-11-12T18:40:54.738Z","ALB-01","ordures_menageres","1dY2Rz6IcIEPSzVnbK2aMSWq6H3L3RGEN",0,1,0,0,0,0,0,"",0.60,"Une colonne gris foncé avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, flux déduit de la couleur."],
+ ["cors-1794508977493","2026-11-12T18:42:57.494Z","ALB-02","verre","1DZKZvdIzvgvIdL--IJfhLGKX9gpX8OLc",0,1,0,0,0,0,0,"",0.75,"Colonne verte à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Image très schématique, flux déduit de la couleur."],
+ ["cors-1794508977493","2026-11-12T18:42:57.494Z","ALB-02","emballages","1DZKZvdIzvgvIdL--IJfhLGKX9gpX8OLc",0,1,0,0,0,0,0,"",0.75,"Colonne jaune à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Image très schématique, flux déduit de la couleur."],
+ ["cors-1794508977493","2026-11-12T18:42:57.494Z","ALB-02","ordures_menageres","1DZKZvdIzvgvIdL--IJfhLGKX9gpX8OLc",0,1,0,0,0,0,0,"",0.70,"Colonne gris foncé à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Flux déduit de la couleur, ouverture plus petite que d'ordinaire pour ce flux."],
+ ["13c11b16","2026-11-12T10:28:53.737Z","ALB-06","verre","1QgsZE-9L2Svj_FNTrCiooAn8JY3Vxaor",0,2,0,0,0,0,0,"",0.85,"Deux grandes colonnes vertes à verre aériennes (ouvertures rondes et en fente) côte à côte ; rien posé dessus ni au pied, sol mouillé propre."],
+ ["0371db76","2026-11-12T10:28:27.044Z","ALB-06","ordures_menageres","1hLxTpfa9LamDM1uaAQfROikgH962rgBC",0,3,0,0,0,1,2,"incivilite",0.60,"Trois colonnes semi-enterrées à dôme gris, fermées, sans déchet posé dessus ; deux cartons vides (un ouvert, un aplati) au sol entre les colonnes, flux étranger aux ordures ménagères."],
+ ["0371db76","2026-11-12T10:28:27.044Z","ALB-06","verre","1hLxTpfa9LamDM1uaAQfROikgH962rgBC",0,2,0,0,0,0,0,"",0.75,"Deux colonnes aériennes vertes (une sarcelle partiellement masquée, une vert foncé à deux ouvertures rondes), rien posé dessus ni au sol à leur pied."],
+ ["98ae9f47","2026-11-12T10:29:06.526Z","ALB-06","ordures_menageres","1EGKRbYQuyay7AJAG9czHt-yYfmScwW32",0,2,0,0,0,1,2,"incivilite",0.72,"Deux colonnes grises semi-enterrées à trappe métallique entièrement visibles, aucun déchet posé dessus ; au sol, une caisse en carton et un carton ouvert, flux étranger aux ordures ménagères."],
+ ["53c34b8d","2026-11-12T10:31:08.000Z","ALB-06","ordures_menageres","1QmvLTOMtp27mVqSpXGzrduiwXgVgPceS",0,3,0,0,0,1,2,"incivilite",0.60,"Trois colonnes semi-enterrées à dôme gris, aucun déchet posé dessus ; au pied des deux dernières, un carton aplati et une petite caisse en carton, étrangers au flux."],
+ ["53c34b8d","2026-11-12T10:31:08.000Z","ALB-06","verre","1QmvLTOMtp27mVqSpXGzrduiwXgVgPceS",0,2,0,0,0,0,0,"",0.60,"Deux colonnes aériennes à droite (une vert foncé avec pictogramme verre, une bleu-vert partiellement masquée), rien posé dessus ni à leur pied."],
+ ["2bec1d0a","2026-11-12T10:31:08.000Z","ALB-06","ordures_menageres","1y7LfBRJwciSBinsBLgmctQsHc_i8MBOR",0,3,0,0,0,1,2,"incivilite",0.60,"Trois colonnes semi-enterrées à dôme gris (flux présumé d'après la couleur, sans pictogramme lisible), aucun déchet sur les dômes ; deux cartons vides au sol devant les colonnes centrale et droite."],
+ ["2bec1d0a","2026-11-12T10:31:08.000Z","ALB-06","verre","1y7LfBRJwciSBinsBLgmctQsHc_i8MBOR",0,2,0,0,0,0,0,"",0.70,"Deux grandes colonnes aériennes (une verte avec pictogramme verre, une bleu-vert partiellement masquée) à droite, rien posé dessus ni à leur pied."],
+ ["37c4279a","2026-11-11T10:07:45.000Z","ALB-05","ordures_menageres","168IfVhZIzU2kojQorI8d-bW38UuZDa-s",0,4,0,0,0,0,0,"",0.75,"Quatre cuves semi-enterrées à habillage de gravillons et couvercle gris avec trappe, sans aucun déchet posé dessus ni au sol."],
+ ["37c4279a","2026-11-11T10:07:45.000Z","ALB-05","emballages","168IfVhZIzU2kojQorI8d-bW38UuZDa-s",0,1,0,0,0,0,0,"",0.80,"Une grande colonne grise aérienne avec deux ouvertures à liseré jaune, visible avec ses ouvertures, sans déchet dessus ni au pied."],
+ ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","ordures_menageres","18LKlStVsQib0xLTcTpVVl5od1Pb6WHjO",0,3,0,0,0,1,5,"inadequation",0.70,"Trois conteneurs d'ordures ménagères, rien posé dessus ; cinq sacs déposés au sol à leur pied."],
+ ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","verre","18LKlStVsQib0xLTcTpVVl5od1Pb6WHjO",0,1,0,0,0,0,0,"",0.70,"Une colonne à verre visible dans le cadre, rien posé dessus ni au sol."],
+ ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","emballages","18LKlStVsQib0xLTcTpVVl5od1Pb6WHjO",0,0,0,0,0,0,0,"",0.50,"Aucune colonne à emballages identifiable dans le cadre."],
+ ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","papier","18LKlStVsQib0xLTcTpVVl5od1Pb6WHjO",0,0,0,0,0,0,0,"",0.50,"Aucune colonne à papier identifiable dans le cadre."]
+].map(r=>({uuid:r[0],ts:r[1],site:r[2],flux:r[3],photo:r[4],inaccessible:!!r[5],vues:r[6],dessus:r[7],bloquees:r[8],pleines:r[9],depotSol:!!r[10],sacs:r[11],cause:r[12],confiance:r[13],texte:r[14],
+  test:r[0].startsWith("test-")||r[0].startsWith("cors-")}));
+
+const FLUX_LABEL={verre:"Verre",ordures_menageres:"Ordures ménagères",emballages:"Emballages",papier:"Papier"};
+const FLUX_DOT={verre:"#2f7d4e",ordures_menageres:"#5d6a66",emballages:"#d8a81a",papier:"#2f6ea8"};
+const CAUSE_LABEL={incivilite:"Incivilité",inadequation:"Inadéquation du dispositif",saturation:"Saturation"};
+const NIV=[
+ {cls:"lv0",lab:"Propre",wx:"soleil"},
+ {cls:"lv1",lab:"À surveiller",wx:"eclaircies"},
+ {cls:"lv2",lab:"Dégradé",wx:"pluie"},
+ {cls:"lv3",lab:"Critique",wx:"orage"}
+];
+const INCONNU={cls:"lvx",lab:"Sans relevé",wx:"inconnu"};
+const NONVU={cls:"lvx",lab:"Non repéré",wx:"inconnu"};
+// Bac-Score : note A→E d'un point de collecte, sur le modèle du Nutri-Score.
+// Points de pénalité : propreté au sol (0-6) + remplissage (0-4) + récidive sur 30 j (0-4).
+const LETTRES=[
+ {l:"A",max:1,var:"--sA",fill:.12,lab:"Impeccable",desc:"rien au sol, conteneurs disponibles"},
+ {l:"B",max:3,var:"--sB",fill:.32,lab:"Bon",desc:"incident isolé ou léger"},
+ {l:"C",max:6,var:"--sC",fill:.56,lab:"Moyen",desc:"dépôts qui reviennent ou saturation partielle"},
+ {l:"D",max:9,var:"--sD",fill:.8,lab:"Dégradé",desc:"dépôts réguliers ou conteneurs souvent pleins"},
+ {l:"E",max:99,var:"--sE",fill:1,lab:"Point noir",desc:"dépôts massifs ou récidive chaque semaine"}
+];
+function lettre(pts){return LETTRES.find(x=>pts<=x.max)}
+function ptsProprete(sacs,depot){if(!depot&&sacs===0)return 0;if(sacs<=2)return 2;if(sacs<=4)return 4;return 6}
+function ptsRemplissage(o,ref){
+  if(o.inaccessible) return 4;
+  if(!ref.n||o.vues===0) return 0;
+  const t=(o.bloquees+o.pleines)/ref.n;
+  return t===0?0:t<=1/3?1:t<=2/3?2:4;
+}
+function ptsRecidive(n){return n===0?0:n===1?1:n<=3?2:4}
+let bacSeq=0;
+function bacIcon(frac,col,size){
+  const s=size||44,id="bk"+(++bacSeq),y=(21.6-13.6*frac).toFixed(2),h=(13.6*frac).toFixed(2);
+  const corps="M6.1 8.2h11.8l-.95 12.1a1.9 1.9 0 0 1-1.9 1.75H8.95a1.9 1.9 0 0 1-1.9-1.75z";
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--ink-2)">'
+   +'<defs><clipPath id="'+id+'"><path d="'+corps+'"/></clipPath></defs>'
+   +'<rect x="5" y="'+y+'" width="14" height="'+h+'" fill="'+col+'" clip-path="url(#'+id+')"/>'
+   +'<path d="'+corps+'" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+   +'<path d="M4.2 7.5h15.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
+   +'<path d="M9.7 7.5V5.8a1.2 1.2 0 0 1 1.2-1.2h2.2a1.2 1.2 0 0 1 1.2 1.2v1.7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>'
+   +'</svg>';
+}
+function scoreStrip(L){
+  return '<div class="score" role="img" aria-label="Bac-Score '+(L?L.l:'non noté')+'">'
+   + LETTRES.map(x=>'<b class="'+(L&&x.l===L.l?'on':'')+'" style="background:var('+x.var+')">'+x.l+'</b>').join('')
+   +'</div>';
+}
+const MAPCOL=["#2b7a4b","#9a6a07","#b4530d","#ab2318"];
+
+function icon(kind,size){
+  const s=size||26, c='stroke="currentColor" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"';
+  const sun='<circle cx="12" cy="12" r="4.2" '+c+'/><g '+c+'><path d="M12 3.4v2"/><path d="M12 18.6v2"/><path d="M3.4 12h2"/><path d="M18.6 12h2"/><path d="M6 6l1.4 1.4"/><path d="M16.6 16.6L18 18"/><path d="M18 6l-1.4 1.4"/><path d="M7.4 16.6L6 18"/></g>';
+  const cloud='<path d="M7.5 18h9.2a3.3 3.3 0 0 0 .3-6.6 5 5 0 0 0-9.6-1A3.8 3.8 0 0 0 7.5 18z" '+c+'/>';
+  const map={
+    soleil:sun,
+    eclaircies:'<circle cx="8.6" cy="8.4" r="3.1" '+c+'/><g '+c+'><path d="M8.6 2.6v1.6"/><path d="M3.4 8.4h1.6"/><path d="M4.6 4.4l1.1 1.1"/><path d="M12.6 4.4l-1.1 1.1"/></g>'+cloud,
+    pluie:cloud+'<g '+c+'><path d="M9.5 20v1.6"/><path d="M13 20v1.6"/><path d="M16.5 20v1.6"/></g>',
+    orage:cloud+'<path d="M13.4 19.4l-3 .1 2.3 3.1" '+c+'/><g '+c+'><path d="M9 20.2v1.4"/><path d="M16.6 20v1.6"/></g>',
+    inconnu:'<circle cx="12" cy="12" r="8.4" '+c+'/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.1 2.4c-.5.2-.7.6-.7 1.1v.6" '+c+'/><path d="M12 17.1v.1" '+c+'/>'
+  };
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" aria-hidden="true">'+map[kind]+'</svg>';
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function dateFR(iso){const d=new Date(iso);return d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+function jours(iso){return Math.floor((Date.now()-new Date(iso).getTime())/86400000)}
+
+function niveauProprete(o){
+  if(!o.depotSol && o.sacs===0) return 0;
+  if(o.sacs<=2) return 1;
+  if(o.sacs<=4) return 2;
+  return 3;
+}
+function unitesRef(site,flux,obs){
+  const r=REF.find(x=>x.site===site&&x.flux===flux);
+  if(r&&r.nbUnites>0) return {n:r.nbUnites,provisoire:false};
+  const maxVu=Math.max(0,...obs.filter(o=>o.site===site&&o.flux===flux).map(o=>o.vues));
+  return {n:maxVu,provisoire:true};
+}
+function niveauRemplissage(o,ref){
+  if(o.inaccessible) return {n:3,txt:"accès bloqué"};
+  if(o.vues===0) return {n:null,txt:"aucune unité visible"};
+  if(!ref.n) return {n:null,txt:"nombre de conteneurs inconnu"};
+  const occupe=o.bloquees+o.pleines;
+  const taux=occupe/ref.n;
+  const n = taux===0?0 : taux<=1/3?1 : taux<=2/3?2 : 3;
+  return {n,txt:occupe+" sur "+ref.n+" conteneur"+(ref.n>1?"s":"")+" plein ou bloqué"+(occupe>1?"s":"")+(ref.provisoire?" (effectif provisoire)":"")};
+}
+
+function calcule(obs){
+  const parSite={};
+  REF.forEach(r=>{
+    if(!parSite[r.site]) parSite[r.site]={site:r.site,nom:r.nom,lat:r.lat,lon:r.lon,flux:[],dernier:null,niveau:null};
+  });
+  const couples=new Set();
+  REF.forEach(r=>couples.add(r.site+"|"+r.flux));
+  obs.forEach(o=>couples.add(o.site+"|"+o.flux));
+  [...couples].forEach(k=>{
+    const [site,flux]=k.split("|");
+    if(!parSite[site]) return;
+    const liste=obs.filter(o=>o.site===site&&o.flux===flux).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    const o=liste[0];
+    const horsRef=!REF.some(r=>r.site===site&&r.flux===flux);
+    if(!o){parSite[site].flux.push({flux,niveau:null,horsRef,detail:"aucun relevé"});return}
+    const ref=unitesRef(site,flux,obs);
+    if(o.vues===0 && !o.inaccessible){
+      parSite[site].flux.push({flux,niveau:null,nonVisible:true,horsRef,detail:"conteneur non repéré sur la photo du "+dateFR(o.ts),ts:o.ts,test:o.test});
+      if(!parSite[site].dernier||new Date(o.ts)>new Date(parSite[site].dernier)) parSite[site].dernier=o.ts;
+      return;
+    }
+    const p=niveauProprete(o), rm=niveauRemplissage(o,ref);
+    const niveau=Math.max(p, rm.n==null?0:rm.n);
+    const limite=new Date(new Date(o.ts).getTime()-30*86400000);
+    const nRecid=liste.filter(x=>x.depotSol && new Date(x.ts)>=limite).length;
+    const sc={pr:ptsProprete(o.sacs,o.depotSol),re:ptsRemplissage(o,ref),rc:ptsRecidive(nRecid),nRecid};
+    sc.total=sc.pr+sc.re+sc.rc; sc.L=lettre(sc.total);
+    const bouts=[];
+    bouts.push(o.sacs>0?o.sacs+" sac"+(o.sacs>1?"s":"")+" au sol":"rien au sol");
+    bouts.push(rm.txt);
+    if(o.cause) bouts.push((CAUSE_LABEL[o.cause]||o.cause).toLowerCase());
+    if(nRecid>1) bouts.push(nRecid+" constats avec dépôt sur 30 j");
+    parSite[site].flux.push({flux,niveau,horsRef,sc,detail:bouts.join(" · "),ts:o.ts,test:o.test});
+    if(!parSite[site].dernier||new Date(o.ts)>new Date(parSite[site].dernier)) parSite[site].dernier=o.ts;
+  });
+  Object.values(parSite).forEach(s=>{
+    const n=s.flux.filter(f=>f.niveau!==null).map(f=>f.niveau);
+    s.niveau=n.length?Math.max(...n):null;
+    const scs=s.flux.filter(f=>f.sc).map(f=>f.sc.total);
+    s.pts=scs.length?Math.max(...scs):null;
+    s.L=s.pts===null?null:lettre(s.pts);
+    const ordre={verre:0,ordures_menageres:1,emballages:2,papier:3};
+    s.flux.sort((a,b)=>(ordre[a.flux]??9)-(ordre[b.flux]??9));
+  });
+  return Object.values(parSite).sort((a,b)=>a.site.localeCompare(b.site));
+}
+
+function rendu(){
+  const inclureTest=document.getElementById('opt-test').checked;
+  const obs=OBS.filter(o=>inclureTest||!o.test);
+  const sites=calcule(obs);
+
+  const maj=obs.map(o=>o.ts).sort().pop();
+  document.getElementById('m-maj').textContent = maj? "Dernier relevé : "+dateFR(maj) : "Aucun relevé";
+  const photos=[...new Set(obs.map(o=>o.photo))];
+  document.getElementById('m-nb').textContent = photos.length+" photos · "+obs.length+" constats";
+
+  // Îlots
+  document.getElementById('sites').innerHTML = sites.map(s=>{
+    const niv = s.niveau===null?INCONNU:NIV[s.niveau];
+    const vieux = s.dernier && jours(s.dernier)>7;
+    return '<article class="site">'
+      +'<div class="site-top">'
+        +'<div class="wx '+niv.cls+'">'+icon(niv.wx,26)+'</div>'
+        +'<div style="min-width:0;flex:1">'
+          +'<div class="site-code">'+esc(s.site)+'</div>'
+          +'<div class="site-name">'+esc(s.nom)+'</div>'
+          +'<div class="site-when">'+(s.dernier? "relevé "+dateFR(s.dernier)+(vieux?" · périmé":"") : "jamais relevé")+'</div>'
+        +'</div>'
+        +'<span class="pill '+niv.cls+'">'+niv.lab+'</span>'
+      +'</div>'
+      +'<div class="scorebox">'
+        +'<span class="bac">'+bacIcon(s.L?s.L.fill:0,s.L?'var('+s.L.var+')':'var(--sOff)',44)+'</span>'
+        +'<span class="scoreside">'+scoreStrip(s.L)
+          +'<span class="scoretxt">'+(s.L?'<b>'+esc(s.L.lab)+'</b> · '+s.pts+' point'+(s.pts>1?'s':'')+' de pénalité':'<b>Non noté</b> · aucun relevé exploitable')+'</span>'
+        +'</span>'
+      +'</div>'
+      +'<div class="flux">'+s.flux.map(f=>{
+        const fn = f.niveau===null?(f.nonVisible?NONVU:INCONNU):NIV[f.niveau];
+        return '<div class="frow">'
+          +'<span class="fname"><span class="dot" style="background:'+(FLUX_DOT[f.flux]||'#999')+'"></span><b>'+esc(FLUX_LABEL[f.flux]||f.flux)+'</b>'
+          +(f.horsRef?' <span class="badge">hors référentiel</span>':'')
+          +(f.test?' <span class="badge">test</span>':'')+'</span>'
+          +'<span style="display:inline-flex;align-items:center;gap:6px">'
+            +(f.sc?'<span class="fscore" style="background:var('+f.sc.L.var+')" title="Bac-Score '+f.sc.L.l+' · '+f.sc.total+' points">'+f.sc.L.l+'</span>':'')
+            +'<span class="pill '+fn.cls+'">'+fn.lab+'</span></span>'
+          +'<span class="fdetail">'+esc(f.detail)+'</span>'
+        +'</div>';
+      }).join('')+'</div>'
+    +'</article>';
+  }).join('');
+
+  // Carte
+  const lats=sites.map(s=>s.lat), lons=sites.map(s=>s.lon);
+  const latMin=Math.min(...lats), latMax=Math.max(...lats), lonMin=Math.min(...lons), lonMax=Math.max(...lons);
+  const latMoy=(latMin+latMax)/2, kx=Math.cos(latMoy*Math.PI/180);
+  const W=800,H=520,PAD=64;
+  const spanX=(lonMax-lonMin)*kx||1e-6, spanY=(latMax-latMin)||1e-6;
+  const sc=Math.min((W-2*PAD)/spanX,(H-2*PAD)/spanY);
+  const offX=(W-spanX*sc)/2, offY=(H-spanY*sc)/2;
+  const px=s=>offX+(s.lon-lonMin)*kx*sc, py=s=>offY+(latMax-s.lat)*sc;
+  const kmParDegLat=111.2, pxParKm=sc/kmParDegLat;
+  let g='<rect x="0" y="0" width="800" height="520" fill="var(--surface-2)" rx="8"/>';
+  for(let i=1;i<8;i++){const x=i*100;g+='<line x1="'+x+'" y1="0" x2="'+x+'" y2="520" stroke="var(--line)" stroke-width="1"/>';}
+  for(let i=1;i<6;i++){const y=i*87;g+='<line x1="0" y1="'+y+'" x2="800" y2="'+y+'" stroke="var(--line)" stroke-width="1"/>';}
+  sites.forEach(s=>{
+    const x=px(s), y=py(s);
+    const col=s.L?'var('+s.L.var+')':'var(--sOff)';
+    const haut=y<90;
+    g+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="15" fill="'+col+'" stroke="var(--surface)" stroke-width="3"/>';
+    g+='<text x="'+x.toFixed(1)+'" y="'+(y+5.5).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" font-weight="600" fill="#fff">'+(s.L?s.L.l:'?')+'</text>';
+    g+='<text x="'+x.toFixed(1)+'" y="'+(haut?y+46:y-36).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink-3)">'+esc(s.site)+'</text>';
+    g+='<text x="'+x.toFixed(1)+'" y="'+(haut?y+32:y-22).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="500" fill="var(--ink)">'+esc(s.nom.replace(/^Îlot /,''))+'</text>';
+  });
+  const barre=pxParKm;
+  g+='<g><line x1="52" y1="478" x2="'+(52+barre).toFixed(1)+'" y2="478" stroke="var(--ink-2)" stroke-width="2.5"/>'
+   +'<line x1="52" y1="472" x2="52" y2="484" stroke="var(--ink-2)" stroke-width="2.5"/>'
+   +'<line x1="'+(52+barre).toFixed(1)+'" y1="472" x2="'+(52+barre).toFixed(1)+'" y2="484" stroke="var(--ink-2)" stroke-width="2.5"/>'
+   +'<text x="'+(52+barre/2).toFixed(1)+'" y="498" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--ink-2)">1 km</text></g>';
+  g+='<text x="748" y="486" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="var(--ink-3)">N</text>'
+   +'<path d="M748 476 L744 466 L748 469 L752 466 Z" fill="var(--ink-2)"/>';
+  document.getElementById('map').innerHTML=g;
+  document.getElementById('maplegend').innerHTML =
+    LETTRES.map(x=>'<span><i class="swatch" style="background:var('+x.var+')"></i><b style="font-family:var(--mono)">'+x.l+'</b> '+x.lab+'</span>').join('')
+    +'<span><i class="swatch" style="background:var(--sOff)"></i><b style="font-family:var(--mono)">?</b> Non noté</span>';
+
+  // Statistiques
+  const sitesReleves=sites.filter(s=>s.dernier).length;
+  const couplesRef=REF.length;
+  const couplesReleves=new Set(obs.filter(o=>REF.some(r=>r.site===o.site&&r.flux===o.flux)).map(o=>o.site+"|"+o.flux)).size;
+  const depots=obs.filter(o=>o.depotSol);
+  const sacsMax=Math.max(0,...obs.map(o=>o.sacs));
+  const unitesConnues=REF.filter(r=>r.nbUnites>0).length;
+  const dates=obs.map(o=>o.ts).sort();
+  const periode = dates.length? new Date(dates[0]).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+" → "+new Date(dates[dates.length-1]).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : "—";
+  const tiles=[
+    {k:"Îlots relevés",v:sitesReleves+" / "+sites.length,n:sitesReleves<sites.length?(sites.length-sitesReleves)+" îlot(s) jamais photographié(s)":"couverture complète"},
+    {k:"Couples îlot × flux",v:couplesReleves+" / "+couplesRef,n:Math.round(100*couplesReleves/couplesRef)+" % du référentiel couvert"},
+    {k:"Constats avec dépôt au sol",v:depots.length+" / "+obs.length,n:depots.length?"maximum "+sacsMax+" sacs sur un même point":"aucun dépôt constaté"},
+    {k:"Îlots notés D ou E",v:String(sites.filter(s=>s.L&&(s.L.l==="D"||s.L.l==="E")).length),n:"points à remonter au syndicat"},
+    {k:"Période couverte",v:periode,n:photos.length+" photos analysées"},
+    {k:"Nombre de conteneurs renseigné",v:unitesConnues+" / "+couplesRef,n:"bloque le calcul du remplissage",alert:unitesConnues<couplesRef}
+  ];
+  document.getElementById('tiles').innerHTML=tiles.map(t=>
+    '<div class="tile'+(t.alert?' alert':'')+'"><div class="k">'+esc(t.k)+'</div><div class="v">'+esc(t.v)+'</div><div class="n">'+esc(t.n)+'</div></div>').join('');
+
+  // Barres : constats par flux, part avec dépôt au sol
+  const parFlux={};
+  obs.forEach(o=>{(parFlux[o.flux]=parFlux[o.flux]||{t:0,d:0}); parFlux[o.flux].t++; if(o.depotSol) parFlux[o.flux].d++;});
+  const maxT=Math.max(1,...Object.values(parFlux).map(v=>v.t));
+  const lignes=Object.entries(parFlux).sort((a,b)=>b[1].t-a[1].t);
+  document.getElementById('bars').innerHTML =
+    '<div style="font-size:.82rem;color:var(--ink-2);margin-bottom:12px">Constats par flux, et part avec un dépôt au sol</div>'
+    + lignes.map(([f,v])=>{
+      const w=Math.round(100*v.t/maxT), wd=v.t?Math.round(100*v.d/v.t):0;
+      return '<div class="bar"><span class="lab">'+esc(FLUX_LABEL[f]||f)+'</span>'
+        +'<span class="track"><span class="fill" style="width:'+w+'%;background:linear-gradient(90deg,var(--crit) 0 '+(wd*w/100).toFixed(1)+'%,var(--accent) '+(wd*w/100).toFixed(1)+'% 100%)"></span></span>'
+        +'<span class="num">'+v.t+'</span></div>';
+    }).join('')
+    + '<div style="font-size:.74rem;color:var(--ink-3);margin-top:12px">La portion rouge indique les constats où des déchets étaient posés au sol.</div>';
+
+  // Barème du Bac-Score
+  const bareme=[
+    {lbl:"Propreté au sol",items:[["rien",0],["1 à 2 sacs",2],["3 à 4 sacs",4],["5 sacs ou plus",6]]},
+    {lbl:"Remplissage",items:[["aucun plein",0],["jusqu'à 1/3",1],["jusqu'à 2/3",2],["plus de 2/3 ou accès bloqué",4]]},
+    {lbl:"Récidive sur 30 jours",items:[["aucun dépôt",0],["1 dépôt",1],["2 à 3 dépôts",2],["4 dépôts ou plus",4]]}
+  ];
+  document.getElementById('bareme').innerHTML = bareme.map(b=>
+    '<div class="lane"><span class="lbl">'+esc(b.lbl)+'</span><span class="cells">'
+    + b.items.map(it=>'<i style="background:var(--surface-2);display:grid;place-items:center;height:auto;padding:5px 4px;font-size:.7rem;color:var(--ink-2);text-align:center;line-height:1.25">'
+        +esc(it[0])+'<br><b style="font-family:var(--mono);color:var(--ink)">+'+it[1]+'</b></i>').join('')
+    +'</span></div>').join('');
+  document.getElementById('echelle').innerHTML = LETTRES.map((x,i)=>{
+    const bas=i===0?0:LETTRES[i-1].max+1, haut=i===LETTRES.length-1?"et plus":"à "+x.max;
+    return '<span style="display:inline-flex;align-items:center;gap:7px;font-size:.79rem;color:var(--ink-2)">'
+      +'<b style="display:grid;place-items:center;width:22px;height:22px;border-radius:5px;background:var('+x.var+');color:#fff;font-family:var(--mono);font-size:.78rem">'+x.l+'</b>'
+      +'<span><b style="color:var(--ink)">'+esc(x.lab)+'</b> · '+bas+' '+haut+' pt'+'</span></span>';
+  }).join('');
+
+  // Photos
+  const vues=[];
+  obs.slice().sort((a,b)=>new Date(b.ts)-new Date(a.ts)).forEach(o=>{if(!vues.some(v=>v.photo===o.photo)) vues.push(o)});
+  document.getElementById('photos').innerHTML=vues.slice(0,9).map(o=>{
+    const s=sites.find(x=>x.site===o.site);
+    const autres=obs.filter(x=>x.photo===o.photo);
+    const pireSacs=Math.max(...autres.map(x=>x.sacs));
+    const niv=pireSacs===0?NIV[0]:pireSacs<=2?NIV[1]:pireSacs<=4?NIV[2]:NIV[3];
+    const url="https://drive.google.com/file/d/"+o.photo+"/view";
+    const thumb="https://drive.google.com/thumbnail?id="+o.photo+"&sz=w600";
+    return '<figure class="photo" style="margin:0">'
+      +'<div class="thumb"><img src="'+thumb+'" alt="Relevé photo de l\'îlot '+esc(s?s.nom:o.site)+'" loading="lazy" '
+      +'onerror="var p=this.parentNode;this.remove();p.insertAdjacentHTML(\'beforeend\',\'<div class=&quot;ph&quot;>Vignette indisponible ici<br>(photo privée)</div>\')">'
+      +'</div>'
+      +'<figcaption class="pbody">'
+        +'<div class="pmeta"><span class="pill '+niv.cls+'">'+niv.lab+'</span>'
+        +'<span class="badge">'+esc(o.site)+'</span>'
+        +(o.test?'<span class="badge">test</span>':'')+'</div>'
+        +'<div style="font-size:.78rem;color:var(--ink-3);font-family:var(--mono)">'+dateFR(o.ts)+'</div>'
+        +'<p class="ptext">'+esc(o.texte)+'</p>'
+        +'<a class="plink" href="'+url+'" target="_blank" rel="noopener">Ouvrir la photo →</a>'
+      +'</figcaption></figure>';
+  }).join('');
+}
+document.getElementById('opt-test').addEventListener('change',rendu);
+rendu();
+</script>
+
+<p style="max-width:70rem;margin:28px auto 40px;padding:0 18px;font-size:.9rem">
+  <a href="integrer.html">Mettre cet encart sur le site de votre commune &rarr;</a>
+</p>
+
+</body>
+</html>

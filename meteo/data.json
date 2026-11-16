@@ -1,0 +1,88 @@
+{
+  "commune": "Albon",
+  "maj": "2026-11-16T07:18:17.284Z",
+  "global": {
+    "lettre": "C",
+    "lab": "Moyen",
+    "pts": 4.3,
+    "notes": 3
+  },
+  "total": 6,
+  "points": [
+    {
+      "code": "ALB-01",
+      "nom": "Îlot École Louise Michel",
+      "lettre": null,
+      "lab": null,
+      "pts": null,
+      "dernier": null
+    },
+    {
+      "code": "ALB-02",
+      "nom": "Îlot Saint-Martin-des-Rosiers",
+      "lettre": null,
+      "lab": null,
+      "pts": null,
+      "dernier": null
+    },
+    {
+      "code": "ALB-03",
+      "nom": "Îlot Route de l'Argentelle",
+      "lettre": null,
+      "lab": null,
+      "pts": null,
+      "dernier": null
+    },
+    {
+      "code": "ALB-04",
+      "nom": "Îlot Parking du restaurant routier",
+      "lettre": "D",
+      "lab": "Dégradé",
+      "pts": 7,
+      "dernier": "2026-11-11T08:19:59.000Z"
+    },
+    {
+      "code": "ALB-05",
+      "nom": "Îlot La Tour d'Albon",
+      "lettre": "A",
+      "lab": "Impeccable",
+      "pts": 0,
+      "dernier": "2026-11-11T10:07:45.000Z"
+    },
+    {
+      "code": "ALB-06",
+      "nom": "Îlot Creux de la Thine",
+      "lettre": "C",
+      "lab": "Moyen",
+      "pts": 6,
+      "dernier": "2026-11-12T10:31:08.000Z"
+    }
+  ],
+  "echelle": [
+    {
+      "l": "A",
+      "lab": "Impeccable",
+      "max": 1
+    },
+    {
+      "l": "B",
+      "lab": "Bon",
+      "max": 3
+    },
+    {
+      "l": "C",
+      "lab": "Moyen",
+      "max": 6
+    },
+    {
+      "l": "D",
+      "lab": "Dégradé",
+      "max": 9
+    },
+    {
+      "l": "E",
+      "lab": "Point noir",
+      "max": 99
+    }
+  ]
+}
