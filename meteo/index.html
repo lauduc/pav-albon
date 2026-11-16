@@ -230,7 +230,7 @@ details[open] summary{margin-bottom:8px}
     <p style="margin:0 0 14px;font-size:.84rem;color:var(--ink-2);max-width:66ch">Le score additionne des <b>points de pénalité</b> sur trois critères, puis convertit le total en lettre. Zéro point donne A, dix points ou plus donnent E. Le détail est affiché sur chaque îlot, de sorte qu'une note se vérifie toujours contre les photos.</p>
     <div class="lanes" id="bareme"></div>
     <div style="display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)" id="echelle"></div>
-    <p style="margin:14px 0 0;font-size:.78rem;color:var(--ink-3);max-width:66ch">La récidive est ce qui distingue un incident d'un problème de fond : c'est elle qui permet de montrer au syndicat de collecte qu'un point revient sans cesse, même quand chaque constat pris isolément paraît modeste.</p>
+    <p style="margin:14px 0 0;font-size:.78rem;color:var(--ink-3);max-width:66ch">La récidive est ce qui distingue un incident d'un problème de fond : c'est elle qui permet de montrer au syndicat de collecte qu'un point revient sans cesse, même quand chaque constat pris isolément paraît modeste. Elle se compte en passages : plusieurs photos du même dépôt, prises à quelques minutes d'intervalle, ne comptent qu'une fois.</p>
   </div>
 </section>
 
@@ -338,6 +338,18 @@ function ptsRemplissage(o,ref){
   return t===0?0:t<=1/3?1:t<=2/3?2:4;
 }
 function ptsRecidive(n){return n===0?0:n===1?1:n<=3?2:4}
+// Deux photos du même tas prises à quelques minutes d'intervalle sont UN
+// constat, pas deux : sinon le score récompenserait la parcimonie en photos.
+const FENETRE_PASSAGE=20*60000;
+function nPassagesAvecDepot(site,flux,tFin,obs){
+  const liste=obs.filter(x=>x.site===site&&x.flux===flux&&x.depotSol
+    &&new Date(x.ts).getTime()<=tFin
+    &&new Date(x.ts).getTime()>=tFin-30*86400000)
+    .sort((a,b)=>new Date(a.ts)-new Date(b.ts));
+  let n=0,prec=-Infinity;
+  liste.forEach(x=>{const t=new Date(x.ts).getTime(); if(t-prec>FENETRE_PASSAGE) n++; prec=t;});
+  return n;
+}
 let bacSeq=0;
 function bacIcon(frac,col,size){
   const s=size||44,id="bk"+(++bacSeq),y=(21.6-13.6*frac).toFixed(2),h=(13.6*frac).toFixed(2);
@@ -419,15 +431,14 @@ function calcule(obs){
     }
     const p=niveauProprete(o), rm=niveauRemplissage(o,ref);
     const niveau=Math.max(p, rm.n==null?0:rm.n);
-    const limite=new Date(new Date(o.ts).getTime()-30*86400000);
-    const nRecid=liste.filter(x=>x.depotSol && new Date(x.ts)>=limite).length;
+    const nRecid=nPassagesAvecDepot(site,flux,new Date(o.ts).getTime(),obs);
     const sc={pr:ptsProprete(o.sacs,o.depotSol),re:ptsRemplissage(o,ref),rc:ptsRecidive(nRecid),nRecid};
     sc.total=sc.pr+sc.re+sc.rc; sc.L=lettre(sc.total);
     const bouts=[];
     bouts.push(o.sacs>0?o.sacs+" sac"+(o.sacs>1?"s":"")+" au sol":"rien au sol");
     bouts.push(rm.txt);
     if(o.cause) bouts.push((CAUSE_LABEL[o.cause]||o.cause).toLowerCase());
-    if(nRecid>1) bouts.push(nRecid+" constats avec dépôt sur 30 j");
+    if(nRecid>1) bouts.push(nRecid+" passages avec dépôt sur 30 j");
     parSite[site].flux.push({flux,niveau,horsRef,sc,detail:bouts.join(" · "),ts:o.ts,test:o.test});
     if(!parSite[site].dernier||new Date(o.ts)>new Date(parSite[site].dernier)) parSite[site].dernier=o.ts;
   });
@@ -456,7 +467,7 @@ function passagesParSite(obs){
     const lots=[];
     liste.forEach(o=>{
       const d=lots[lots.length-1];
-      if(d && new Date(o.ts)-new Date(d.fin)<=20*60000){d.obs.push(o); d.fin=o.ts;}
+      if(d && new Date(o.ts)-new Date(d.fin)<=FENETRE_PASSAGE){d.obs.push(o); d.fin=o.ts;}
       else lots.push({obs:[o],fin:o.ts});
     });
     lots.forEach(lot=>{
@@ -467,9 +478,7 @@ function passagesParSite(obs){
         if(o.depotSol) depot=true;
         if(o.vues===0 && !o.inaccessible) return;
         const ref=unitesRef(o.site,o.flux,obs);
-        const t0=new Date(o.ts).getTime(), limite=t0-30*86400000;
-        const nRecid=obs.filter(x=>x.site===o.site&&x.flux===o.flux&&x.depotSol
-          &&new Date(x.ts).getTime()>=limite&&new Date(x.ts).getTime()<=t0).length;
+        const nRecid=nPassagesAvecDepot(o.site,o.flux,new Date(o.ts).getTime(),obs);
         const total=ptsProprete(o.sacs,o.depotSol)+ptsRemplissage(o,ref)+ptsRecidive(nRecid);
         if(pts===null||total>pts){pts=total; pire=o;}
       });
@@ -629,7 +638,7 @@ function rendu(){
   const bareme=[
     {lbl:"Propreté au sol",items:[["rien",0],["1 à 2 sacs",2],["3 à 4 sacs",4],["5 sacs ou plus",6]]},
     {lbl:"Remplissage",items:[["aucun plein",0],["jusqu'à 1/3",1],["jusqu'à 2/3",2],["plus de 2/3 ou accès bloqué",4]]},
-    {lbl:"Récidive sur 30 jours",items:[["aucun dépôt",0],["1 dépôt",1],["2 à 3 dépôts",2],["4 dépôts ou plus",4]]}
+    {lbl:"Récidive sur 30 jours",items:[["aucun passage",0],["1 passage",1],["2 à 3 passages",2],["4 passages ou plus",4]]}
   ];
   document.getElementById('bareme').innerHTML = bareme.map(b=>
     '<div class="lane"><span class="lbl">'+esc(b.lbl)+'</span><span class="cells">'

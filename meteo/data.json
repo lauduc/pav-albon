@@ -1,10 +1,10 @@
 {
   "commune": "Albon",
-  "maj": "2026-11-16T22:13:50.890Z",
+  "maj": "2026-11-16T22:48:32.669Z",
   "global": {
     "lettre": "C",
     "lab": "Moyen",
-    "pts": 4.3,
+    "pts": 3.5,
     "notes": 4
   },
   "total": 6,
@@ -52,9 +52,9 @@
     {
       "code": "ALB-06",
       "nom": "Îlot Creux de la Thine",
-      "lettre": "C",
-      "lab": "Moyen",
-      "pts": 6,
+      "lettre": "B",
+      "lab": "Bon",
+      "pts": 3,
       "dernier": "2026-11-12T10:31:08.000Z"
     }
   ],
