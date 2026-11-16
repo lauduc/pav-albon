@@ -103,6 +103,21 @@ section{margin-top:40px}
 .maplegend span{display:inline-flex;align-items:center;gap:6px}
 .swatch{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--surface)}
 
+/* Frise des passages : une bande par îlot, un carré par passage. */
+.frise{display:grid;gap:16px}
+.frow2{display:grid;grid-template-columns:170px 1fr;gap:14px;align-items:start}
+@media (max-width:560px){.frow2{grid-template-columns:1fr;gap:6px}}
+.fr-code{font-family:var(--mono);font-size:.7rem;color:var(--ink-3);letter-spacing:.04em}
+.fr-nom{font-weight:600;font-size:.9rem;line-height:1.3}
+.fr-cells{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px}
+.fr-cell{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:inherit}
+.fr-sq{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#fff;font-family:var(--mono);font-weight:600;font-size:.92rem;position:relative}
+.fr-sq.depot::after{content:"";position:absolute;right:-2px;top:-2px;width:9px;height:9px;border-radius:50%;background:var(--crit);border:2px solid var(--surface)}
+.fr-dt{font-family:var(--mono);font-size:.63rem;color:var(--ink-3)}
+.fr-cell:hover .fr-sq,.fr-cell:focus-visible .fr-sq{outline:2px solid var(--ink-2);outline-offset:2px}
+.fr-sum{font-size:.74rem;color:var(--ink-3);margin-top:7px}
+.fr-vide{font-size:.82rem;color:var(--ink-3);padding:9px 0}
+
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
 .tile .k{font-size:.72rem;color:var(--ink-3);letter-spacing:.03em}
@@ -175,6 +190,17 @@ details[open] summary{margin-bottom:8px}
   <div class="mapwrap">
     <svg id="map" viewBox="0 0 800 520" role="img" aria-label="Carte schématique des six îlots de collecte de la commune"></svg>
     <div class="maplegend" id="maplegend"></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Frise des passages</h2>
+    <p>Un carré par passage, du plus ancien au plus récent, coloré par le Bac-Score calculé ce jour-là. Le point rouge signale un dépôt au sol. Cliquez un carré pour ouvrir la photo.</p>
+  </div>
+  <div class="mapwrap">
+    <div class="frise" id="frise"></div>
+    <p style="margin:16px 0 0;font-size:.78rem;color:var(--ink-3);max-width:66ch">Deux îlots côte à côte peuvent afficher la même note aujourd'hui : c'est la frise qui dit lequel est un accident et lequel recommence à chaque passage.</p>
   </div>
 </section>
 
@@ -417,6 +443,44 @@ function calcule(obs){
   return Object.values(parSite).sort((a,b)=>a.site.localeCompare(b.site));
 }
 
+// Un « passage » regroupe les photos prises au même endroit à quelques minutes
+// d'intervalle. Sa note est celle du flux le plus dégradé, calculée avec les
+// données connues à cette date-là : la récidive ne compte que le passé.
+function passagesParSite(obs){
+  const sites={};
+  REF.forEach(r=>{if(!sites[r.site]) sites[r.site]={site:r.site,nom:r.nom,lots:[]}});
+  const parSite={};
+  obs.forEach(o=>{(parSite[o.site]=parSite[o.site]||[]).push(o)});
+  Object.keys(sites).forEach(code=>{
+    const liste=(parSite[code]||[]).slice().sort((a,b)=>new Date(a.ts)-new Date(b.ts));
+    const lots=[];
+    liste.forEach(o=>{
+      const d=lots[lots.length-1];
+      if(d && new Date(o.ts)-new Date(d.fin)<=20*60000){d.obs.push(o); d.fin=o.ts;}
+      else lots.push({obs:[o],fin:o.ts});
+    });
+    lots.forEach(lot=>{
+      const parFlux={};
+      lot.obs.forEach(o=>{const p=parFlux[o.flux]; if(!p||new Date(o.ts)>new Date(p.ts)) parFlux[o.flux]=o});
+      let pts=null,pire=null,depot=false;
+      Object.values(parFlux).forEach(o=>{
+        if(o.depotSol) depot=true;
+        if(o.vues===0 && !o.inaccessible) return;
+        const ref=unitesRef(o.site,o.flux,obs);
+        const t0=new Date(o.ts).getTime(), limite=t0-30*86400000;
+        const nRecid=obs.filter(x=>x.site===o.site&&x.flux===o.flux&&x.depotSol
+          &&new Date(x.ts).getTime()>=limite&&new Date(x.ts).getTime()<=t0).length;
+        const total=ptsProprete(o.sacs,o.depotSol)+ptsRemplissage(o,ref)+ptsRecidive(nRecid);
+        if(pts===null||total>pts){pts=total; pire=o;}
+      });
+      lot.pts=pts; lot.L=pts===null?null:lettre(pts); lot.depot=depot;
+      lot.photo=(pire||lot.obs[0]).photo;
+    });
+    sites[code].lots=lots;
+  });
+  return Object.values(sites).sort((a,b)=>a.site.localeCompare(b.site));
+}
+
 function rendu(){
   const inclureTest=document.getElementById('opt-test').checked;
   const obs=OBS.filter(o=>inclureTest||!o.test);
@@ -495,6 +559,36 @@ function rendu(){
   document.getElementById('maplegend').innerHTML =
     LETTRES.map(x=>'<span><i class="swatch" style="background:var('+x.var+')"></i><b style="font-family:var(--mono)">'+x.l+'</b> '+x.lab+'</span>').join('')
     +'<span><i class="swatch" style="background:var(--sOff)"></i><b style="font-family:var(--mono)">?</b> Non noté</span>';
+
+  // Frise des passages
+  const MAXP=10;
+  document.getElementById('frise').innerHTML = passagesParSite(obs).map(s=>{
+    const lots=s.lots.slice(-MAXP);
+    const cells=lots.map(l=>{
+      const col=l.L?'var('+l.L.var+')':'var(--sOff)';
+      const jj=new Date(l.fin).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+      const titre=(l.L?'Bac-Score '+l.L.l+' — '+l.L.lab+' · '+l.pts+' point'+(l.pts>1?'s':'')
+                     :'Non noté')+' · '+dateFR(l.fin)+(l.depot?' · dépôt au sol':'');
+      const inner='<span class="fr-sq'+(l.depot?' depot':'')+'" style="background:'+col+'">'
+        +(l.L?l.L.l:'?')+'</span><span class="fr-dt">'+jj+'</span>';
+      return l.photo
+        ? '<a class="fr-cell" href="https://drive.google.com/file/d/'+l.photo+'/view" target="_blank" rel="noopener" title="'+esc(titre)+'" aria-label="'+esc(titre)+'">'+inner+'</a>'
+        : '<span class="fr-cell" title="'+esc(titre)+'">'+inner+'</span>';
+    }).join('');
+    const avecDepot=s.lots.filter(l=>l.depot).length;
+    const dj=s.lots.length?jours(s.lots[s.lots.length-1].fin):null;
+    const resume=s.lots.length
+      ? s.lots.length+' passage'+(s.lots.length>1?'s':'')
+        +(s.lots.length>MAXP?' (10 derniers affichés)':'')
+        +(avecDepot?' · '+avecDepot+' avec dépôt au sol':' · aucun dépôt constaté')
+        +' · dernier '+(dj===0?"aujourd'hui":dj===1?'hier':'il y a '+dj+' jours')
+      : '';
+    return '<div class="frow2">'
+      +'<div><div class="fr-code">'+esc(s.site)+'</div><div class="fr-nom">'+esc(s.nom)+'</div></div>'
+      +'<div>'+(lots.length?'<div class="fr-cells">'+cells+'</div><div class="fr-sum">'+esc(resume)+'</div>'
+                          :'<div class="fr-vide">Jamais relevé</div>')+'</div>'
+    +'</div>';
+  }).join('');
 
   // Statistiques
   const sitesReleves=sites.filter(s=>s.dernier).length;
