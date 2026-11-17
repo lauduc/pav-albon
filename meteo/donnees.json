@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-17T15:15:40Z",
+ "maj": "2026-11-17T15:30:40Z",
  "source": "classeur PAV Albon — relevés points de collecte",
  "referentiel": [
   {
@@ -143,24 +143,24 @@
   {
    "site": "ALB-06",
    "nom": "Îlot Creux de la Thine",
-   "lat": 45.261132,
-   "lon": 4.825427,
+   "lat": 45.2601,
+   "lon": 4.824026,
    "flux": "verre",
    "nbUnites": 2
   },
   {
    "site": "ALB-06",
    "nom": "Îlot Creux de la Thine",
-   "lat": 45.261132,
-   "lon": 4.825427,
+   "lat": 45.2601,
+   "lon": 4.824026,
    "flux": "ordures_menageres",
    "nbUnites": 3
   },
   {
    "site": "ALB-06",
    "nom": "Îlot Creux de la Thine",
-   "lat": 45.261132,
-   "lon": 4.825427,
+   "lat": 45.2601,
+   "lon": 4.824026,
    "flux": "emballages",
    "nbUnites": 1
   }
