@@ -276,17 +276,6 @@ details[open] summary{margin-bottom:8px}
   </div>
 </section>
 
-<section>
-  <div class="note">
-    <h3>Trois points à traiter avant d'exposer ces chiffres</h3>
-    <ul>
-      <li><b>Le nombre de conteneurs n'est renseigné que pour 1 couple îlot×flux sur 18.</b> Sans lui, le taux de remplissage ne peut pas être calculé : la page se rabat sur le maximum d'unités déjà observées, ce qui est provisoire et sous-estime les manques.</li>
-      <li><b>L'îlot Route de l'Argentelle n'a jamais été photographié</b>, et il manque le verre à La Tour d'Albon comme les emballages au Creux de la Thine.</li>
-      <li><b>Un flux « papier » est remonté au Parking du restaurant routier</b> alors qu'il n'existe pas dans le référentiel. À ajouter, ou à corriger dans la consigne d'analyse.</li>
-    </ul>
-  </div>
-</section>
-
 <footer>
   <p>Source : classeur « PAV Albon — relevés points de collecte », feuilles Référentiel et Observations. Page calculée à partir des données brutes, sans saisie manuelle.</p>
   <p>La photo d'un îlot n'est pas publiée lorsque le relevé signale une personne ou une plaque d'immatriculation reconnaissable : le constat compte dans la note, l'image reste privée.</p>
@@ -417,7 +406,7 @@ function rendu(){
   const lats=sites.map(s=>s.lat), lons=sites.map(s=>s.lon);
   const latMin=Math.min(...lats), latMax=Math.max(...lats), lonMin=Math.min(...lons), lonMax=Math.max(...lons);
   const latMoy=(latMin+latMax)/2, kx=Math.cos(latMoy*Math.PI/180);
-  const W=800,H=520,PAD=64;
+  const W=800,H=520,PAD=78;
   const spanX=(lonMax-lonMin)*kx||1e-6, spanY=(latMax-latMin)||1e-6;
   const sc=Math.min((W-2*PAD)/spanX,(H-2*PAD)/spanY);
   const offX=(W-spanX*sc)/2, offY=(H-spanY*sc)/2;
@@ -429,11 +418,11 @@ function rendu(){
   sites.forEach(s=>{
     const x=px(s), y=py(s);
     const col=s.L?'var('+s.L.var+')':'var(--sOff)';
-    const haut=y<90;
-    g+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="15" fill="'+col+'" stroke="var(--surface)" stroke-width="3"/>';
-    g+='<text x="'+x.toFixed(1)+'" y="'+(y+5.5).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" font-weight="600" fill="#fff">'+(s.L?s.L.l:'?')+'</text>';
-    g+='<text x="'+x.toFixed(1)+'" y="'+(haut?y+46:y-36).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink-3)">'+esc(s.site)+'</text>';
-    g+='<text x="'+x.toFixed(1)+'" y="'+(haut?y+32:y-22).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="500" fill="var(--ink)">'+esc(s.nom.replace(/^Îlot /,''))+'</text>';
+    const haut=y<110;
+    g+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="23" fill="'+col+'" stroke="var(--surface)" stroke-width="3.5"/>';
+    g+='<text x="'+x.toFixed(1)+'" y="'+(y+8).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="22" font-weight="600" fill="#fff">'+(s.L?s.L.l:'?')+'</text>';
+    g+='<text x="'+x.toFixed(1)+'" y="'+(haut?y+62:y-50).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink-3)">'+esc(s.site)+'</text>';
+    g+='<text x="'+x.toFixed(1)+'" y="'+(haut?y+46:y-32).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="500" fill="var(--ink)">'+esc(s.nom.replace(/^Îlot /,''))+'</text>';
   });
   const barre=pxParKm;
   g+='<g><line x1="52" y1="478" x2="'+(52+barre).toFixed(1)+'" y2="478" stroke="var(--ink-2)" stroke-width="2.5"/>'
