@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-17T15:30:40Z",
+ "maj": "2026-11-17T16:30:40Z",
  "source": "classeur PAV Albon — relevés points de collecte",
  "referentiel": [
   {
@@ -658,6 +658,57 @@
    "cause": "",
    "confiance": 0.75,
    "texte": "Une colonne emballages (plaquette jaune « Emballages plastique et métal ») vue de face avec trois ouvertures. Quelques bouteilles plastique sont visibles dans deux ouvertures, mais rien n'est posé sur le dessus de la colonne et rien au sol au pied. [Correction du 16/11 : colonne constatée pleine sur place ; non vue par le classifieur.]"
+  },
+  {
+   "uuid": "5e609848-1755-45b3-80c9-3642b3acc7bd",
+   "ts": "2026-11-16T07:55:47.000Z",
+   "site": "ALB-05",
+   "flux": "verre",
+   "photo": "1N1570TLsM4thKu8EzMHO1BhvbDQI1Ydj",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.9,
+   "texte": "Colonne grise à ouvertures rondes vertes entièrement visible, rien posé dessus ni au pied."
+  },
+  {
+   "uuid": "5e609848-1755-45b3-80c9-3642b3acc7bd",
+   "ts": "2026-11-16T07:55:47.000Z",
+   "site": "ALB-05",
+   "flux": "papier",
+   "photo": "1N1570TLsM4thKu8EzMHO1BhvbDQI1Ydj",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.85,
+   "texte": "Colonne grise à trappe bleue entièrement visible, rien posé dessus ni au pied."
+  },
+  {
+   "uuid": "5e609848-1755-45b3-80c9-3642b3acc7bd",
+   "ts": "2026-11-16T07:55:47.000Z",
+   "site": "ALB-05",
+   "flux": "ordures_menageres",
+   "photo": "1N1570TLsM4thKu8EzMHO1BhvbDQI1Ydj",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.8,
+   "texte": "Borne à tambour inox sur dalle métallique visible, rien posé dessus ni autour ; flux déduit du type de tambour."
   },
   {
    "uuid": "c935bcb1-3e19-4193-9ec6-a1aa7e843f10",
