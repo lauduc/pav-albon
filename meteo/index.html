@@ -104,6 +104,16 @@ section{margin-top:40px}
 .mapwrap svg{display:block;width:100%;height:auto;max-width:100%}
 .maplegend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:12px;font-size:.76rem;color:var(--ink-2)}
 .maplegend span{display:inline-flex;align-items:center;gap:6px}
+/* Retour vers le site qui a amené ici. Caché par défaut : il n'apparaît que
+   s'il y a réellement quelque part où revenir. */
+.retour{display:none;align-items:center;gap:8px;margin-bottom:20px;padding:9px 15px;
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;
+  font-size:.85rem;font-weight:600;color:var(--ink-2);text-decoration:none;width:fit-content;max-width:100%}
+.retour[hidden]{display:none}
+.retour:not([hidden]){display:inline-flex}
+.retour:hover{color:var(--ink);background:var(--surface-2)}
+.retour svg{width:15px;height:15px;flex:none}
+.retour span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .swatch{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--surface)}
 
 /* Frise des passages : une bande par îlot, un carré par passage. */
@@ -187,6 +197,7 @@ details[open] summary{margin-bottom:8px}
 <body>
 
 <div class="wrap">
+<a class="retour" id="retour" hidden></a>
 <header>
   <p class="eyebrow">Pack mairies · module points de collecte</p>
   <h1>Météo des points de collecte</h1>
@@ -551,9 +562,9 @@ function rendu(){
     const pireSacs=Math.max(...autres.map(x=>x.sacs));
     const niv=pireSacs===0?NIV[0]:pireSacs<=2?NIV[1]:pireSacs<=4?NIV[2]:NIV[3];
     const url="https://drive.google.com/file/d/"+o.photo+"/view";
-    const thumb = "https://lh3.googleusercontent.com/d/"+o.photo+"=w600";
+    const thumb="https://drive.google.com/thumbnail?id="+o.photo+"&sz=w600";
     return '<figure class="photo" style="margin:0">'
-      +'<div class="thumb"><img src="'+thumb+'" alt="Relevé photo de l\'îlot '+esc(s?s.nom:o.site)+'" loading="lazy" referrerpolicy="no-referrer" '
+      +'<div class="thumb"><img src="'+thumb+'" alt="Relevé photo de l\'îlot '+esc(s?s.nom:o.site)+'" loading="lazy" '
       +'onerror="var p=this.parentNode;this.remove();p.insertAdjacentHTML(\'beforeend\',\'<div class=&quot;ph&quot;>Vignette indisponible ici<br>(photo privée)</div>\')">'
       +'</div>'
       +'<figcaption class="pbody">'
@@ -567,6 +578,32 @@ function rendu(){
   }).join('');
 }
 document.getElementById('opt-test').addEventListener('change',rendu);
+
+/* Retour vers le site appelant. Deux sources, dans cet ordre : le paramètre
+   ?retour=, qui est une destination et marche donc même dans un onglet neuf ;
+   puis le référent, quand la page a été ouverte depuis un autre site dans le
+   même onglet. Sans l'un ni l'autre, le bouton reste caché — un retour qui ne
+   fait rien est pire qu'un retour absent. */
+(function retour(){
+  const el=document.getElementById('retour');
+  const propre=u=>{try{const x=new URL(u); return /^https?:$/.test(x.protocol)?x:null}catch(e){return null}};
+  let cible=propre(new URL(location.href).searchParams.get('retour')||''), arriere=false;
+  if(!cible){
+    const r=propre(document.referrer);
+    if(r && r.origin!==location.origin && history.length>1){cible=r; arriere=true;}
+  }
+  if(!cible) return;
+  el.href=cible.href;
+  el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>'
+    +'<span>Retour sur '+esc(cible.hostname.replace(/^www\./,''))+'</span>';
+  el.hidden=false;
+  /* Quand on connaît seulement le référent, un vrai pas en arrière rend au
+     visiteur sa position dans la page d'où il vient. Le lien reste un lien :
+     clic du milieu et ouverture dans un onglet continuent de marcher. */
+  if(arriere) el.addEventListener('click',e=>{
+    if(e.button===0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey){e.preventDefault(); history.back();}
+  });
+})();
 
 fetch('donnees.json',{cache:'no-cache'})
   .then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
