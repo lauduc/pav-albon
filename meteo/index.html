@@ -551,9 +551,9 @@ function rendu(){
     const pireSacs=Math.max(...autres.map(x=>x.sacs));
     const niv=pireSacs===0?NIV[0]:pireSacs<=2?NIV[1]:pireSacs<=4?NIV[2]:NIV[3];
     const url="https://drive.google.com/file/d/"+o.photo+"/view";
-    const thumb="https://drive.google.com/thumbnail?id="+o.photo+"&sz=w600";
+    const thumb = "https://lh3.googleusercontent.com/d/"+o.photo+"=w600";
     return '<figure class="photo" style="margin:0">'
-      +'<div class="thumb"><img src="'+thumb+'" alt="Relevé photo de l\'îlot '+esc(s?s.nom:o.site)+'" loading="lazy" '
+      +'<div class="thumb"><img src="'+thumb+'" alt="Relevé photo de l\'îlot '+esc(s?s.nom:o.site)+'" loading="lazy" referrerpolicy="no-referrer" '
       +'onerror="var p=this.parentNode;this.remove();p.insertAdjacentHTML(\'beforeend\',\'<div class=&quot;ph&quot;>Vignette indisponible ici<br>(photo privée)</div>\')">'
       +'</div>'
       +'<figcaption class="pbody">'
