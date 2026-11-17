@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-17T14:45:39Z",
+ "maj": "2026-11-17T15:15:40Z",
  "source": "classeur PAV Albon — relevés points de collecte",
  "referentiel": [
   {
@@ -42,7 +42,7 @@
    "lat": 45.23763,
    "lon": 4.871429,
    "flux": "verre",
-   "nbUnites": 0
+   "nbUnites": 2
   },
   {
    "site": "ALB-02",
@@ -50,7 +50,7 @@
    "lat": 45.23763,
    "lon": 4.871429,
    "flux": "ordures_menageres",
-   "nbUnites": 0
+   "nbUnites": 4
   },
   {
    "site": "ALB-02",
@@ -58,7 +58,7 @@
    "lat": 45.23763,
    "lon": 4.871429,
    "flux": "emballages",
-   "nbUnites": 0
+   "nbUnites": 2
   },
   {
    "site": "ALB-03",
@@ -66,7 +66,7 @@
    "lat": 45.249818,
    "lon": 4.845634,
    "flux": "verre",
-   "nbUnites": 0
+   "nbUnites": 1
   },
   {
    "site": "ALB-03",
@@ -74,7 +74,7 @@
    "lat": 45.249818,
    "lon": 4.845634,
    "flux": "ordures_menageres",
-   "nbUnites": 0
+   "nbUnites": 2
   },
   {
    "site": "ALB-03",
@@ -82,7 +82,7 @@
    "lat": 45.249818,
    "lon": 4.845634,
    "flux": "emballages",
-   "nbUnites": 0
+   "nbUnites": 1
   },
   {
    "site": "ALB-04",
@@ -90,7 +90,7 @@
    "lat": 45.241359,
    "lon": 4.820709,
    "flux": "verre",
-   "nbUnites": 0
+   "nbUnites": 1
   },
   {
    "site": "ALB-04",
@@ -98,7 +98,7 @@
    "lat": 45.241359,
    "lon": 4.820709,
    "flux": "ordures_menageres",
-   "nbUnites": 0
+   "nbUnites": 3
   },
   {
    "site": "ALB-04",
@@ -106,7 +106,7 @@
    "lat": 45.241359,
    "lon": 4.820709,
    "flux": "emballages",
-   "nbUnites": 0
+   "nbUnites": 1
   },
   {
    "site": "ALB-05",
@@ -154,7 +154,7 @@
    "lat": 45.261132,
    "lon": 4.825427,
    "flux": "ordures_menageres",
-   "nbUnites": 0
+   "nbUnites": 3
   },
   {
    "site": "ALB-06",
@@ -162,7 +162,7 @@
    "lat": 45.261132,
    "lon": 4.825427,
    "flux": "emballages",
-   "nbUnites": 0
+   "nbUnites": 1
   }
  ],
  "observations": [
