@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-17T16:45:40Z",
+ "maj": "2026-11-17T23:00:09Z",
  "source": "classeur PAV Albon — relevés points de collecte",
  "referentiel": [
   {
@@ -181,7 +181,9 @@
    "sacs": 5,
    "cause": "inadequation",
    "confiance": 0.8,
-   "texte": "Trois colonnes semi-enterrées grises à dôme, aucun déchet posé sur les trappes ; au pied de la troisième, un panneau blanc, un sac noir, des bouteilles et des détritus épars."
+   "texte": "Trois colonnes semi-enterrées grises à dôme, aucun déchet posé sur les trappes ; au pied de la troisième, un panneau blanc, un sac noir, des bouteilles et des détritus épars.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "5e0d5759-6350-4728-a75a-8c3a31ab727b",
@@ -198,7 +200,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.7,
-   "texte": "Un conteneur vert à deux ouvertures rondes visible de face, rien posé dessus ; le dépôt voisin est devant les colonnes grises, pas à son pied direct."
+   "texte": "Un conteneur vert à deux ouvertures rondes visible de face, rien posé dessus ; le dépôt voisin est devant les colonnes grises, pas à son pied direct.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "5e0d5759-6350-4728-a75a-8c3a31ab727b",
@@ -215,7 +219,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.4,
-   "texte": "Conteneur vert d'extrémité à pastille jaune, vu de côté : ouverture non visible, donc non comptée."
+   "texte": "Conteneur vert d'extrémité à pastille jaune, vu de côté : ouverture non visible, donc non comptée.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "5e0d5759-6350-4728-a75a-8c3a31ab727b",
@@ -232,7 +238,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.3,
-   "texte": "Conteneur vert à pastille bleue vu de côté, flux probable papier absent des postes attendus ; ouverture non visible."
+   "texte": "Conteneur vert à pastille bleue vu de côté, flux probable papier absent des postes attendus ; ouverture non visible.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "37c4279a-98ff-4964-b0ac-1f0527f3bab0",
@@ -249,7 +257,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.75,
-   "texte": "Quatre cuves semi-enterrées à habillage de gravillons et couvercle gris avec trappe, sans aucun déchet posé dessus ni au sol ; le flux est déduit de la forme des trappes et de la couleur grise."
+   "texte": "Quatre cuves semi-enterrées à habillage de gravillons et couvercle gris avec trappe, sans aucun déchet posé dessus ni au sol ; le flux est déduit de la forme des trappes et de la couleur grise.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "37c4279a-98ff-4964-b0ac-1f0527f3bab0",
@@ -266,7 +276,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.8,
-   "texte": "Une grande colonne grise aérienne avec deux ouvertures à liseré jaune, visible avec ses ouvertures, sans déchet dessus ni au pied ; les colonnes plus à gauche sont trop coupées ou en retrait pour être comptées."
+   "texte": "Une grande colonne grise aérienne avec deux ouvertures à liseré jaune, visible avec ses ouvertures, sans déchet dessus ni au pied ; les colonnes plus à gauche sont trop coupées ou en retrait pour être comptées.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "0371db76-0d96-4d4e-8887-e46d3f839102",
@@ -283,7 +295,9 @@
    "sacs": 2,
    "cause": "incivilite",
    "confiance": 0.6,
-   "texte": "Trois colonnes semi-enterrées à dôme gris, fermées, sans déchet posé dessus ; deux cartons vides (un ouvert, un aplati) au sol entre les colonnes, flux étranger aux ordures ménagères. Le flux exact des trois dômes identiques (OM ou emballages) n'est pas certain."
+   "texte": "Trois colonnes semi-enterrées à dôme gris, fermées, sans déchet posé dessus ; deux cartons vides (un ouvert, un aplati) au sol entre les colonnes, flux étranger aux ordures ménagères. Le flux exact des trois dômes identiques (OM ou emballages) n'est pas certain.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "0371db76-0d96-4d4e-8887-e46d3f839102",
@@ -300,7 +314,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.75,
-   "texte": "Deux colonnes aériennes vertes (une sarcelle partiellement masquée, une vert foncé à deux ouvertures rondes), rien posé dessus ni au sol à leur pied."
+   "texte": "Deux colonnes aériennes vertes (une sarcelle partiellement masquée, une vert foncé à deux ouvertures rondes), rien posé dessus ni au sol à leur pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "13c11b16-153a-4880-82fd-f03590f1035e",
@@ -317,7 +333,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.85,
-   "texte": "Deux grandes colonnes vertes à verre aériennes (ouvertures rondes et en fente) côte à côte ; rien posé dessus ni au pied, sol mouillé propre, la seconde colonne est partiellement masquée par la première mais ses ouvertures restent visibles."
+   "texte": "Deux grandes colonnes vertes à verre aériennes (ouvertures rondes et en fente) côte à côte ; rien posé dessus ni au pied, sol mouillé propre, la seconde colonne est partiellement masquée par la première mais ses ouvertures restent visibles.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "98ae9f47-41e9-4687-9c64-4e281637285d",
@@ -334,7 +352,9 @@
    "sacs": 2,
    "cause": "incivilite",
    "confiance": 0.72,
-   "texte": "Deux colonnes grises semi-enterrées à trappe métallique sont entièrement visibles (une troisième est coupée à gauche, ouverture non visible, non comptée), aucun déchet posé dessus ; au sol, une caisse en carton et un carton ouvert, flux étranger aux ordures ménagères."
+   "texte": "Deux colonnes grises semi-enterrées à trappe métallique sont entièrement visibles (une troisième est coupée à gauche, ouverture non visible, non comptée), aucun déchet posé dessus ; au sol, une caisse en carton et un carton ouvert, flux étranger aux ordures ménagères.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "53c34b8d-1ab5-4fa5-98cf-e0e8f5a5d8a6",
@@ -351,7 +371,9 @@
    "sacs": 2,
    "cause": "incivilite",
    "confiance": 0.6,
-   "texte": "Trois colonnes semi-enterrées à dôme gris, aucun déchet posé dessus ; au pied des deux dernières, un carton aplati et une petite caisse en carton, étrangers au flux. Le flux des trois dômes identiques (gris) est présumé, non certain."
+   "texte": "Trois colonnes semi-enterrées à dôme gris, aucun déchet posé dessus ; au pied des deux dernières, un carton aplati et une petite caisse en carton, étrangers au flux. Le flux des trois dômes identiques (gris) est présumé, non certain.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "53c34b8d-1ab5-4fa5-98cf-e0e8f5a5d8a6",
@@ -368,7 +390,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.6,
-   "texte": "Deux colonnes aériennes à droite (une vert foncé avec pictogramme verre, une bleu-vert partiellement masquée), rien posé dessus ni à leur pied ; le flux de la colonne bleu-vert reste incertain."
+   "texte": "Deux colonnes aériennes à droite (une vert foncé avec pictogramme verre, une bleu-vert partiellement masquée), rien posé dessus ni à leur pied ; le flux de la colonne bleu-vert reste incertain.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "2bec1d0a-7851-4471-86da-359ea2f51b76",
@@ -385,7 +409,9 @@
    "sacs": 2,
    "cause": "incivilite",
    "confiance": 0.6,
-   "texte": "Trois colonnes semi-enterrées à dôme gris (flux présumé ordures ménagères d'après la couleur, sans pictogramme lisible), aucun déchet sur les dômes ; deux cartons vides au sol devant les colonnes centrale et droite."
+   "texte": "Trois colonnes semi-enterrées à dôme gris (flux présumé ordures ménagères d'après la couleur, sans pictogramme lisible), aucun déchet sur les dômes ; deux cartons vides au sol devant les colonnes centrale et droite.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "2bec1d0a-7851-4471-86da-359ea2f51b76",
@@ -402,7 +428,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.7,
-   "texte": "Deux grandes colonnes aériennes (une verte avec pictogramme verre, une bleu-vert partiellement masquée) à droite, rien posé dessus ni à leur pied."
+   "texte": "Deux grandes colonnes aériennes (une verte avec pictogramme verre, une bleu-vert partiellement masquée) à droite, rien posé dessus ni à leur pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "test-1794508854738",
@@ -419,7 +447,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.6,
-   "texte": "Une colonne verte avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, identification du flux déduite de la couleur."
+   "texte": "Une colonne verte avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, identification du flux déduite de la couleur.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "test-1794508854738",
@@ -436,7 +466,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.6,
-   "texte": "Une colonne jaune avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, flux déduit de la couleur."
+   "texte": "Une colonne jaune avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, flux déduit de la couleur.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "test-1794508854738",
@@ -453,7 +485,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.6,
-   "texte": "Une colonne gris foncé avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, flux déduit de la couleur."
+   "texte": "Une colonne gris foncé avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, flux déduit de la couleur.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "cors-1794508977493",
@@ -470,7 +504,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.75,
-   "texte": "Colonne verte à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Image très schématique, flux déduit de la couleur."
+   "texte": "Colonne verte à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Image très schématique, flux déduit de la couleur.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "cors-1794508977493",
@@ -487,7 +523,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.75,
-   "texte": "Colonne jaune à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Image très schématique, flux déduit de la couleur."
+   "texte": "Colonne jaune à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Image très schématique, flux déduit de la couleur.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "cors-1794508977493",
@@ -504,7 +542,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.7,
-   "texte": "Colonne gris foncé à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Flux déduit de la couleur, ouverture plus petite que d'ordinaire pour ce flux."
+   "texte": "Colonne gris foncé à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Flux déduit de la couleur, ouverture plus petite que d'ordinaire pour ce flux.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "f3a2e4bf-f1e8-4d3a-8ec8-0f0c274b1a55",
@@ -521,7 +561,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.5,
-   "texte": "Quatre colonnes semi-enterrées à dôme gris foncé avec trappe rectangulaire, aucun déchet sur les dômes ni au sol (seulement des feuilles mortes) ; le flux est incertain car tous les dômes sont gris et les pictogrammes sont trop petits, rattachement aux ordures ménagères probable mais non confirmé."
+   "texte": "Quatre colonnes semi-enterrées à dôme gris foncé avec trappe rectangulaire, aucun déchet sur les dômes ni au sol (seulement des feuilles mortes) ; le flux est incertain car tous les dômes sont gris et les pictogrammes sont trop petits, rattachement aux ordures ménagères probable mais non confirmé.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "6788e7d8-e2f8-4e8a-9559-768903830180",
@@ -538,7 +580,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.85,
-   "texte": "Une colonne verte à verre au fond à droite, ouvertures rondes visibles, rien posé dessus ni à son pied (seulement des feuilles mortes)."
+   "texte": "Une colonne verte à verre au fond à droite, ouvertures rondes visibles, rien posé dessus ni à son pied (seulement des feuilles mortes).",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "6788e7d8-e2f8-4e8a-9559-768903830180",
@@ -555,7 +599,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.88,
-   "texte": "Une colonne à ouvertures jaunes au centre, ouvertures dégagées, aucun déchet dessus ni au sol à son pied."
+   "texte": "Une colonne à ouvertures jaunes au centre, ouvertures dégagées, aucun déchet dessus ni au sol à son pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "6788e7d8-e2f8-4e8a-9559-768903830180",
@@ -572,7 +618,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.4,
-   "texte": "Colonne bleue étiquetée « papier cartonnette » à gauche, absente des flux attendus du site ; ouvertures dégagées, aucun dépôt dessus ni au sol."
+   "texte": "Colonne bleue étiquetée « papier cartonnette » à gauche, absente des flux attendus du site ; ouvertures dégagées, aucun dépôt dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "ff8d11a2-7e6f-4dd2-aa41-e809a93177f5",
@@ -589,7 +637,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.85,
-   "texte": "Colonne grise à opercule vert avec deux ouvertures rondes, aucun déchet posé dessus ni au pied."
+   "texte": "Colonne grise à opercule vert avec deux ouvertures rondes, aucun déchet posé dessus ni au pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "ff8d11a2-7e6f-4dd2-aa41-e809a93177f5",
@@ -606,7 +656,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.65,
-   "texte": "Petit conteneur gris semi-enterré à tambour métallique, identifié comme ordures ménagères par sa forme. Rien dessus ni au sol sur la dalle."
+   "texte": "Petit conteneur gris semi-enterré à tambour métallique, identifié comme ordures ménagères par sa forme. Rien dessus ni au sol sur la dalle.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "ff8d11a2-7e6f-4dd2-aa41-e809a93177f5",
@@ -623,7 +675,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.8,
-   "texte": "Colonne grise à opercule jaune et blanc avec consignes de tri. Quelques objets visibles dans l'ouverture, mais rien posé dessus ni au pied."
+   "texte": "Colonne grise à opercule jaune et blanc avec consignes de tri. Quelques objets visibles dans l'ouverture, mais rien posé dessus ni au pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "ff8d11a2-7e6f-4dd2-aa41-e809a93177f5",
@@ -640,7 +694,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.4,
-   "texte": "Colonne grise à opercule bleu, flux papier absent des postes attendus du site. Rien dessus ni au sol."
+   "texte": "Colonne grise à opercule bleu, flux papier absent des postes attendus du site. Rien dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "7ca26150-35ef-4c09-9962-b9524d569d5c",
@@ -657,7 +713,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.75,
-   "texte": "Une colonne emballages (plaquette jaune « Emballages plastique et métal ») vue de face avec trois ouvertures. Quelques bouteilles plastique sont visibles dans deux ouvertures, mais rien n'est posé sur le dessus de la colonne et rien au sol au pied. [Correction du 16/11 : colonne constatée pleine sur place ; non vue par le classifieur.]"
+   "texte": "Une colonne emballages (plaquette jaune « Emballages plastique et métal ») vue de face avec trois ouvertures. Quelques bouteilles plastique sont visibles dans deux ouvertures, mais rien n'est posé sur le dessus de la colonne et rien au sol au pied. [Correction du 16/11 : colonne constatée pleine sur place ; non vue par le classifieur.]",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "5e609848-1755-45b3-80c9-3642b3acc7bd",
@@ -674,7 +732,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.9,
-   "texte": "Colonne grise à ouvertures rondes vertes entièrement visible, rien posé dessus ni au pied."
+   "texte": "Colonne grise à ouvertures rondes vertes entièrement visible, rien posé dessus ni au pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "5e609848-1755-45b3-80c9-3642b3acc7bd",
@@ -691,7 +751,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.85,
-   "texte": "Colonne grise à trappe bleue entièrement visible, rien posé dessus ni au pied."
+   "texte": "Colonne grise à trappe bleue entièrement visible, rien posé dessus ni au pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "5e609848-1755-45b3-80c9-3642b3acc7bd",
@@ -708,7 +770,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.8,
-   "texte": "Borne à tambour inox sur dalle métallique visible, rien posé dessus ni autour ; flux déduit du type de tambour."
+   "texte": "Borne à tambour inox sur dalle métallique visible, rien posé dessus ni autour ; flux déduit du type de tambour.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "c935bcb1-3e19-4193-9ec6-a1aa7e843f10",
@@ -725,7 +789,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.92,
-   "texte": "Colonne bleue (papier/cartonnettes) entièrement visible avec ses ouvertures, rien posé dessus ni au sol."
+   "texte": "Colonne bleue (papier/cartonnettes) entièrement visible avec ses ouvertures, rien posé dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "c935bcb1-3e19-4193-9ec6-a1aa7e843f10",
@@ -742,7 +808,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.92,
-   "texte": "Colonne jaune entièrement visible avec ses ouvertures, rien posé dessus ni au pied, seulement des feuilles mortes au sol."
+   "texte": "Colonne jaune entièrement visible avec ses ouvertures, rien posé dessus ni au pied, seulement des feuilles mortes au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "c935bcb1-3e19-4193-9ec6-a1aa7e843f10",
@@ -759,7 +827,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.88,
-   "texte": "Colonne verte à ouvertures rondes visible à l'arrière-plan, partiellement masquée par la colonne jaune mais ouvertures visibles, rien dessus ni au sol."
+   "texte": "Colonne verte à ouvertures rondes visible à l'arrière-plan, partiellement masquée par la colonne jaune mais ouvertures visibles, rien dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "5db65bac-6dce-48d9-8b50-3edf1a702730",
@@ -776,7 +846,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.85,
-   "texte": "Quatre colonnes semi-enterrées à dôme gris et pictogramme sac, ouvertures visibles (la dernière à droite est en partie coupée), aucun déchet posé dessus ni au sol."
+   "texte": "Quatre colonnes semi-enterrées à dôme gris et pictogramme sac, ouvertures visibles (la dernière à droite est en partie coupée), aucun déchet posé dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "5db65bac-6dce-48d9-8b50-3edf1a702730",
@@ -793,7 +865,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.7,
-   "texte": "Un conteneur noir à ouvertures cerclées de jaune au fond à gauche, rien dessus ni au pied ; les autres conteneurs noirs plus à gauche sont trop coupés ou trop éloignés pour être identifiés."
+   "texte": "Un conteneur noir à ouvertures cerclées de jaune au fond à gauche, rien dessus ni au pied ; les autres conteneurs noirs plus à gauche sont trop coupés ou trop éloignés pour être identifiés.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "cbb38f31-c11b-4dfb-860c-17080b6c2841",
@@ -810,7 +884,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.55,
-   "texte": "Quatre colonnes semi-enterrées à habillage de gravillons et dôme gris, sans déchet sur les dômes ni au sol. Le flux est déduit de la couleur grise et du pictogramme de sac sur l'une d'elles. Le verre n'est pas exclu pour certaines."
+   "texte": "Quatre colonnes semi-enterrées à habillage de gravillons et dôme gris, sans déchet sur les dômes ni au sol. Le flux est déduit de la couleur grise et du pictogramme de sac sur l'une d'elles. Le verre n'est pas exclu pour certaines.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "cbb38f31-c11b-4dfb-860c-17080b6c2841",
@@ -827,7 +903,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.6,
-   "texte": "Une seule grande colonne sombre aux ouvertures jaunes est nettement visible à gauche, sans déchet dessus ni au pied. Les deux colonnes sombres derrière sont partiellement masquées et n'ont pas été comptées."
+   "texte": "Une seule grande colonne sombre aux ouvertures jaunes est nettement visible à gauche, sans déchet dessus ni au pied. Les deux colonnes sombres derrière sont partiellement masquées et n'ont pas été comptées.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "cad10dbd-1e0f-45ee-9860-afab965336c0",
@@ -844,7 +922,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.75,
-   "texte": "Trois colonnes semi-enterrées à dôme gris et trappe à tambour, sans aucun déchet posé dessus ni sac à leur pied ; le flux est déduit de la forme et du pictogramme de sac, sans certitude."
+   "texte": "Trois colonnes semi-enterrées à dôme gris et trappe à tambour, sans aucun déchet posé dessus ni sac à leur pied ; le flux est déduit de la forme et du pictogramme de sac, sans certitude.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "cad10dbd-1e0f-45ee-9860-afab965336c0",
@@ -861,7 +941,9 @@
    "sacs": 2,
    "cause": "incivilite",
    "confiance": 0.7,
-   "texte": "Trois colonnes vertes à ouverture ronde alignées (la troisième est coupée par le bord du cadre mais son ouverture est visible), aucun déchet sur les couvercles ; un carton plié et un morceau de carton au sol au pied de la première colonne, flux étranger au verre."
+   "texte": "Trois colonnes vertes à ouverture ronde alignées (la troisième est coupée par le bord du cadre mais son ouverture est visible), aucun déchet sur les couvercles ; un carton plié et un morceau de carton au sol au pied de la première colonne, flux étranger au verre.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "8b51c96e-79e4-44d4-8512-0608b175ee96",
@@ -878,7 +960,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.85,
-   "texte": "Trois colonnes semi-enterrées à dôme gris et trappe à tambour sont visibles, aucun déchet posé dessus ni sac à leur pied, seulement quelques petits papiers épars."
+   "texte": "Trois colonnes semi-enterrées à dôme gris et trappe à tambour sont visibles, aucun déchet posé dessus ni sac à leur pied, seulement quelques petits papiers épars.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "8b51c96e-79e4-44d4-8512-0608b175ee96",
@@ -895,7 +979,9 @@
    "sacs": 1,
    "cause": "incivilite",
    "confiance": 0.65,
-   "texte": "Une colonne verte à ouvertures rondes est nettement identifiable, rien posé dessus ; un emballage carton ouvert est au sol à son pied, flux étranger au verre. Les deux autres conteneurs verts à droite sont partiellement cadrés et de flux incertain, donc non comptés."
+   "texte": "Une colonne verte à ouvertures rondes est nettement identifiable, rien posé dessus ; un emballage carton ouvert est au sol à son pied, flux étranger au verre. Les deux autres conteneurs verts à droite sont partiellement cadrés et de flux incertain, donc non comptés.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "ba1c15e0-485d-4e05-bdae-509b1322f3f0",
@@ -912,7 +998,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.85,
-   "texte": "Conteneur noir à deux ouvertures rondes cerclées de vert et deux autocollants verts (verre) ; rien posé dessus, rien au sol."
+   "texte": "Conteneur noir à deux ouvertures rondes cerclées de vert et deux autocollants verts (verre) ; rien posé dessus, rien au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "ba1c15e0-485d-4e05-bdae-509b1322f3f0",
@@ -929,7 +1017,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.6,
-   "texte": "Colonne verte à gauche avec ouverture ronde et autocollant jaune, flux emballages supposé d'après l'autocollant ; rien dessus ni au sol."
+   "texte": "Colonne verte à gauche avec ouverture ronde et autocollant jaune, flux emballages supposé d'après l'autocollant ; rien dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "ba1c15e0-485d-4e05-bdae-509b1322f3f0",
@@ -946,7 +1036,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.4,
-   "texte": "Colonne verte centrale à ouverture rectangulaire et autocollant bleu, évoquant le papier, flux absent des postes attendus ; rien dessus ni au sol."
+   "texte": "Colonne verte centrale à ouverture rectangulaire et autocollant bleu, évoquant le papier, flux absent des postes attendus ; rien dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "e9a96dde-fd7b-4e48-90b1-abcb56c6d599",
@@ -963,7 +1055,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.75,
-   "texte": "Deux colonnes semi-enterrées à base en gravillons lavés et couvercle violet/gris, ouvertures visibles, aucun déchet dessus ni au sol ; flux déduit de la forme et de la couleur."
+   "texte": "Deux colonnes semi-enterrées à base en gravillons lavés et couvercle violet/gris, ouvertures visibles, aucun déchet dessus ni au sol ; flux déduit de la forme et de la couleur.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "e9a96dde-fd7b-4e48-90b1-abcb56c6d599",
@@ -980,7 +1074,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.7,
-   "texte": "Grande colonne noire à droite du cadre avec étiquette verte, partiellement coupée par le bord ; rien dessus ni au pied ; flux incertain."
+   "texte": "Grande colonne noire à droite du cadre avec étiquette verte, partiellement coupée par le bord ; rien dessus ni au pied ; flux incertain.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "e9a96dde-fd7b-4e48-90b1-abcb56c6d599",
@@ -997,7 +1093,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.6,
-   "texte": "Colonne verte avec étiquette jaune, ouverture visible, rien dessus ni au sol ; identification du flux basée sur l'étiquette jaune."
+   "texte": "Colonne verte avec étiquette jaune, ouverture visible, rien dessus ni au sol ; identification du flux basée sur l'étiquette jaune.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "e9a96dde-fd7b-4e48-90b1-abcb56c6d599",
@@ -1014,7 +1112,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.4,
-   "texte": "Colonne verte avec étiquette bleue, pouvant correspondre à du papier, flux absent des contenants attendus ; rien dessus ni au sol."
+   "texte": "Colonne verte avec étiquette bleue, pouvant correspondre à du papier, flux absent des contenants attendus ; rien dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "7569eae9-d41e-449b-96d3-e8c79ed7b9df",
@@ -1031,7 +1131,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.9,
-   "texte": "Grande colonne grise aérienne avec façade jaune et étiquette « emballages », trois ouvertures visibles, rien posé dessus ni au pied."
+   "texte": "Grande colonne grise aérienne avec façade jaune et étiquette « emballages », trois ouvertures visibles, rien posé dessus ni au pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "7569eae9-d41e-449b-96d3-e8c79ed7b9df",
@@ -1048,7 +1150,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.7,
-   "texte": "Colonne semi-enterrée grise avec tambour inox à poignée, typique d'ordures ménagères ; aucun déchet dessus ni au sol visible."
+   "texte": "Colonne semi-enterrée grise avec tambour inox à poignée, typique d'ordures ménagères ; aucun déchet dessus ni au sol visible.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "66288e43-a7c9-4e7a-beba-4cbda20c793a",
@@ -1065,7 +1169,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.92,
-   "texte": "Colonne à verre verte au premier plan, ouvertures dégagées, aucun déchet dessus ni au sol."
+   "texte": "Colonne à verre verte au premier plan, ouvertures dégagées, aucun déchet dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "66288e43-a7c9-4e7a-beba-4cbda20c793a",
@@ -1082,7 +1188,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.9,
-   "texte": "Colonne bleue (papier) au centre, ouvertures dégagées, rien dessus ni au pied."
+   "texte": "Colonne bleue (papier) au centre, ouvertures dégagées, rien dessus ni au pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "66288e43-a7c9-4e7a-beba-4cbda20c793a",
@@ -1099,7 +1207,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.9,
-   "texte": "Colonne à ouvertures jaunes (emballages) à l'arrière-plan, rien dessus ni au sol."
+   "texte": "Colonne à ouvertures jaunes (emballages) à l'arrière-plan, rien dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
   },
   {
    "uuid": "test-releveur-1794933778068",
@@ -1116,7 +1226,9 @@
    "sacs": 0,
    "cause": "",
    "confiance": 0.45,
-   "texte": "Un seul contenant gris-vert foncé avec une ouverture rectangulaire verte est visible. Aucun déchet n'est posé dessus ni au sol. La photo est très schématique, donc le flux est incertain (ordures ménagères ou papier à fente)."
+   "texte": "Un seul contenant gris-vert foncé avec une ouverture rectangulaire verte est visible. Aucun déchet n'est posé dessus ni au sol. La photo est très schématique, donc le flux est incertain (ordures ménagères ou papier à fente).",
+   "personneVisible": false,
+   "plaqueLisible": false
   }
  ]
 }
