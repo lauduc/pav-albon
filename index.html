@@ -274,6 +274,20 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 }
 .raz svg { width: 19px; height: 19px; flex: none; }
 .raz:active { background: color-mix(in srgb, var(--alert) 10%, var(--surface)); }
+/* Deux actions au pied de la liste : effacer, et aller voir ce que les relevés
+   ont produit. La rangée reste centrée même quand « Tout effacer » est caché —
+   c'est le cas le plus fréquent, tournée terminée. */
+.actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px; }
+.actions .raz { margin: 0; }
+.meteo-l {
+  appearance: none; cursor: pointer; text-decoration: none;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  background: var(--surface); color: var(--ink);
+  border: 1.5px solid var(--line); border-radius: 12px; padding: 13px 20px;
+  font-family: var(--font-ui); font-size: .95rem; font-weight: 600;
+}
+.meteo-l svg { width: 19px; height: 19px; flex: none; color: var(--muted); }
+.meteo-l:active { background: var(--bg); }
 .round { list-style: none; padding: 0; margin: 0; }
 .round .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .round .cd { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); flex: none; }
@@ -417,10 +431,18 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   <div>
     <span class="eyebrow">Points de collecte — appuie pour en choisir un</span>
     <ul class="round" id="round"></ul>
-    <button type="button" class="raz" id="raz" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-      <span>Tout effacer</span>
-    </button>
+    <div class="actions">
+      <button type="button" class="raz" id="raz" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        <span>Tout effacer</span>
+      </button>
+      <!-- Ouvert hors de l'application : la météo est une page de lecture, on
+           n'y reste pas, et le navigateur rend son bouton retour. -->
+      <a class="meteo-l" href="meteo/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.6" cy="8.4" r="3.1"/><path d="M8.6 2.6v1.6"/><path d="M3.4 8.4h1.6"/><path d="M4.6 4.4l1.1 1.1"/><path d="M12.6 4.4l-1.1 1.1"/><path d="M7.5 18h9.2a3.3 3.3 0 0 0 .3-6.6 5 5 0 0 0-9.6-1A3.8 3.8 0 0 0 7.5 18z"/></svg>
+        <span>Voir la météo</span>
+      </a>
+    </div>
   </div>
 
   <div class="queue" id="queue">
