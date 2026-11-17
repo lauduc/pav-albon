@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-17T16:30:40Z",
+ "maj": "2026-11-17T16:45:40Z",
  "source": "classeur PAV Albon — relevés points de collecte",
  "referentiel": [
   {
@@ -1100,6 +1100,23 @@
    "cause": "",
    "confiance": 0.9,
    "texte": "Colonne à ouvertures jaunes (emballages) à l'arrière-plan, rien dessus ni au sol."
+  },
+  {
+   "uuid": "test-releveur-1794933778068",
+   "ts": "2026-11-17T16:42:58.068Z",
+   "site": "ALB-01",
+   "flux": "ordures_menageres",
+   "photo": "1LeYTHCnKccgA-mt1oEkE4qp3-eDAFLF3",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.45,
+   "texte": "Un seul contenant gris-vert foncé avec une ouverture rectangulaire verte est visible. Aucun déchet n'est posé dessus ni au sol. La photo est très schématique, donc le flux est incertain (ordures ménagères ou papier à fente)."
   }
  ]
 }
