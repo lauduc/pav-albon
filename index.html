@@ -338,6 +338,13 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 }
 .share-l svg { width: 18px; height: 18px; flex: none; }
 .share-l:active { background: var(--bg); color: var(--ink); }
+.code-i {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 10px;
+  background: var(--bg); color: var(--ink); text-align: center;
+  font-family: var(--font-mono); font-size: 1.05rem; letter-spacing: .08em;
+}
+.code-i:focus { outline: 2px solid var(--signal); outline-offset: 1px; }
+.code-m { margin: 0; font-size: .82rem; color: var(--muted); min-height: 1.1em; }
 .sheet {
   position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.62);
   display: flex; align-items: center; justify-content: center;
@@ -463,6 +470,12 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg>
     <span>Partager l'application</span>
   </button>
+  <!-- Le code d'accès : saisi une fois, il part avec chaque photo. Le libellé
+       affiche le code en place, pour qu'on sache sans ouvrir. -->
+  <button type="button" class="share-l" id="code-b">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 19 4"/><path d="m16 7 2 2"/><path d="m19.5 4.5 2 2"/></svg>
+    <span id="code-l">Code d'accès</span>
+  </button>
   <input type="file" accept="image/*" capture="environment" id="file" hidden>
   <input type="file" accept="image/*" id="file-gal" multiple hidden>
 </div>
@@ -473,6 +486,22 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   <button type="button" id="loupe-x" aria-label="Fermer">&times;</button>
   <img id="loupe-img" alt="">
   <div class="loupe-t"><strong id="loupe-nm"></strong><span id="loupe-s"></span></div>
+</div>
+
+<!-- Code d'accès : une seule information à retenir, donc une seule feuille,
+     sans réglage ni option. -->
+<div class="sheet" id="code-s" hidden>
+  <div class="sheet-c" role="dialog" aria-modal="true" aria-labelledby="code-t">
+    <h2 id="code-t">Code d'accès</h2>
+    <p class="sheet-h">Le code remis par la mairie. Il accompagne chaque photo&nbsp;: sans lui, le serveur refuse le dépôt.</p>
+    <input class="code-i" id="code-i" type="text" inputmode="text" autocapitalize="characters"
+           autocomplete="off" spellcheck="false" placeholder="ALB-XXXXXX" aria-label="Code d'accès">
+    <p class="code-m" id="code-m"></p>
+    <div class="sheet-a">
+      <button type="button" class="q-btn prim" id="code-ok">Enregistrer</button>
+      <button type="button" class="q-btn" id="code-x">Fermer</button>
+    </div>
+  </div>
 </div>
 
 <!-- Partage : le QR pointe sur l'adresse publique collecte.mairie-albon.fr,
@@ -1280,6 +1309,28 @@ async function majFile() {
    vérifier avant de s'engager que si l'engagement vient après. Une fois armé,
    en revanche, l'envoi se poursuit tout seul — un échec réseau ne doit pas
    obliger à rester devant le téléphone. */
+/* ── Code d'accès ──────────────────────────────────────────────────────────
+   Un code par personne, délivré par la mairie et révocable depuis le classeur.
+   Il voyage dans le corps de l'envoi, en champ de formulaire plutôt qu'en
+   en-tête : un en-tête personnalisé déclencherait un préflight CORS, et le
+   dépôt multipart s'en passe. Il est recopié dans IndexedDB parce que le
+   service worker, qui vide la file en arrière-plan, n'a pas le localStorage. */
+let CODE = "";
+try { CODE = localStorage.getItem("pav-code") || ""; } catch {}
+function poserCode(v) {
+  CODE = (v || "").trim().toUpperCase();
+  try { localStorage.setItem("pav-code", CODE); } catch {}
+  cfgPut("code", CODE);
+  const l = $("code-l");
+  if (l) l.textContent = CODE ? "Code " + CODE : "Code d'accès";
+}
+function ouvrirCode(msg) {
+  $("code-i").value = CODE;
+  $("code-m").textContent = msg || "";
+  $("code-s").hidden = false;
+  $("code-i").focus();
+}
+
 let envoiArme = false;
 try { envoiArme = localStorage.getItem("pav-arme") === "1"; } catch {}
 const armer = v => { envoiArme = v; try { localStorage.setItem("pav-arme", v ? "1" : "0"); } catch {} };
@@ -1287,6 +1338,11 @@ const armer = v => { envoiArme = v; try { localStorage.setItem("pav-arme", v ? "
 async function vider() {
   if (!envoiArme) { majFile(); return; }
   if (!ENDPOINT || envoiEnCours || !navigator.onLine) { majFile(); return; }
+  if (!CODE) {
+    dernierEtat = "Saisis ton code d'accès avant d'envoyer";
+    armer(false); majFile(); ouvrirCode("Aucun code enregistré sur ce téléphone.");
+    return;
+  }
   const q = await qAll();
   if (!q.length) { dernierEtat = ""; majFile(); return; }
   envoiEnCours = true; dernierEtat = "";
@@ -1298,7 +1354,16 @@ async function vider() {
       const fd = new FormData();
       fd.append("photo", it.photo, it.uuid + ".jpg");
       for (const k of ["uuid","horodatage","site_code","lat","lon","precision_m"]) fd.append(k, it[k]);
+      fd.append("code", CODE);
       const r = await fetch(ENDPOINT, { method: "POST", body: fd });
+      /* Un code refusé ne se répare pas en réessayant : on désarme, on le dit,
+         et la photo reste en file — elle partira une fois le code corrigé. */
+      if (r.status === 401 || r.status === 403) {
+        dernierEtat = "Code d'accès refusé — vérifie-le auprès de la mairie";
+        armer(false);
+        ouvrirCode("Ce code a été refusé par le serveur.");
+        break;
+      }
       if (!r.ok) { dernierEtat = `Le serveur a répondu ${r.status} — nouvelle tentative plus tard`; break; }
       await qDel(it.uuid);
       /* La photo est partie : sa vignette quitte l'îlot, mais le passage
@@ -1343,9 +1408,40 @@ if ("serviceWorker" in navigator) {
   });
   navigator.serviceWorker.addEventListener("message", e => {
     if (e.data && e.data.type === "pav-envoye") { dernierEtat = "Envoyé en arrière-plan"; majFile(); }
+    if (e.data && e.data.type === "pav-refuse") {
+      dernierEtat = "Code d'accès refusé — vérifie-le auprès de la mairie";
+      armer(false); majFile(); ouvrirCode("Ce code a été refusé par le serveur.");
+    }
   });
 }
 cfgPut("endpoint", ENDPOINT);
+
+$("code-b").addEventListener("click", () => ouvrirCode());
+$("code-x").addEventListener("click", () => { $("code-s").hidden = true; });
+$("code-ok").addEventListener("click", () => {
+  const v = $("code-i").value.trim();
+  if (!v) { $("code-m").textContent = "Saisis le code remis par la mairie."; return; }
+  poserCode(v);
+  $("code-s").hidden = true;
+  dernierEtat = "Code enregistré"; majFile();
+});
+$("code-i").addEventListener("keydown", e => { if (e.key === "Enter") $("code-ok").click(); });
+
+/* Lien personnel distribué par la mairie : …/?code=ALB-XXXXXX. On le range et
+   on le retire aussitôt de l'adresse, pour qu'il ne reste ni dans l'historique
+   ni dans un lien repartagé depuis le téléphone. */
+(() => {
+  try {
+    const u = new URL(location.href);
+    const c = u.searchParams.get("code");
+    if (c) {
+      poserCode(c);
+      u.searchParams.delete("code");
+      history.replaceState(null, "", u.pathname + u.search + u.hash);
+    }
+  } catch {}
+})();
+poserCode(CODE);
 
 /* ── démarrage ─────────────────────────────────────────────────────────── */
 /* Le mode démo n'existe que pour un appareil SANS géolocalisation utilisable.

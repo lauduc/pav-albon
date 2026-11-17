@@ -10,7 +10,7 @@
    là-bas, la file part au retour sur la page, pas avant. Le code le gère sans
    erreur, mais la promesse n'est pas la même selon le téléphone. */
 
-const CACHE = "pav-v1";
+const CACHE = "pav-v2";
 const FICHIERS = ["./", "./index.html"];
 
 self.addEventListener("install", e => {
@@ -73,6 +73,10 @@ const supprimer = cle => idb().then(d => new Promise((ok, ko) => {
 async function viderLaFile() {
   const endpoint = await lire(CFG, "endpoint");
   if (!endpoint) return;                       // rien de configuré : on ne tente rien
+  /* Le code d'accès accompagne chaque dépôt. Sans lui, inutile de réveiller le
+     réseau : le serveur refuserait, et Background Sync réessaierait en boucle. */
+  const code = await lire(CFG, "code");
+  if (!code) return;
   const file = (await lire(ST)) || [];
   let envoyees = 0;
   for (const it of file) {
@@ -81,7 +85,16 @@ async function viderLaFile() {
     for (const k of ["uuid", "horodatage", "site_code", "lat", "lon", "precision_m", "source"]) {
       if (it[k] !== undefined && it[k] !== null) fd.append(k, it[k]);
     }
+    fd.append("code", code);
     const r = await fetch(endpoint, { method: "POST", body: fd });
+    // Code refusé : réessayer ne servirait à rien tant qu'il n'a pas changé.
+    // On s'arrête sans relancer d'erreur, et on prévient la page si elle est
+    // ouverte — sinon l'agent le découvrira à sa prochaine visite.
+    if (r.status === 401 || r.status === 403) {
+      const cs = await self.clients.matchAll();
+      cs.forEach(c => c.postMessage({ type: "pav-refuse", status: r.status }));
+      return;
+    }
     // On laisse l'élément en file et on relance l'erreur : Background Sync
     // réessaiera tout seul plus tard, avec son propre délai.
     if (!r.ok) throw new Error("envoi refusé " + r.status);
