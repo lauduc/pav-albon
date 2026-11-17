@@ -16,9 +16,9 @@
         sombre : une vignette sombre dans une page claire se voit comme le nez
         au milieu de la figure. ?theme=dark ou ?theme=auto pour en décider.
 
-     Les données viennent de data.json, à côté. La vignette ne calcule rien :
-     le Bac-Score est déjà calculé en amont, pour que la page détaillée et la
-     vignette ne puissent pas diverger. -->
+     Les données viennent de donnees.json, à côté, et le Bac-Score est calculé
+     par bac-score.js — le même module que la page détaillée, pour que les deux
+     ne puissent pas diverger. -->
 <style>
 *, *::before, *::after { box-sizing: border-box; }
 :root {
@@ -114,7 +114,9 @@ a { color: inherit; }
 <body>
 <div id="app"><p class="err">Chargement…</p></div>
 
-<script>
+<script type="module">
+import { normaliser, resume } from "./bac-score.js";
+
 const COULEUR = { A: "--sA", B: "--sB", C: "--sC", D: "--sD", E: "--sE" };
 const PAGE = "https://collecte.mairie-albon.fr/meteo/";   // la page détaillée
 
@@ -177,9 +179,9 @@ function rendre(d) {
     </div>`;
 }
 
-fetch("data.json", { cache: "no-cache" })
+fetch("donnees.json", { cache: "no-cache" })
   .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(rendre)
+  .then(d => { const n = normaliser(d); rendre(resume(n.REF, n.OBS, n)); })
   .catch(() => {
     document.getElementById("app").innerHTML =
       '<p class="err">Les relevés ne sont pas disponibles pour le moment.</p>';

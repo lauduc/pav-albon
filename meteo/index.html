@@ -291,67 +291,19 @@ details[open] summary{margin-bottom:8px}
 </footer>
 </div>
 
-<script>
-const REF = [
- ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"verre",1],
- ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"ordures_menageres",4],
- ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"emballages",1],
- ["ALB-01","Îlot École Louise Michel",45.242644,4.851511,"papier",1],
- ["ALB-02","Îlot Saint-Martin-des-Rosiers",45.237630,4.871429,"verre",0],
- ["ALB-02","Îlot Saint-Martin-des-Rosiers",45.237630,4.871429,"ordures_menageres",0],
- ["ALB-02","Îlot Saint-Martin-des-Rosiers",45.237630,4.871429,"emballages",0],
- ["ALB-03","Îlot Route de l'Argentelle",45.249818,4.845634,"verre",0],
- ["ALB-03","Îlot Route de l'Argentelle",45.249818,4.845634,"ordures_menageres",0],
- ["ALB-03","Îlot Route de l'Argentelle",45.249818,4.845634,"emballages",0],
- ["ALB-04","Îlot Parking du restaurant routier",45.241359,4.820709,"verre",0],
- ["ALB-04","Îlot Parking du restaurant routier",45.241359,4.820709,"ordures_menageres",0],
- ["ALB-04","Îlot Parking du restaurant routier",45.241359,4.820709,"emballages",0],
- ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"verre",1],
- ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"ordures_menageres",1],
- ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"emballages",1],
- ["ALB-05","Îlot La Tour d'Albon",45.249859,4.865426,"papier",1],
- ["ALB-06","Îlot Creux de la Thine",45.261132,4.825427,"verre",2],
- ["ALB-06","Îlot Creux de la Thine",45.261132,4.825427,"ordures_menageres",0],
- ["ALB-06","Îlot Creux de la Thine",45.261132,4.825427,"emballages",0]
-].map(r=>({site:r[0],nom:r[1],lat:r[2],lon:r[3],flux:r[4],nbUnites:r[5]}));
+<script type="module">
+/* La page ne contient plus de données : elle charge donnees.json, publié
+   depuis le classeur, et importe le calcul du Bac-Score. Une seule
+   implémentation du barème, partagée avec la vignette. */
+import {LETTRES, FLUX_LABEL, dateFR, jours, normaliser,
+        calcule as calculeAvec, passagesParSite as passagesAvec} from './bac-score.js';
 
-// uuid, horodatage, site, flux, photoId, inaccessible, vues, dessus, bloquees, pleines, depotSol, sacs, cause, confiance, justification
-const OBS = [
- ["test-1794508854738","2026-11-12T18:40:54.738Z","ALB-01","verre","1dY2Rz6IcIEPSzVnbK2aMSWq6H3L3RGEN",0,1,0,0,0,0,0,"",0.60,"Une colonne verte avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, identification du flux déduite de la couleur."],
- ["test-1794508854738","2026-11-12T18:40:54.738Z","ALB-01","emballages","1dY2Rz6IcIEPSzVnbK2aMSWq6H3L3RGEN",0,1,0,0,0,0,0,"",0.60,"Une colonne jaune avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, flux déduit de la couleur."],
- ["test-1794508854738","2026-11-12T18:40:54.738Z","ALB-01","ordures_menageres","1dY2Rz6IcIEPSzVnbK2aMSWq6H3L3RGEN",0,1,0,0,0,0,0,"",0.60,"Une colonne gris foncé avec ouverture ronde, rien posé dessus ni au sol ; image schématique de test, flux déduit de la couleur."],
- ["cors-1794508977493","2026-11-12T18:42:57.494Z","ALB-02","verre","1DZKZvdIzvgvIdL--IJfhLGKX9gpX8OLc",0,1,0,0,0,0,0,"",0.75,"Colonne verte à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Image très schématique, flux déduit de la couleur."],
- ["cors-1794508977493","2026-11-12T18:42:57.494Z","ALB-02","emballages","1DZKZvdIzvgvIdL--IJfhLGKX9gpX8OLc",0,1,0,0,0,0,0,"",0.75,"Colonne jaune à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Image très schématique, flux déduit de la couleur."],
- ["cors-1794508977493","2026-11-12T18:42:57.494Z","ALB-02","ordures_menageres","1DZKZvdIzvgvIdL--IJfhLGKX9gpX8OLc",0,1,0,0,0,0,0,"",0.70,"Colonne gris foncé à ouverture ronde, entièrement dans le cadre ; aucun déchet posé dessus ni au sol. Flux déduit de la couleur, ouverture plus petite que d'ordinaire pour ce flux."],
- ["13c11b16","2026-11-12T10:28:53.737Z","ALB-06","verre","1QgsZE-9L2Svj_FNTrCiooAn8JY3Vxaor",0,2,0,0,0,0,0,"",0.85,"Deux grandes colonnes vertes à verre aériennes (ouvertures rondes et en fente) côte à côte ; rien posé dessus ni au pied, sol mouillé propre."],
- ["0371db76","2026-11-12T10:28:27.044Z","ALB-06","ordures_menageres","1hLxTpfa9LamDM1uaAQfROikgH962rgBC",0,3,0,0,0,1,2,"incivilite",0.60,"Trois colonnes semi-enterrées à dôme gris, fermées, sans déchet posé dessus ; deux cartons vides (un ouvert, un aplati) au sol entre les colonnes, flux étranger aux ordures ménagères."],
- ["0371db76","2026-11-12T10:28:27.044Z","ALB-06","verre","1hLxTpfa9LamDM1uaAQfROikgH962rgBC",0,2,0,0,0,0,0,"",0.75,"Deux colonnes aériennes vertes (une sarcelle partiellement masquée, une vert foncé à deux ouvertures rondes), rien posé dessus ni au sol à leur pied."],
- ["98ae9f47","2026-11-12T10:29:06.526Z","ALB-06","ordures_menageres","1EGKRbYQuyay7AJAG9czHt-yYfmScwW32",0,2,0,0,0,1,2,"incivilite",0.72,"Deux colonnes grises semi-enterrées à trappe métallique entièrement visibles, aucun déchet posé dessus ; au sol, une caisse en carton et un carton ouvert, flux étranger aux ordures ménagères."],
- ["53c34b8d","2026-11-12T10:31:08.000Z","ALB-06","ordures_menageres","1QmvLTOMtp27mVqSpXGzrduiwXgVgPceS",0,3,0,0,0,1,2,"incivilite",0.60,"Trois colonnes semi-enterrées à dôme gris, aucun déchet posé dessus ; au pied des deux dernières, un carton aplati et une petite caisse en carton, étrangers au flux."],
- ["53c34b8d","2026-11-12T10:31:08.000Z","ALB-06","verre","1QmvLTOMtp27mVqSpXGzrduiwXgVgPceS",0,2,0,0,0,0,0,"",0.60,"Deux colonnes aériennes à droite (une vert foncé avec pictogramme verre, une bleu-vert partiellement masquée), rien posé dessus ni à leur pied."],
- ["2bec1d0a","2026-11-12T10:31:08.000Z","ALB-06","ordures_menageres","1y7LfBRJwciSBinsBLgmctQsHc_i8MBOR",0,3,0,0,0,1,2,"incivilite",0.60,"Trois colonnes semi-enterrées à dôme gris (flux présumé d'après la couleur, sans pictogramme lisible), aucun déchet sur les dômes ; deux cartons vides au sol devant les colonnes centrale et droite."],
- ["2bec1d0a","2026-11-12T10:31:08.000Z","ALB-06","verre","1y7LfBRJwciSBinsBLgmctQsHc_i8MBOR",0,2,0,0,0,0,0,"",0.70,"Deux grandes colonnes aériennes (une verte avec pictogramme verre, une bleu-vert partiellement masquée) à droite, rien posé dessus ni à leur pied."],
- ["37c4279a","2026-11-11T10:07:45.000Z","ALB-05","ordures_menageres","168IfVhZIzU2kojQorI8d-bW38UuZDa-s",0,4,0,0,0,0,0,"",0.75,"Quatre cuves semi-enterrées à habillage de gravillons et couvercle gris avec trappe, sans aucun déchet posé dessus ni au sol."],
- ["37c4279a","2026-11-11T10:07:45.000Z","ALB-05","emballages","168IfVhZIzU2kojQorI8d-bW38UuZDa-s",0,1,0,0,0,0,0,"",0.80,"Une grande colonne grise aérienne avec deux ouvertures à liseré jaune, visible avec ses ouvertures, sans déchet dessus ni au pied."],
- ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","ordures_menageres","18LKlStVsQib0xLTcTpVVI5od1Pb6WHjO",0,3,0,0,0,1,5,"inadequation",0.70,"Trois conteneurs d'ordures ménagères, rien posé dessus ; cinq sacs déposés au sol à leur pied."],
- ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","verre","18LKlStVsQib0xLTcTpVVI5od1Pb6WHjO",0,1,0,0,0,0,0,"",0.70,"Une colonne à verre visible dans le cadre, rien posé dessus ni au sol."],
- ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","emballages","18LKlStVsQib0xLTcTpVVI5od1Pb6WHjO",0,0,0,0,0,0,0,"",0.50,"Aucune colonne à emballages identifiable dans le cadre."],
- ["5e0d5759","2026-11-11T08:19:59.000Z","ALB-04","papier","18LKlStVsQib0xLTcTpVVI5od1Pb6WHjO",0,0,0,0,0,0,0,"",0.50,"Aucune colonne à papier identifiable dans le cadre."],
- ["6788e7d8","2026-11-16T07:51:32.493Z","ALB-01","verre","1ja2fsm8yy3i_o-R4WQ5SnzEcQEg-Or2n",0,1,0,0,0,0,0,"",0.85,"Une colonne verte à verre au fond à droite, ouvertures rondes visibles, rien posé dessus ni à son pied."],
- ["6788e7d8","2026-11-16T07:51:32.493Z","ALB-01","emballages","1ja2fsm8yy3i_o-R4WQ5SnzEcQEg-Or2n",0,1,0,0,0,0,0,"",0.88,"Une colonne à ouvertures jaunes au centre, ouvertures dégagées, rien au sol."],
- ["6788e7d8","2026-11-16T07:51:32.493Z","ALB-01","papier","1ja2fsm8yy3i_o-R4WQ5SnzEcQEg-Or2n",0,1,0,0,0,0,0,"",0.40,"Colonne bleue étiquetée « papier cartonnette » à gauche, rien au sol."],
- ["f3a2e4bf","2026-11-16T07:51:20.124Z","ALB-01","ordures_menageres","1OTOxhS4MShXf4B1wQ4UTCnEQ6yhiIpE_",0,4,0,0,0,0,0,"",0.50,"Quatre colonnes semi-enterrées à dôme gris foncé, aucune saturation visible, rien au sol."],
- ["7ca26150","2026-11-16T07:55:21.208Z","ALB-05","emballages","1gkxS0C2U36S7EL6iIyK8ST_F3msNSGT7",0,1,0,0,1,0,0,"",0.75,"Une colonne emballages (plaquette jaune), rien posé dessus ni au sol. Colonne constatée pleine sur place le 16 novembre : correction manuelle, le classifieur ne lit pas le niveau de remplissage."],
- ["ff8d11a2","2026-11-16T07:55:05.818Z","ALB-05","verre","1Xduic0y1xhvbanV8-VOB_EpF6o0LB6P0",0,1,0,0,0,0,0,"",0.85,"Colonne grise à opercule vert avec deux ouvertures rondes, rien au sol."],
- ["ff8d11a2","2026-11-16T07:55:05.818Z","ALB-05","ordures_menageres","1Xduic0y1xhvbanV8-VOB_EpF6o0LB6P0",0,1,0,0,0,0,0,"",0.65,"Petit conteneur gris semi-enterré à tambour métallique, rien au sol."],
- ["ff8d11a2","2026-11-16T07:55:05.818Z","ALB-05","emballages","1Xduic0y1xhvbanV8-VOB_EpF6o0LB6P0",0,1,0,0,0,0,0,"",0.80,"Colonne grise à opercule jaune et blanc avec consignes de tri, rien au sol."],
- ["ff8d11a2","2026-11-16T07:55:05.818Z","ALB-05","papier","1Xduic0y1xhvbanV8-VOB_EpF6o0LB6P0",0,1,0,0,0,0,0,"",0.40,"Colonne grise à opercule bleu ; le flux papier est absent du référentiel de ce point, lecture à confirmer."]
-].map(r=>({uuid:r[0],ts:r[1],site:r[2],flux:r[3],photo:r[4],inaccessible:!!r[5],vues:r[6],dessus:r[7],bloquees:r[8],pleines:r[9],depotSol:!!r[10],sacs:r[11],cause:r[12],confiance:r[13],texte:r[14],
-  test:r[0].startsWith("test-")||r[0].startsWith("cors-")}));
+let REF=[], OBS=[];
+const calcule=obs=>calculeAvec(REF,obs);
+const passagesParSite=obs=>passagesAvec(REF,obs);
 
-const FLUX_LABEL={verre:"Verre",ordures_menageres:"Ordures ménagères",emballages:"Emballages",papier:"Papier"};
+
 const FLUX_DOT={verre:"#2f7d4e",ordures_menageres:"#5d6a66",emballages:"#d8a81a",papier:"#2f6ea8"};
-const CAUSE_LABEL={incivilite:"Incivilité",inadequation:"Inadéquation du dispositif",saturation:"Saturation"};
 const NIV=[
  {cls:"lv0",lab:"Propre",wx:"soleil"},
  {cls:"lv1",lab:"À surveiller",wx:"eclaircies"},
@@ -360,36 +312,6 @@ const NIV=[
 ];
 const INCONNU={cls:"lvx",lab:"Sans relevé",wx:"inconnu"};
 const NONVU={cls:"lvx",lab:"Non repéré",wx:"inconnu"};
-// Bac-Score : note A→E d'un point de collecte, sur le modèle du Nutri-Score.
-// Points de pénalité : propreté au sol (0-6) + remplissage (0-4) + récidive sur 30 j (0-4).
-const LETTRES=[
- {l:"A",max:1,var:"--sA",fill:.12,lab:"Impeccable",desc:"rien au sol, conteneurs disponibles"},
- {l:"B",max:3,var:"--sB",fill:.32,lab:"Bon",desc:"incident isolé ou léger"},
- {l:"C",max:6,var:"--sC",fill:.56,lab:"Moyen",desc:"dépôts qui reviennent ou saturation partielle"},
- {l:"D",max:9,var:"--sD",fill:.8,lab:"Dégradé",desc:"dépôts réguliers ou conteneurs souvent pleins"},
- {l:"E",max:99,var:"--sE",fill:1,lab:"Point noir",desc:"dépôts massifs ou récidive chaque semaine"}
-];
-function lettre(pts){return LETTRES.find(x=>pts<=x.max)}
-function ptsProprete(sacs,depot){if(!depot&&sacs===0)return 0;if(sacs<=2)return 2;if(sacs<=4)return 4;return 6}
-function ptsRemplissage(o,ref){
-  if(o.inaccessible) return 4;
-  if(!ref.n||o.vues===0) return 0;
-  const t=(o.bloquees+o.pleines)/ref.n;
-  return t===0?0:t<=1/3?1:t<=2/3?2:4;
-}
-function ptsRecidive(n){return n===0?0:n===1?1:n<=3?2:4}
-// Deux photos du même tas prises à quelques minutes d'intervalle sont UN
-// constat, pas deux : sinon le score récompenserait la parcimonie en photos.
-const FENETRE_PASSAGE=20*60000;
-function nPassagesAvecDepot(site,flux,tFin,obs){
-  const liste=obs.filter(x=>x.site===site&&x.flux===flux&&x.depotSol
-    &&new Date(x.ts).getTime()<=tFin
-    &&new Date(x.ts).getTime()>=tFin-30*86400000)
-    .sort((a,b)=>new Date(a.ts)-new Date(b.ts));
-  let n=0,prec=-Infinity;
-  liste.forEach(x=>{const t=new Date(x.ts).getTime(); if(t-prec>FENETRE_PASSAGE) n++; prec=t;});
-  return n;
-}
 let bacSeq=0;
 function bacIcon(frac,col,size){
   const s=size||44,id="bk"+(++bacSeq),y=(21.6-13.6*frac).toFixed(2),h=(13.6*frac).toFixed(2);
@@ -423,112 +345,7 @@ function icon(kind,size){
   return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" aria-hidden="true">'+map[kind]+'</svg>';
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-function dateFR(iso){const d=new Date(iso);return d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
-function jours(iso){return Math.floor((Date.now()-new Date(iso).getTime())/86400000)}
 
-function niveauProprete(o){
-  if(!o.depotSol && o.sacs===0) return 0;
-  if(o.sacs<=2) return 1;
-  if(o.sacs<=4) return 2;
-  return 3;
-}
-function unitesRef(site,flux,obs){
-  const r=REF.find(x=>x.site===site&&x.flux===flux);
-  if(r&&r.nbUnites>0) return {n:r.nbUnites,provisoire:false};
-  const maxVu=Math.max(0,...obs.filter(o=>o.site===site&&o.flux===flux).map(o=>o.vues));
-  return {n:maxVu,provisoire:true};
-}
-function niveauRemplissage(o,ref){
-  if(o.inaccessible) return {n:3,txt:"accès bloqué"};
-  if(o.vues===0) return {n:null,txt:"aucune unité visible"};
-  if(!ref.n) return {n:null,txt:"nombre de conteneurs inconnu"};
-  const occupe=o.bloquees+o.pleines;
-  const taux=occupe/ref.n;
-  const n = taux===0?0 : taux<=1/3?1 : taux<=2/3?2 : 3;
-  return {n,txt:occupe+" sur "+ref.n+" conteneur"+(ref.n>1?"s":"")+" plein ou bloqué"+(occupe>1?"s":"")+(ref.provisoire?" (effectif provisoire)":"")};
-}
-
-function calcule(obs){
-  const parSite={};
-  REF.forEach(r=>{
-    if(!parSite[r.site]) parSite[r.site]={site:r.site,nom:r.nom,lat:r.lat,lon:r.lon,flux:[],dernier:null,niveau:null};
-  });
-  const couples=new Set();
-  REF.forEach(r=>couples.add(r.site+"|"+r.flux));
-  obs.forEach(o=>couples.add(o.site+"|"+o.flux));
-  [...couples].forEach(k=>{
-    const [site,flux]=k.split("|");
-    if(!parSite[site]) return;
-    const liste=obs.filter(o=>o.site===site&&o.flux===flux).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
-    const o=liste[0];
-    const horsRef=!REF.some(r=>r.site===site&&r.flux===flux);
-    if(!o){parSite[site].flux.push({flux,niveau:null,horsRef,detail:"aucun relevé"});return}
-    const ref=unitesRef(site,flux,obs);
-    if(o.vues===0 && !o.inaccessible){
-      parSite[site].flux.push({flux,niveau:null,nonVisible:true,horsRef,detail:"conteneur non repéré sur la photo du "+dateFR(o.ts),ts:o.ts,test:o.test});
-      if(!parSite[site].dernier||new Date(o.ts)>new Date(parSite[site].dernier)) parSite[site].dernier=o.ts;
-      return;
-    }
-    const p=niveauProprete(o), rm=niveauRemplissage(o,ref);
-    const niveau=Math.max(p, rm.n==null?0:rm.n);
-    const nRecid=nPassagesAvecDepot(site,flux,new Date(o.ts).getTime(),obs);
-    const sc={pr:ptsProprete(o.sacs,o.depotSol),re:ptsRemplissage(o,ref),rc:ptsRecidive(nRecid),nRecid};
-    sc.total=sc.pr+sc.re+sc.rc; sc.L=lettre(sc.total);
-    const bouts=[];
-    bouts.push(o.sacs>0?o.sacs+" sac"+(o.sacs>1?"s":"")+" au sol":"rien au sol");
-    bouts.push(rm.txt);
-    if(o.cause) bouts.push((CAUSE_LABEL[o.cause]||o.cause).toLowerCase());
-    if(nRecid>1) bouts.push(nRecid+" passages avec dépôt sur 30 j");
-    parSite[site].flux.push({flux,niveau,horsRef,sc,detail:bouts.join(" · "),ts:o.ts,test:o.test});
-    if(!parSite[site].dernier||new Date(o.ts)>new Date(parSite[site].dernier)) parSite[site].dernier=o.ts;
-  });
-  Object.values(parSite).forEach(s=>{
-    const n=s.flux.filter(f=>f.niveau!==null).map(f=>f.niveau);
-    s.niveau=n.length?Math.max(...n):null;
-    const scs=s.flux.filter(f=>f.sc).map(f=>f.sc.total);
-    s.pts=scs.length?Math.max(...scs):null;
-    s.L=s.pts===null?null:lettre(s.pts);
-    const ordre={verre:0,ordures_menageres:1,emballages:2,papier:3};
-    s.flux.sort((a,b)=>(ordre[a.flux]??9)-(ordre[b.flux]??9));
-  });
-  return Object.values(parSite).sort((a,b)=>a.site.localeCompare(b.site));
-}
-
-// Un « passage » regroupe les photos prises au même endroit à quelques minutes
-// d'intervalle. Sa note est celle du flux le plus dégradé, calculée avec les
-// données connues à cette date-là : la récidive ne compte que le passé.
-function passagesParSite(obs){
-  const sites={};
-  REF.forEach(r=>{if(!sites[r.site]) sites[r.site]={site:r.site,nom:r.nom,lots:[]}});
-  const parSite={};
-  obs.forEach(o=>{(parSite[o.site]=parSite[o.site]||[]).push(o)});
-  Object.keys(sites).forEach(code=>{
-    const liste=(parSite[code]||[]).slice().sort((a,b)=>new Date(a.ts)-new Date(b.ts));
-    const lots=[];
-    liste.forEach(o=>{
-      const d=lots[lots.length-1];
-      if(d && new Date(o.ts)-new Date(d.fin)<=FENETRE_PASSAGE){d.obs.push(o); d.fin=o.ts;}
-      else lots.push({obs:[o],fin:o.ts});
-    });
-    lots.forEach(lot=>{
-      const parFlux={};
-      lot.obs.forEach(o=>{const p=parFlux[o.flux]; if(!p||new Date(o.ts)>new Date(p.ts)) parFlux[o.flux]=o});
-      let pts=null,pire=null,depot=false;
-      Object.values(parFlux).forEach(o=>{
-        if(o.depotSol) depot=true;
-        if(o.vues===0 && !o.inaccessible) return;
-        const ref=unitesRef(o.site,o.flux,obs);
-        const nRecid=nPassagesAvecDepot(o.site,o.flux,new Date(o.ts).getTime(),obs);
-        const total=ptsProprete(o.sacs,o.depotSol)+ptsRemplissage(o,ref)+ptsRecidive(nRecid);
-        if(pts===null||total>pts){pts=total; pire=o;}
-      });
-      lot.pts=pts; lot.L=pts===null?null:lettre(pts); lot.depot=depot;
-      lot.photo=(pire||lot.obs[0]).photo;
-    });
-    sites[code].lots=lots;
-  });
-  return Object.values(sites).sort((a,b)=>a.site.localeCompare(b.site));
-}
 
 function rendu(){
   const inclureTest=document.getElementById('opt-test').checked;
@@ -749,7 +566,20 @@ function rendu(){
   }).join('');
 }
 document.getElementById('opt-test').addEventListener('change',rendu);
-rendu();
+
+fetch('donnees.json',{cache:'no-cache'})
+  .then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
+  .then(d=>{
+    const n=normaliser(d);
+    REF=n.REF; OBS=n.OBS;
+    document.getElementById('m-commune').textContent=
+      "Commune d'"+(n.commune||'Albon')+" (26)";
+    rendu();
+  })
+  .catch(()=>{
+    document.getElementById('sites').innerHTML=
+      '<p class="fr-vide">Les relevés ne sont pas disponibles pour le moment.</p>';
+  });
 </script>
 
 <p style="max-width:70rem;margin:28px auto 40px;padding:0 18px;font-size:.9rem">
