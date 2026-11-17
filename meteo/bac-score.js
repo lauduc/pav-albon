@@ -68,6 +68,10 @@ export function normaliser(donnees){
     bloquees:Number(o.bloquees)||0, pleines:Number(o.pleines)||0,
     depotSol:!!o.depotSol, sacs:Number(o.sacs)||0,
     cause:o.cause||"", confiance:Number(o.confiance)||0, texte:o.texte||"",
+    /* Deux drapeaux posés par le classifieur. Ils ne changent rien à la note :
+       ils interdisent seulement de publier la photo. Absents du fichier (ancienne
+       version des données), ils valent faux. */
+    personneVisible:!!o.personneVisible, plaqueLisible:!!o.plaqueLisible,
     test:/^(test|cors)-/.test(String(o.uuid))
   }));
   return {REF,OBS,commune:donnees.commune||"",maj:donnees.maj||null};
@@ -117,7 +121,8 @@ export function calcule(REF,obs){
     if(!o){parSite[site].flux.push({flux,niveau:null,horsRef,detail:"aucun relevé"});return}
     const ref=unitesRef(REF,site,flux,obs);
     if(o.vues===0 && !o.inaccessible){
-      parSite[site].flux.push({flux,niveau:null,nonVisible:true,horsRef,detail:"conteneur non repéré sur la photo du "+dateFR(o.ts),ts:o.ts,test:o.test});
+      parSite[site].flux.push({flux,niveau:null,nonVisible:true,horsRef,detail:"conteneur non repéré sur la photo du "+dateFR(o.ts),ts:o.ts,test:o.test,
+        photo:o.photo||"", publiable:!!o.photo && !o.personneVisible && !o.plaqueLisible, texte:o.texte||""});
       if(!parSite[site].dernier||new Date(o.ts)>new Date(parSite[site].dernier)) parSite[site].dernier=o.ts;
       return;
     }
@@ -131,7 +136,8 @@ export function calcule(REF,obs){
     bouts.push(rm.txt);
     if(o.cause) bouts.push((CAUSE_LABEL[o.cause]||o.cause).toLowerCase());
     if(nRecid>1) bouts.push(nRecid+" passages avec dépôt sur 30 j");
-    parSite[site].flux.push({flux,niveau,horsRef,sc,detail:bouts.join(" · "),ts:o.ts,test:o.test});
+    parSite[site].flux.push({flux,niveau,horsRef,sc,detail:bouts.join(" · "),ts:o.ts,test:o.test,
+      photo:o.photo||"", publiable:!!o.photo && !o.personneVisible && !o.plaqueLisible, texte:o.texte||""});
     if(!parSite[site].dernier||new Date(o.ts)>new Date(parSite[site].dernier)) parSite[site].dernier=o.ts;
   });
   Object.values(parSite).forEach(s=>{

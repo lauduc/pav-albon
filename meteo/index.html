@@ -76,6 +76,14 @@ section{margin-top:40px}
 .lv2{color:var(--bad);background:var(--bad-bg)} .lv3{color:var(--crit);background:var(--crit-bg)}
 .lvx{color:var(--none);background:var(--none-bg)}
 .scorebox{display:flex;align-items:center;gap:12px;background:var(--surface-2);border-radius:9px;padding:10px 12px}
+/* La preuve : la photo du flux qui fixe la note, à côté de la note. Une image
+   qui ne se charge pas s'efface au lieu de laisser un cadre vide. */
+.preuve{margin:0;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface-2)}
+.preuve a{display:block;line-height:0}
+.preuve img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.preuve figcaption{display:block;padding:7px 10px;font-size:.73rem;color:var(--ink-3);line-height:1.35}
+.preuve figcaption b{color:var(--ink-2);font-weight:600}
+.sansphoto{font-size:.73rem;color:var(--ink-3);border:1px dashed var(--line);border-radius:9px;padding:9px 10px}
 .bac{flex:0 0 auto;display:grid;place-items:center}
 .scoreside{min-width:0;display:flex;flex-direction:column;gap:5px}
 .score{display:flex;align-items:flex-end;gap:2px}
@@ -171,16 +179,6 @@ section{margin-top:40px}
 .bar .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--ink-2)}
 .bar .lab{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
-.photo{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
-.thumb{aspect-ratio:4/3;max-width:100%;background:var(--surface-2);display:grid;place-items:center;position:relative;border-bottom:1px solid var(--line)}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb .ph{text-align:center;padding:14px;color:var(--ink-3);font-size:.74rem;line-height:1.4}
-.pbody{padding:13px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.pmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.ptext{font-size:.79rem;color:var(--ink-2);margin:0}
-.plink{font-size:.77rem;font-weight:600;color:var(--accent);text-decoration:none;align-self:flex-start}
-.plink:hover{text-decoration:underline}
 a:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
 
 .note{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:14px 16px;margin-top:14px}
@@ -244,14 +242,6 @@ details[open] summary{margin-bottom:8px}
 
 <section>
   <div class="sechead">
-    <h2>Derniers relevés photo</h2>
-    <p>Analyse rédigée par le modèle au moment du dépôt.</p>
-  </div>
-  <div class="photos" id="photos"></div>
-</section>
-
-<section>
-  <div class="sechead">
     <h2>D'où vient la note</h2>
     <p>Les points de pénalité du flux qui fixe la note, répartis entre les trois critères. La barre va de 0 à 14 points ; au-delà de 9, l'îlot est en E.</p>
   </div>
@@ -299,7 +289,7 @@ details[open] summary{margin-bottom:8px}
 
 <footer>
   <p>Source : classeur « PAV Albon — relevés points de collecte », feuilles Référentiel et Observations. Page calculée à partir des données brutes, sans saisie manuelle.</p>
-  <p>Les vignettes photo s'affichent lorsque la page est hébergée hors de l'environnement d'artefact et que le dossier Drive est partagé par lien. Le lien « Ouvrir la photo » fonctionne dans tous les cas pour les comptes autorisés.</p>
+  <p>La photo d'un îlot n'est pas publiée lorsque le relevé signale une personne ou une plaque d'immatriculation reconnaissable : le constat compte dans la note, l'image reste privée.</p>
 </footer>
 </div>
 
@@ -369,6 +359,24 @@ function rendu(){
   const photos=[...new Set(obs.map(o=>o.photo))];
   document.getElementById('m-nb').textContent = photos.length+" photos · "+obs.length+" constats";
 
+  /* La photo qui justifie la note : celle du flux le plus dégradé du dernier
+     passage. Rien si elle porte une personne ou une plaque lisible — le relevé
+     compte dans la note, c'est l'image qui ne se publie pas. */
+  function preuve(s){
+    const avecPhoto=s.flux.filter(f=>f.photo);
+    if(!avecPhoto.length) return '';
+    const f=avecPhoto.slice().sort((a,b)=>((b.sc?b.sc.total:-1)-(a.sc?a.sc.total:-1)))[0];
+    if(!f.publiable) return '<div class="sansphoto">Photo non publiée : une personne ou une plaque y est reconnaissable.</div>';
+    const n=new Set(s.flux.filter(x=>x.photo).map(x=>x.photo)).size;
+    return '<figure class="preuve">'
+      +'<a href="https://drive.google.com/file/d/'+f.photo+'/view" target="_blank" rel="noopener" '
+      +'title="'+esc((FLUX_LABEL[f.flux]||f.flux)+' — '+(f.ts?dateFR(f.ts):''))+'">'
+      +'<img src="https://drive.google.com/thumbnail?id='+f.photo+'&sz=w600" loading="lazy" '
+      +'alt="'+esc('Relevé photo de l\'îlot '+s.nom)+'" onerror="this.closest(\'figure\').remove()"></a>'
+      +'<figcaption><b>'+esc(FLUX_LABEL[f.flux]||f.flux)+'</b>'+(f.ts?' · '+esc(dateFR(f.ts)):'')
+      +(n>1?' · '+n+' photos ce jour-là':'')+'</figcaption></figure>';
+  }
+
   // Îlots
   document.getElementById('sites').innerHTML = sites.map(s=>{
     const niv = s.niveau===null?INCONNU:NIV[s.niveau];
@@ -389,6 +397,7 @@ function rendu(){
           +'<span class="scoretxt">'+(s.L?'<b>'+esc(s.L.lab)+'</b> · '+s.pts+' point'+(s.pts>1?'s':'')+' de pénalité':'<b>Non noté</b> · aucun relevé exploitable')+'</span>'
         +'</span>'
       +'</div>'
+      +preuve(s)
       +'<div class="flux">'+s.flux.map(f=>{
         const fn = f.niveau===null?(f.nonVisible?NONVU:INCONNU):NIV[f.niveau];
         return '<div class="frow">'
@@ -553,29 +562,6 @@ function rendu(){
       +'<span><b style="color:var(--ink)">'+esc(x.lab)+'</b> · '+bas+' '+haut+' pt'+'</span></span>';
   }).join('');
 
-  // Photos
-  const vues=[];
-  obs.slice().sort((a,b)=>new Date(b.ts)-new Date(a.ts)).forEach(o=>{if(!vues.some(v=>v.photo===o.photo)) vues.push(o)});
-  document.getElementById('photos').innerHTML=vues.slice(0,9).map(o=>{
-    const s=sites.find(x=>x.site===o.site);
-    const autres=obs.filter(x=>x.photo===o.photo);
-    const pireSacs=Math.max(...autres.map(x=>x.sacs));
-    const niv=pireSacs===0?NIV[0]:pireSacs<=2?NIV[1]:pireSacs<=4?NIV[2]:NIV[3];
-    const url="https://drive.google.com/file/d/"+o.photo+"/view";
-    const thumb="https://drive.google.com/thumbnail?id="+o.photo+"&sz=w600";
-    return '<figure class="photo" style="margin:0">'
-      +'<div class="thumb"><img src="'+thumb+'" alt="Relevé photo de l\'îlot '+esc(s?s.nom:o.site)+'" loading="lazy" '
-      +'onerror="var p=this.parentNode;this.remove();p.insertAdjacentHTML(\'beforeend\',\'<div class=&quot;ph&quot;>Vignette indisponible ici<br>(photo privée)</div>\')">'
-      +'</div>'
-      +'<figcaption class="pbody">'
-        +'<div class="pmeta"><span class="pill '+niv.cls+'">'+niv.lab+'</span>'
-        +'<span class="badge">'+esc(o.site)+'</span>'
-        +(o.test?'<span class="badge">test</span>':'')+'</div>'
-        +'<div style="font-size:.78rem;color:var(--ink-3);font-family:var(--mono)">'+dateFR(o.ts)+'</div>'
-        +'<p class="ptext">'+esc(o.texte)+'</p>'
-        +'<a class="plink" href="'+url+'" target="_blank" rel="noopener">Ouvrir la photo →</a>'
-      +'</figcaption></figure>';
-  }).join('');
 }
 document.getElementById('opt-test').addEventListener('change',rendu);
 
