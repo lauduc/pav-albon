@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="420" viewBox="0 0 560 420" role="img" aria-label="Propreté des points de collecte — Albon : Bac-Score A">
+<rect width="560" height="420" fill="#FFFFFF"/>
+<rect x="15" y="14" width="58" height="58" rx="13" fill="#1b7a3e"/>
+<text x="44" y="56" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="600" fill="#fff">A</text>
+<text x="85" y="29" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" letter-spacing="1" fill="#6A716B">POINTS DE COLLECTE — ALBON</text>
+<text x="85" y="51" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="600" fill="#1A1F1C">Impeccable</text>
+<text x="85" y="70" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6A716B">6 des 6 points relevés · dernier le 17 novembre</text>
+<rect x="15.0" y="86" width="103.6" height="26" rx="4" fill="#1b7a3e"/>
+<rect x="13.5" y="84.5" width="106.6" height="29" rx="5.5" fill="none" stroke="#1A1F1C" stroke-width="2"/>
+<text x="66.8" y="104" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#fff">A</text>
+<rect x="121.6" y="86" width="103.6" height="26" rx="4" fill="#74a524" opacity="0.34"/>
+<text x="173.4" y="104" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#fff">B</text>
+<rect x="228.2" y="86" width="103.6" height="26" rx="4" fill="#d7a208" opacity="0.34"/>
+<text x="280.0" y="104" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#fff">C</text>
+<rect x="334.8" y="86" width="103.6" height="26" rx="4" fill="#d96a18" opacity="0.34"/>
+<text x="386.6" y="104" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#fff">D</text>
+<rect x="441.4" y="86" width="103.6" height="26" rx="4" fill="#bd2a1d" opacity="0.34"/>
+<text x="493.2" y="104" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#fff">E</text>
+<rect x="15" y="129" width="21" height="21" rx="6" fill="#74a524"/>
+<text x="25.5" y="144" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#fff">B</text>
+<text x="45" y="144" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13.5" fill="#1A1F1C">Îlot Parking du restaurant routier</text>
+<text x="545" y="144" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#6A716B">Bon</text>
+<line x1="15" y1="154" x2="545" y2="154" stroke="#D8DCD7" stroke-width="1"/>
+<rect x="15" y="159" width="21" height="21" rx="6" fill="#74a524"/>
+<text x="25.5" y="174" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#fff">B</text>
+<text x="45" y="174" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13.5" fill="#1A1F1C">Îlot Creux de la Thine</text>
+<text x="545" y="174" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#6A716B">Bon</text>
+<line x1="15" y1="184" x2="545" y2="184" stroke="#D8DCD7" stroke-width="1"/>
+<rect x="15" y="189" width="21" height="21" rx="6" fill="#1b7a3e"/>
+<text x="25.5" y="204" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#fff">A</text>
+<text x="45" y="204" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13.5" fill="#1A1F1C">Îlot École Louise Michel</text>
+<text x="545" y="204" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#6A716B">Impeccable</text>
+<line x1="15" y1="214" x2="545" y2="214" stroke="#D8DCD7" stroke-width="1"/>
+<rect x="15" y="219" width="21" height="21" rx="6" fill="#1b7a3e"/>
+<text x="25.5" y="234" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#fff">A</text>
+<text x="45" y="234" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13.5" fill="#1A1F1C">Îlot Saint-Martin-des-Rosiers</text>
+<text x="545" y="234" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#6A716B">Impeccable</text>
+<line x1="15" y1="244" x2="545" y2="244" stroke="#D8DCD7" stroke-width="1"/>
+<rect x="15" y="249" width="21" height="21" rx="6" fill="#1b7a3e"/>
+<text x="25.5" y="264" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#fff">A</text>
+<text x="45" y="264" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13.5" fill="#1A1F1C">Îlot Route de l&apos;Argentelle</text>
+<text x="545" y="264" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#6A716B">Impeccable</text>
+<line x1="15" y1="274" x2="545" y2="274" stroke="#D8DCD7" stroke-width="1"/>
+<rect x="15" y="279" width="21" height="21" rx="6" fill="#1b7a3e"/>
+<text x="25.5" y="294" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#fff">A</text>
+<text x="45" y="294" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13.5" fill="#1A1F1C">Îlot La Tour d&apos;Albon</text>
+<text x="545" y="294" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#6A716B">Impeccable</text>
+<line x1="15" y1="372" x2="545" y2="372" stroke="#D8DCD7" stroke-width="1"/>
+<text x="15" y="396" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11.5" fill="#6A716B">Bac-Score · relevés citoyens</text>
+<rect x="421" y="378" width="124" height="30" rx="15" fill="#F1F3F0" stroke="#D8DCD7"/>
+<text x="483" y="398" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#1A1F1C">Voir le détail</text>
+</svg>
