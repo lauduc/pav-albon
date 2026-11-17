@@ -344,6 +344,15 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   font-family: var(--font-mono); font-size: 1.05rem; letter-spacing: .08em;
 }
 .code-i:focus { outline: 2px solid var(--signal); outline-offset: 1px; }
+.code-r { display: flex; gap: 8px; align-items: stretch; }
+.code-r .code-i { flex: 1; min-width: 0; }
+.code-v {
+  appearance: none; cursor: pointer; flex: none; padding: 0 12px;
+  background: var(--surface); color: var(--muted);
+  border: 1.5px solid var(--line); border-radius: 10px;
+  font-family: var(--font-ui); font-size: .82rem; font-weight: 600;
+}
+.code-v:active { background: var(--bg); color: var(--ink); }
 .code-m { margin: 0; font-size: .82rem; color: var(--muted); min-height: 1.1em; }
 .sheet {
   position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.62);
@@ -494,8 +503,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   <div class="sheet-c" role="dialog" aria-modal="true" aria-labelledby="code-t">
     <h2 id="code-t">Code d'accès</h2>
     <p class="sheet-h">Le code remis par la mairie. Il accompagne chaque photo&nbsp;: sans lui, le serveur refuse le dépôt.</p>
-    <input class="code-i" id="code-i" type="text" inputmode="text" autocapitalize="characters"
-           autocomplete="off" spellcheck="false" placeholder="ALB-XXXXXX" aria-label="Code d'accès">
+    <div class="code-r">
+      <input class="code-i" id="code-i" type="password" inputmode="text" autocapitalize="characters"
+             autocomplete="off" spellcheck="false" placeholder="ALB-XXXXXX" aria-label="Code d'accès">
+      <button type="button" class="code-v" id="code-v" aria-label="Afficher le code">Afficher</button>
+    </div>
     <p class="code-m" id="code-m"></p>
     <div class="sheet-a">
       <button type="button" class="q-btn prim" id="code-ok">Enregistrer</button>
@@ -1322,9 +1334,18 @@ function poserCode(v) {
   try { localStorage.setItem("pav-code", CODE); } catch {}
   cfgPut("code", CODE);
   const l = $("code-l");
-  if (l) l.textContent = CODE ? "Code " + CODE : "Code d'accès";
+  /* On affiche la fin du code, pas le code : de quoi vérifier d'un coup d'œil
+     que c'est le bon, sans le livrer à qui regarde par-dessus l'épaule — ni à
+     une capture d'écran. */
+  if (l) l.textContent = CODE ? "Code ••••" + CODE.slice(-2) : "Code d'accès";
+}
+function masquerCode(masque) {
+  $("code-i").type = masque ? "password" : "text";
+  $("code-v").textContent = masque ? "Afficher" : "Masquer";
+  $("code-v").setAttribute("aria-label", masque ? "Afficher le code" : "Masquer le code");
 }
 function ouvrirCode(msg) {
+  masquerCode(true);
   $("code-i").value = CODE;
   $("code-m").textContent = msg || "";
   $("code-s").hidden = false;
@@ -1418,6 +1439,7 @@ cfgPut("endpoint", ENDPOINT);
 
 $("code-b").addEventListener("click", () => ouvrirCode());
 $("code-x").addEventListener("click", () => { $("code-s").hidden = true; });
+$("code-v").addEventListener("click", () => masquerCode($("code-i").type !== "password"));
 $("code-ok").addEventListener("click", () => {
   const v = $("code-i").value.trim();
   if (!v) { $("code-m").textContent = "Saisis le code remis par la mairie."; return; }
