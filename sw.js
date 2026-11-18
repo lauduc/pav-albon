@@ -10,8 +10,10 @@
    là-bas, la file part au retour sur la page, pas avant. Le code le gère sans
    erreur, mais la promesse n'est pas la même selon le téléphone. */
 
-const CACHE = "pav-v2";
-const FICHIERS = ["./", "./index.html"];
+const CACHE = "pav-v3";
+/* config.json et le référentiel publié font partie du minimum vital :
+   sans eux la tournée ne sait ni où sont les points ni où envoyer. */
+const FICHIERS = ["./", "./index.html", "./qr.js", "./config.json", "./meteo/donnees.json"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting()));

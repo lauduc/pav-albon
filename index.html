@@ -505,7 +505,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <p class="sheet-h">Le code remis par la mairie. Il accompagne chaque photo&nbsp;: sans lui, le serveur refuse le dépôt.</p>
     <div class="code-r">
       <input class="code-i" id="code-i" type="password" inputmode="text" autocapitalize="characters"
-             autocomplete="off" spellcheck="false" placeholder="ALB-XXXXXX" aria-label="Code d'accès">
+             autocomplete="off" spellcheck="false" placeholder="code d'accès" aria-label="Code d'accès">
       <button type="button" class="code-v" id="code-v" aria-label="Afficher le code">Afficher</button>
     </div>
     <p class="code-m" id="code-m"></p>
@@ -516,20 +516,17 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   </div>
 </div>
 
-<!-- Partage : le QR pointe sur l'adresse publique collecte.mairie-albon.fr,
-     pas sur l'URL GitHub. Les modules sont figés dans le fichier, générés
-     une fois pour toutes — rien à télécharger pour l'afficher. -->
+<!-- Partage : le QR encode l'adresse publique de la commune, pas l'URL
+     GitHub. Il est dessiné au chargement à partir de config.json (qr.js) :
+     il suit l'adresse au lieu d'être un dessin figé à regénérer à la main. -->
 <div class="sheet" id="share-s" hidden>
   <div class="sheet-c" role="dialog" aria-modal="true" aria-labelledby="share-t">
     <h2 id="share-t">Partager l'application</h2>
     <p class="sheet-h">Fais scanner ce code avec l'appareil photo d'un autre téléphone&nbsp;: la tournée s'ouvre directement.</p>
     <div class="qr">
-      <svg viewBox="0 0 29 29" shape-rendering="crispEdges" role="img" aria-label="QR code vers collecte.mairie-albon.fr">
-        <path fill="#fff" d="M0 0h29v29H0z"/>
-        <path stroke="#000" d="M0 0.5h7m2 0h2m1 0h1m2 0h2m1 0h3m1 0h7M0 1.5h1m5 0h1m2 0h1m1 0h2m7 0h1m1 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h2m4 0h1m1 0h1m5 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m3 0h1m3 0h4m2 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h3m1 0h4m1 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h2m1 0h6m5 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h1m4 0h1m1 0h1m3 0h1M0 8.5h1m1 0h5m4 0h2m1 0h2m1 0h1m2 0h1m1 0h5M3 9.5h3m6 0h1m2 0h2m1 0h7m3 0h1M0 10.5h1m1 0h2m2 0h2m3 0h1m6 0h1m1 0h1m3 0h1M0 11.5h2m2 0h1m2 0h5m2 0h1m1 0h1m6 0h1m1 0h1m1 0h1M0 12.5h2m1 0h1m2 0h2m9 0h1m1 0h1m5 0h2M1 13.5h1m2 0h1m3 0h3m1 0h4m1 0h8m3 0h1M0 14.5h1m1 0h8m1 0h6m3 0h2m2 0h3M0 15.5h2m1 0h3m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m3 0h2m3 0h1M4 16.5h1m1 0h1m1 0h1m2 0h1m2 0h1m2 0h1m7 0h2M0 17.5h1m1 0h1m1 0h2m1 0h1m3 0h1m6 0h3m1 0h3m1 0h1m1 0h1M0 18.5h1m1 0h2m2 0h1m2 0h2m1 0h1m2 0h1m1 0h2m1 0h1m2 0h1m2 0h1M0 19.5h1m2 0h3m2 0h1m2 0h1m2 0h1m3 0h1m1 0h2m1 0h1m3 0h1M0 20.5h1m3 0h1m1 0h2m1 0h1m2 0h1m2 0h3m1 0h6m1 0h3M8 21.5h7m1 0h3m1 0h1m3 0h5M0 22.5h7m2 0h3m1 0h3m1 0h1m1 0h2m1 0h1m1 0h3M0 23.5h1m5 0h1m1 0h1m1 0h4m2 0h1m2 0h2m3 0h1M0 24.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m2 0h5m1 0h2M0 25.5h1m1 0h3m1 0h1m1 0h1m2 0h2m3 0h3m1 0h1m4 0h4M0 26.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h9M0 27.5h1m5 0h1m3 0h1m5 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1M0 28.5h7m1 0h5m1 0h1m2 0h2m5 0h1m1 0h1"/>
-      </svg>
+      <svg id="qr" role="img" aria-label="QR code vers l'adresse de l'application"></svg>
     </div>
-    <p class="sheet-u" id="share-u">https://collecte.mairie-albon.fr/</p>
+    <p class="sheet-u" id="share-u"></p>
     <div class="sheet-a">
       <button type="button" class="q-btn prim" id="share-n" hidden>Partager le lien…</button>
       <button type="button" class="q-btn" id="share-c">Copier le lien</button>
@@ -540,49 +537,39 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
 <script>
 /* ──────────────────────────────────────────────────────────────────────────
-   RÉFÉRENTIEL D'EXEMPLE — à remplacer par ton relevé GPS des 10 points.
-   Récupère lat/lon avec cette page elle-même (elles s'affichent en bas),
-   ou exporte ta carte My Maps / uMap en GeoJSON.
+   RIEN D'ALBON DANS CE FICHIER.
+
+   Deux sources, toutes deux extérieures au code :
+
+   1. config.json — ce qui identifie la commune : son nom, son adresse
+      publique, le webhook qui reçoit les photos, les seuils de terrain.
+   2. le référentiel des points — il vit dans le classeur de la mairie et
+      arrive ici par le même donnees.json que la page météo. Un point
+      déplacé ou ajouté dans le classeur descend tout seul dans la tournée.
+
+   Les deux sont mis en cache localement : en zone rurale, la tournée doit
+   continuer sans réseau.
    ────────────────────────────────────────────────────────────────────────── */
-/* ──────────────────────────────────────────────────────────────────────────
-   LE RÉFÉRENTIEL NE VIT PAS ICI.
 
-   Il est chargé depuis REFERENTIEL_URL (vue `site` + `poste` exposée par
-   Supabase ou n8n), mis en cache localement pour fonctionner hors ligne, et
-   rafraîchi à chaque ouverture. Un site ajouté ou un nb_unites corrigé dans
-   la base arrive ici sans toucher au code.
+const CONF_VIDE = {
+  commune:  { nom: "", departement: "", prefixeCode: "" },
+  adresses: { application: "", meteo: "", referentiel: "meteo/donnees.json" },
+  depot:    { endpoint: null },
+  terrain:  { rayonM: 100, precisionMaxM: 30 },
+};
+let CONF = CONF_VIDE;
+try { const c = JSON.parse(localStorage.getItem("pav-config") || "null");
+      if (c && c.commune) CONF = c; } catch {}
 
-   Format attendu, un objet par site :
-     { code, nom, lat, lon, postes: { <flux>: <nombre de colonnes>, … } }
+/* Ces trois-là changent quand la configuration arrive : elles ne peuvent pas
+   être des constantes. Elles ne sont lues que dans des fonctions. */
+let ENDPOINT = CONF.depot.endpoint || null;
+let RAYON_M = CONF.terrain.rayonM, PRECISION_MAX_M = CONF.terrain.precisionMaxM;
+let URL_PARTAGE = CONF.adresses.application || location.origin + "/";
 
-   Le tableau ci-dessous n'est qu'un JEU DE SECOURS, utilisé au premier
-   lancement avant le premier chargement réussi. Chaque site a sa propre
-   composition : aucun gabarit, aucun minimum, aucun maximum.
-   ────────────────────────────────────────────────────────────────────────── */
-const REFERENTIEL_URL = null;   // ex. "https://xxx.supabase.co/rest/v1/v_referentiel"
-
-/* Les 6 îlots de propreté d'Albon. Positions : ALB-04, ALB-05 et ALB-06
-   relevées sur le terrain, ALB-01 et ALB-02 reprises du site de la mairie,
-   ALB-03 géocodée sur la Base Adresse Nationale (à confirmer).
-   Écart minimal entre deux sites : 921 m — le plus-proche-voisin est sûr.
-
-   ⚠️ Les comptages de colonnes ci-dessous sont une HYPOTHÈSE, pas un relevé.
-   Corrige-les sur place : un contrôle n'entre dans le dénominateur que si
-   l'agent a cadré TOUTES les colonnes du flux. */
-let SITES = [
-  { code:"ALB-01", nom:"Îlot École Louise Michel",        lat:45.242644, lon:4.851511, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
-  { code:"ALB-02", nom:"Îlot Saint-Martin-des-Rosiers",   lat:45.237630, lon:4.871429, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
-  { code:"ALB-03", nom:"Îlot Route de l'Argentelle",      lat:45.249818, lon:4.845634, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
-  { code:"ALB-04", nom:"Îlot Parking du restaurant routier", lat:45.241359, lon:4.820709, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
-  { code:"ALB-05", nom:"Îlot La Tour d'Albon",            lat:45.249859, lon:4.865426, postes:{ verre:1, ordures_menageres:1, emballages:1 } },
-  /* Relevé sur place le 12/11 : moyenne de deux photos à 11 m l'une de l'autre,
-     précision GPS 7 m. L'ancien point venait d'un géocodage et tombait 161 m
-     plus loin — assez pour que le GPS ne reconnaisse pas l'îlot en arrivant.
-     Les comptes viennent de ces mêmes photos : 2 colonnes à verre (sûr) et
-     3 dômes semi-enterrés que le modèle n'a pas su attribuer avec certitude
-     aux ordures ménagères. À confirmer sur place. */
-  { code:"ALB-06", nom:"Îlot Creux de la Thine",          lat:45.260100, lon:4.823983, postes:{ verre:2, ordures_menageres:3, emballages:1 } },
-];
+/* Le référentiel : vide au départ, rempli par le cache puis par le réseau.
+   Format d'un site : { code, nom, lat, lon, postes: { <flux>: <colonnes> } } */
+let SITES = [];
 const nbColonnes = s => Object.values(s.postes).reduce((a, b) => a + b, 0);
 
 /* Les clés de flux viennent de l'énumération SQL (ordures_menageres…) : on ne
@@ -593,28 +580,74 @@ const FLUX_NOM = {
 };
 const nomFlux = f => FLUX_NOM[f] || String(f).replace(/_/g, " ");
 
+/* donnees.json donne une ligne par couple îlot × flux ; la tournée raisonne
+   par îlot. On regroupe, sans jamais inventer de colonne absente. */
+function sitesDepuis(d) {
+  if (Array.isArray(d)) return d;                      // vue déjà au bon format
+  const par = new Map();
+  for (const r of (d && d.referentiel) || []) {
+    const code = String(r.site || "");
+    if (!code) continue;
+    let s = par.get(code);
+    if (!s) { s = { code, nom: String(r.nom || code), lat: Number(r.lat), lon: Number(r.lon), postes: {} }; par.set(code, s); }
+    /* nbUnites à 0 dans le classeur veut dire « pas encore compté », pas
+       « pas de conteneur » : le flux existe, on compte au moins une colonne.
+       Sinon l'agent n'aurait aucun moyen de photographier ce flux. */
+    const n = Math.max(1, Math.round(Number(r.nbUnites) || 0));
+    if (r.flux) s.postes[r.flux] = (s.postes[r.flux] || 0) + n;
+  }
+  return [...par.values()].filter(s =>
+    Object.keys(s.postes).length && Number.isFinite(s.lat) && Number.isFinite(s.lon));
+}
+
 /* Cache local du référentiel : la tournée doit marcher sans réseau. */
 try { const c = JSON.parse(localStorage.getItem("pav-referentiel") || "null");
       if (Array.isArray(c) && c.length) SITES = c; } catch {}
 
 async function chargerReferentiel() {
-  if (!REFERENTIEL_URL) return;
+  const url = CONF.adresses.referentiel;
+  if (!url) return;
   try {
-    const r = await fetch(REFERENTIEL_URL, { headers: { accept: "application/json" } });
+    const r = await fetch(url, { headers: { accept: "application/json" }, cache: "no-cache" });
     if (!r.ok) return;
-    const d = await r.json();
-    if (!Array.isArray(d) || !d.length) return;
-    SITES = d;
-    try { localStorage.setItem("pav-referentiel", JSON.stringify(d)); } catch {}
+    const sites = sitesDepuis(await r.json());
+    if (!sites.length) return;                         // jamais effacer sur une réponse vide
+    SITES = sites;
+    try { localStorage.setItem("pav-referentiel", JSON.stringify(sites)); } catch {}
+    // Le mode démo a pu démarrer avant l'arrivée du référentiel.
+    if (demo && !choixManuel && !courant) demarrerDemo("");
     rendre(); majGps();
   } catch {}   // hors ligne : on garde le cache, la tournée continue
 }
 
-/* Mets ici l'URL de ton webhook n8n ou de ton endpoint Supabase.
-   À null, les photos restent en file locale : c'est le mode prototype. */
-const ENDPOINT = "https://n8n.srv1040760.hstgr.cloud/webhook/pav-photo";
+/* La configuration arrive après le premier rendu : on réapplique ce qui en
+   dépend plutôt que de retarder l'ouverture de la page. */
+function appliquerConfig() {
+  ENDPOINT = (CONF.depot && CONF.depot.endpoint) || null;
+  RAYON_M = (CONF.terrain && CONF.terrain.rayonM) || 100;
+  PRECISION_MAX_M = (CONF.terrain && CONF.terrain.precisionMaxM) || 30;
+  URL_PARTAGE = (CONF.adresses && CONF.adresses.application) || location.origin + "/";
+  // Le service worker lit l'adresse d'envoi ici : une seule source.
+  cfgPut("endpoint", ENDPOINT);
+  const pref = (CONF.commune && CONF.commune.prefixeCode) || "";
+  if (pref) $("code-i").placeholder = pref + "-XXXXXX";
+  $("share-u").textContent = URL_PARTAGE;
+  majFile(); rendre();
+}
 
-const RAYON_M = 100, PRECISION_MAX_M = 30;
+async function chargerConfig() {
+  try {
+    const r = await fetch("config.json", { cache: "no-cache" });
+    if (r.ok) {
+      const c = await r.json();
+      if (c && c.commune) {
+        CONF = c;
+        try { localStorage.setItem("pav-config", JSON.stringify(c)); } catch {}
+      }
+    }
+  } catch {}   // hors ligne : la configuration en cache fait l'affaire
+  appliquerConfig();
+}
 
 /* ── géométrie ─────────────────────────────────────────────────────────── */
 const R = 6371000, rad = d => d * Math.PI / 180;
@@ -1435,7 +1468,6 @@ if ("serviceWorker" in navigator) {
     }
   });
 }
-cfgPut("endpoint", ENDPOINT);
 
 $("code-b").addEventListener("click", () => ouvrirCode());
 $("code-x").addEventListener("click", () => { $("code-s").hidden = true; });
@@ -1449,7 +1481,7 @@ $("code-ok").addEventListener("click", () => {
 });
 $("code-i").addEventListener("keydown", e => { if (e.key === "Enter") $("code-ok").click(); });
 
-/* Lien personnel distribué par la mairie : …/?code=ALB-XXXXXX. On le range et
+/* Lien personnel distribué par la mairie : …/?code=XXX-XXXXXX. On le range et
    on le retire aussitôt de l'adresse, pour qu'il ne reste ni dans l'historique
    ni dans un lien repartagé depuis le téléphone. */
 (() => {
@@ -1474,9 +1506,11 @@ function demarrerDemo(raison) {
   if (demo) return;                       // une seule fois
   demo = true;
   if (!choixManuel) {
-    courant = SITES.find(s => !faits.has(s.code)) || SITES[0];
-    position = { lat: courant.lat, lon: courant.lon, precision_m: 8 };
-    $("state-lbl").textContent = "Point détecté";
+    courant = SITES.find(s => !faits.has(s.code)) || SITES[0] || null;
+    if (courant) {
+      position = { lat: courant.lat, lon: courant.lon, precision_m: 8 };
+      $("state-lbl").textContent = "Point détecté";
+    }
   }
   $("note").innerHTML = `<strong>Mode démo :</strong> ${raison} Choisis un îlot dans la liste pour photographier. Sur un téléphone, avec la géolocalisation autorisée, la page utilise le GPS réel.`;
   rendre(); majGps();
@@ -1515,16 +1549,15 @@ if (!navigator.geolocation) {
   );
 }
 rendre();
-chargerReferentiel();
+chargerConfig().then(chargerReferentiel);
 // Les photos du jour sont relues au démarrage : rouvrir la page ne perd rien.
 rechargerVignettes().then(rendre).catch(() => {});
 
 /* ──────────────────────────────────────────────────────────────────────────
    PARTAGE DE L'APPLICATION
-   L'adresse est écrite en clair et non déduite de location.href : ouverte
-   depuis l'ancienne URL GitHub, la page doit quand même partager la bonne.
+   L'adresse vient de config.json et non de location.href : ouverte depuis
+   l'ancienne URL GitHub, la page doit quand même partager la bonne.
    ────────────────────────────────────────────────────────────────────────── */
-const URL_PARTAGE = "https://collecte.mairie-albon.fr/";
 
 function ouvrirPartage() { $("share-s").hidden = false; }
 function fermerPartage() { $("share-s").hidden = true; $("share-c").textContent = "Copier le lien"; }
@@ -1552,10 +1585,22 @@ $("share-c").addEventListener("click", async () => {
 if (navigator.share) {
   $("share-n").hidden = false;
   $("share-n").addEventListener("click", () => {
-    navigator.share({ title: "Tournée PAV — Albon", text: "Relevé des points de collecte d'Albon", url: URL_PARTAGE })
+    const ou = (CONF.commune && CONF.commune.nom) ? " — " + CONF.commune.nom : "";
+    navigator.share({ title: "Tournée PAV" + ou, text: "Relevé des points de collecte" + ou, url: URL_PARTAGE })
       .catch(() => {});
   });
 }
+</script>
+
+<script type="module">
+/* Le QR est le seul endroit qui a besoin d'un module : on le charge à part
+   pour ne pas transformer toute la page en module. */
+import { dessiner } from './qr.js';
+const adresse = await fetch('config.json', { cache: 'no-cache' })
+  .then(r => r.ok ? r.json() : null)
+  .then(c => (c && c.adresses && c.adresses.application) || location.origin + '/')
+  .catch(() => location.origin + '/');
+try { dessiner(document.getElementById('qr'), adresse); } catch {}
 </script>
 
 </body>
