@@ -323,6 +323,19 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   padding: 8px 0 8px 12px; border-radius: 0;
 }
 .note code { font-family: var(--font-mono); font-size: .95em; }
+/* Désaccord entre le point affiché et le GPS. Rouge, parce qu'une photo
+   rangée au mauvais îlot ne se voit qu'une fois publiée. */
+.discord {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+  margin-top: 12px; padding: 10px 12px; border-radius: 8px;
+  background: color-mix(in srgb, var(--alert) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--alert) 40%, transparent);
+  font-size: .82rem; line-height: 1.35;
+}
+.discord button {
+  border: 1px solid var(--alert); background: transparent; color: var(--alert);
+  font: inherit; font-weight: 600; padding: 5px 11px; border-radius: 999px; cursor: pointer;
+}
 :is(button, [tabindex]):focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
@@ -406,6 +419,12 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <span class="code" id="site-cd"></span>
     <div class="flux" id="site-flux"></div>
     <span class="gps" id="gps-txt">GPS en cours d'acquisition</span>
+    <!-- Visible seulement quand le point affiché contredit le GPS : c'est le
+         seul moment où une photo risque d'être rangée au mauvais endroit. -->
+    <div class="discord" id="discord" hidden>
+      <span id="discord-t"></span>
+      <button type="button" id="discord-b"></button>
+    </div>
   </div>
 
 
@@ -752,6 +771,10 @@ let envoiTotal = 0, envoiFaites = 0;
    Il est relâché après la photo, pour que la détection reprenne la main au
    point suivant de la tournée. */
 let choixManuel = false;
+/* L'îlot que le GPS reconnaît, indépendamment de celui qui est affiché.
+   C'est lui qui sert de verrou : tant qu'il existe, on ne bascule pas sur un
+   autre point sans le demander. */
+let gpsSite = null;
 const $ = id => document.getElementById(id);
 
 /* ── photo ─────────────────────────────────────────────────────────────── */
@@ -813,6 +836,14 @@ function rendre() {
   /* La bascule des pictogrammes passe par une classe, pas par .hidden :
      SVGElement n'a pas cette propriété, l'affectation ne posait aucun
      attribut et l'appareil photo restait affiché sans point. */
+  /* Le désaccord reste sous les yeux : la confirmation est un instant, la
+     tournée dure une heure, et on oublie ce qu'on a accepté. */
+  const enDesaccord = !!(courant && gpsSite && courant.code !== gpsSite.code);
+  $("discord").hidden = !enDesaccord;
+  if (enDesaccord) {
+    $("discord-t").textContent = `Le GPS indique « ${gpsSite.nom} ». Les photos partiront sur « ${courant.nom} ».`;
+    $("discord-b").textContent = `Revenir sur ${gpsSite.nom}`;
+  }
   $("shoot").classList.toggle("choisir", !courant);
   /* Le bouton n'est JAMAIS désactivé par le GPS : sans point reconnu il emmène
      à la liste au lieu de l'appareil photo. Un agent devant une colonne ne doit
@@ -867,11 +898,17 @@ function majGps() {
   if (demo) { $("gps-txt").textContent = "Mode démo — position simulée sur " + (courant ? courant.code : "—"); return; }
   if (!position) { $("gps-txt").textContent = "GPS en cours d'acquisition"; return; }
   const r = identifierSite(position);
+  /* « 0 m du point » n'a de sens que si le point affiché est bien celui que le
+     GPS a reconnu. En désaccord, la distance irait au point du GPS et ferait
+     croire qu'on est devant celui de l'écran. */
+  const memePoint = r.statut === "ok" && courant && courant.code === r.site.code;
   $("gps-txt").textContent = `${position.lat.toFixed(5)}, ${position.lon.toFixed(5)} · ±${position.precision_m} m`
-    + (r.statut === "ok" ? ` · ${r.d} m du point` : "");
+    + (memePoint ? ` · ${r.d} m du point` : "");
+
+  gpsSite = r.statut === "ok" ? r.site : null;
 
   // Le choix de l'agent ne se fait pas écraser par la position suivante.
-  if (choixManuel) return;
+  if (choixManuel) { rendre(); return; }
 
   if (r.statut === "ok") { $("state-lbl").textContent = "Point détecté"; courant = r.site; }
   else if (courant) {
@@ -893,6 +930,13 @@ function majGps() {
 /* Il n'y a qu'une seule liste de points, celle de la tournée, et elle est
    toujours à l'écran. Le bouton n'ouvre donc plus une seconde liste : quand
    aucun point n'est reconnu il y emmène, et c'est tout. */
+$("discord-b").addEventListener("click", () => {
+  if (!gpsSite) return;
+  courant = gpsSite; choixManuel = false;
+  $("state-lbl").textContent = "Point détecté";
+  rendre();
+});
+
 $("shoot").addEventListener("click", () => {
   if (!courant) { $("round").scrollIntoView({ block: "center", behavior: "smooth" }); return; }
   $("file").click();
@@ -955,6 +999,20 @@ $("round").addEventListener("click", async e => {
 
   const b = e.target.closest("button[data-code]"); if (!b) return;
   const site = SITES.find(s => s.code === b.dataset.code); if (!site) return;
+
+  /* VERROU. Tant que le GPS reconnaît un îlot, en choisir un autre demande une
+     confirmation. Sans elle, une fausse manip dans la liste envoyait les
+     photos suivantes sur le mauvais point — et l'erreur ne se voyait qu'une
+     fois les relevés publiés, trop tard pour la corriger de tête. */
+  if (gpsSite && site.code !== gpsSite.code) {
+    const d = position ? Math.round(distance(position, site)) : null;
+    const ok = confirm(
+      `Le GPS te situe sur « ${gpsSite.nom} ».\n\n`
+      + `Ranger quand même les photos sur « ${site.nom} »`
+      + (d !== null ? `, à ${d} m d'ici` : "") + ` ?`);
+    if (!ok) return;
+  }
+
   courant = site;
   choixManuel = true;
   $("state-lbl").textContent = "Point choisi à la main";
