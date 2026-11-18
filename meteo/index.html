@@ -342,7 +342,21 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 function rendu(){
   const inclureTest=document.getElementById('opt-test').checked;
   const obs=OBS.filter(o=>inclureTest||!o.test);
-  const sites=calcule(obs);
+  /* Du plus récemment relevé au plus ancien : une page de suivi se lit par le
+     haut, et ce qu'on vient de constater vaut mieux que l'ordre alphabétique
+     des codes. Les îlots jamais relevés ferment la marche — ils ne sont pas
+     une actualité, mais ils ne doivent pas disparaître pour autant. */
+  const parFraicheur=(a,b)=>{
+    if(a.dernier&&b.dernier) return b.dernier.localeCompare(a.dernier);
+    if(a.dernier) return -1;
+    if(b.dernier) return 1;
+    return a.site.localeCompare(b.site);
+  };
+  const sites=calcule(obs).sort(parFraicheur);
+  /* La frise et la décomposition suivent le même ordre : trois sections qui
+     classent différemment les mêmes îlots se lisent mal. */
+  const ordre=new Map(sites.map((s,i)=>[s.site,i]));
+  const commeLesCartes=l=>l.slice().sort((a,b)=>(ordre.get(a.site)??99)-(ordre.get(b.site)??99));
 
   const maj=obs.map(o=>o.ts).sort().pop();
   document.getElementById('m-maj').textContent = maj? "Dernier relevé : "+dateFR(maj) : "Aucun relevé";
@@ -439,7 +453,7 @@ function rendu(){
 
   // Frise des passages
   const MAXP=10;
-  document.getElementById('frise').innerHTML = passagesParSite(obs).map(s=>{
+  document.getElementById('frise').innerHTML = commeLesCartes(passagesParSite(obs)).map(s=>{
     const lots=s.lots.slice(-MAXP);
     const cells=lots.map(l=>{
       const col=l.L?'var('+l.L.var+')':'var(--sOff)';
