@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-18T18:15:08Z",
+ "maj": "2026-11-18T18:45:10Z",
  "source": "classeur PAV Albon — relevés points de collecte",
  "referentiel": [
   {
@@ -63,24 +63,24 @@
   {
    "site": "ALB-03",
    "nom": "Îlot Route de l'Argentelle",
-   "lat": 45.249818,
-   "lon": 4.845634,
+   "lat": 45.247801,
+   "lon": 4.846922,
    "flux": "verre",
    "nbUnites": 1
   },
   {
    "site": "ALB-03",
    "nom": "Îlot Route de l'Argentelle",
-   "lat": 45.249818,
-   "lon": 4.845634,
+   "lat": 45.247801,
+   "lon": 4.846922,
    "flux": "ordures_menageres",
    "nbUnites": 2
   },
   {
    "site": "ALB-03",
    "nom": "Îlot Route de l'Argentelle",
-   "lat": 45.249818,
-   "lon": 4.845634,
+   "lat": 45.247801,
+   "lon": 4.846922,
    "flux": "emballages",
    "nbUnites": 1
   },
