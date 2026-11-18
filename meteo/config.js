@@ -47,3 +47,15 @@ export function libelleCommune(nom, departement) {
   const apostrophe = /^[AEIOUYÀÂÉÈÊÎÏÔÖÛÜ]/i.test(n) ? "Commune d'" : "Commune de ";
   return apostrophe + n + (d ? " (" + d + ")" : "");
 }
+
+/* Le barème vit dans son propre fichier : un futur écran de réglage n'aura
+   que celui-là à réécrire, sans risquer de toucher à l'adresse du webhook ni
+   au reste de la configuration de la commune. */
+export async function chargerBareme(appliquer, chemin = "../bareme.json") {
+  let brut;
+  try {
+    const r = await fetch(chemin, { cache: "no-cache" });
+    if (r.ok) brut = await r.json();
+  } catch {}   // fichier absent ou illisible : le barème par défaut s'applique
+  return appliquer(brut);
+}

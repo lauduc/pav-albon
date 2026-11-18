@@ -19,7 +19,7 @@
   --crit:#ab2318; --crit-bg:#fae0dd;
   --none:#7b8783; --none-bg:#e7eae9;
   --sA:#1b7a3e; --sB:#74a524; --sC:#d7a208; --sD:#d96a18; --sE:#bd2a1d; --sOff:#b9c2bf;
-  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#8257d9;
   --font:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
 }
@@ -33,7 +33,7 @@
   --crit:#f0756a; --crit-bg:#331a18;
   --none:#8d9a95; --none-bg:#222c29;
   --sA:#3fa763; --sB:#8cc23a; --sC:#e8bb34; --sD:#ef8a43; --sE:#e8574a; --sOff:#3a4a46;
-  --c1:#3987e5; --c2:#d95926; --c3:#199e70;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#9b74e8;
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
@@ -46,7 +46,7 @@
   --crit:#f0756a; --crit-bg:#331a18;
   --none:#8d9a95; --none-bg:#222c29;
   --sA:#3fa763; --sB:#8cc23a; --sC:#e8bb34; --sD:#ef8a43; --sE:#e8574a; --sOff:#3a4a46;
-  --c1:#3987e5; --c2:#d95926; --c3:#199e70;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#9b74e8;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -243,7 +243,7 @@ details[open] summary{margin-bottom:8px}
 <section>
   <div class="sechead">
     <h2>D'où vient la note</h2>
-    <p>Les points de pénalité du flux qui fixe la note, répartis entre les trois critères. La barre va de 0 à 14 points ; au-delà de 9, l'îlot est en E.</p>
+    <p id="compo-intro">Les points de pénalité du flux qui fixe la note, répartis entre les trois critères.</p>
   </div>
   <div class="mapwrap">
     <div class="compo" id="compo"></div>
@@ -269,10 +269,10 @@ details[open] summary{margin-bottom:8px}
     <p>Une note de A à E par flux ; l'îlot retient la moins bonne.</p>
   </div>
   <div class="mapwrap">
-    <p style="margin:0 0 14px;font-size:.84rem;color:var(--ink-2);max-width:66ch">Le score additionne des <b>points de pénalité</b> sur trois critères, puis convertit le total en lettre. Zéro point donne A, dix points ou plus donnent E. Le détail est affiché sur chaque îlot, de sorte qu'une note se vérifie toujours contre les photos.</p>
+    <p id="bareme-intro" style="margin:0 0 14px;font-size:.84rem;color:var(--ink-2);max-width:66ch">Le score additionne des <b>points de pénalité</b> et convertit le total en lettre.</p>
     <div class="lanes" id="bareme"></div>
     <div style="display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)" id="echelle"></div>
-    <p style="margin:14px 0 0;font-size:.78rem;color:var(--ink-3);max-width:66ch">La récidive est ce qui distingue un incident d'un problème de fond : c'est elle qui permet de montrer au syndicat de collecte qu'un point revient sans cesse, même quand chaque constat pris isolément paraît modeste. Elle se compte en passages : plusieurs photos du même dépôt, prises à quelques minutes d'intervalle, ne comptent qu'une fois.</p>
+    <p id="bareme-recidive" style="margin:14px 0 0;font-size:.78rem;color:var(--ink-3);max-width:66ch">La récidive est ce qui distingue un incident d'un problème de fond.</p>
   </div>
 </section>
 
@@ -286,9 +286,9 @@ details[open] summary{margin-bottom:8px}
 /* La page ne contient plus de données : elle charge donnees.json, publié
    depuis le classeur, et importe le calcul du Bac-Score. Une seule
    implémentation du barème, partagée avec la vignette. */
-import {LETTRES, FLUX_LABEL, dateFR, jours, normaliser,
+import {LETTRES, FLUX_LABEL, dateFR, jours, normaliser, appliquerBareme, decrireBareme,
         calcule as calculeAvec, passagesParSite as passagesAvec} from './bac-score.js';
-import {chargerConfig, urlPhoto, urlVignette, libelleCommune} from './config.js';
+import {chargerConfig, chargerBareme, urlPhoto, urlVignette, libelleCommune} from './config.js';
 
 let REF=[], OBS=[];
 const calcule=obs=>calculeAvec(REF,obs);
@@ -468,10 +468,12 @@ function rendu(){
   }).join('');
 
   // D'où vient la note : décomposition en trois composantes
-  const COMPO=[{k:'pr',lab:'Propreté au sol',c:'var(--c1)',max:6},
-               {k:'re',lab:'Remplissage',c:'var(--c2)',max:4},
-               {k:'rc',lab:'Récidive',c:'var(--c3)',max:4}];
-  const MAXPTS=COMPO.reduce((a,c)=>a+c.max,0);
+  /* Les trois composantes, leur poids et l'échelle des lettres viennent du
+     barème actif : la page ne recopie plus aucun seuil. */
+  const BAR=decrireBareme();
+  const COULEURS=['var(--c1)','var(--c2)','var(--c3)','var(--c4)'];
+  const COMPO=BAR.criteres.map((c,i)=>({k:c.cle,lab:c.libelle,c:COULEURS[i%COULEURS.length],max:c.max}));
+  const MAXPTS=BAR.max;
   document.getElementById('compo').innerHTML = sites.map(s=>{
     const f=s.flux.filter(x=>x.sc).sort((a,b)=>b.sc.total-a.sc.total)[0];
     const gauche='<div><div class="fr-code">'+esc(s.site)+'</div><div class="fr-nom">'+esc(s.nom)+'</div>'
@@ -491,10 +493,10 @@ function rendu(){
     +'</div></div>';
   }).join('');
   document.getElementById('compo-axe').innerHTML =
-    [[0,'0'],[1,'A'],[3,'B'],[6,'C'],[9,'D']].map(([v,l],i)=>
-      '<span class="c-tick" style="left:'+(100*v/MAXPTS).toFixed(2)+'%;transform:'
-        +(v===0?'none':'translateX(-50%)')+'">'
-        +(i===0?'0':l+' ≤ '+v)+'</span>').join('');
+    ['<span class="c-tick" style="left:0">0</span>']
+    .concat(BAR.echelle.filter(e=>e.haut!==null).map(e=>
+      '<span class="c-tick" style="left:'+(100*e.haut/MAXPTS).toFixed(2)+'%;transform:translateX(-50%)">'
+        +e.l+' ≤ '+e.haut+'</span>')).join('');
   document.getElementById('compo-legend').innerHTML =
     COMPO.map(c=>'<span><i class="swatch" style="border-radius:3px;background:'+c.c+'"></i>'
       +esc(c.lab)+' <span style="color:var(--ink-3)">· jusqu\'à '+c.max+' pts</span></span>').join('');
@@ -534,24 +536,37 @@ function rendu(){
     }).join('')
     + '<div style="font-size:.74rem;color:var(--ink-3);margin-top:12px">La portion rouge indique les constats où des déchets étaient posés au sol.</div>';
 
-  // Barème du Bac-Score
-  const bareme=[
-    {lbl:"Propreté au sol",items:[["rien",0],["1 à 2 sacs",2],["3 à 4 sacs",4],["5 sacs ou plus",6]]},
-    {lbl:"Remplissage",items:[["aucun plein",0],["jusqu'à 1/3",1],["jusqu'à 2/3",2],["plus de 2/3 ou accès bloqué",4]]},
-    {lbl:"Récidive sur 30 jours",items:[["aucun passage",0],["1 passage",1],["2 à 3 passages",2],["4 passages ou plus",4]]}
-  ];
-  document.getElementById('bareme').innerHTML = bareme.map(b=>
-    '<div class="lane"><span class="lbl">'+esc(b.lbl)+'</span><span class="cells">'
+  // Barème du Bac-Score : entièrement décrit par bac-score.js
+  document.getElementById('bareme').innerHTML = BAR.criteres.map(b=>
+    '<div class="lane"><span class="lbl">'+esc(b.libelle)+'</span><span class="cells">'
     + b.items.map(it=>'<i style="background:var(--surface-2);display:grid;place-items:center;height:auto;padding:5px 4px;font-size:.7rem;color:var(--ink-2);text-align:center;line-height:1.25">'
-        +esc(it[0])+'<br><b style="font-family:var(--mono);color:var(--ink)">+'+it[1]+'</b></i>').join('')
+        +esc(it.texte)+'<br><b style="font-family:var(--mono);color:var(--ink)">+'+it.points+'</b></i>').join('')
     +'</span></div>').join('');
-  document.getElementById('echelle').innerHTML = LETTRES.map((x,i)=>{
-    const bas=i===0?0:LETTRES[i-1].max+1, haut=i===LETTRES.length-1?"et plus":"à "+x.max;
-    return '<span style="display:inline-flex;align-items:center;gap:7px;font-size:.79rem;color:var(--ink-2)">'
+  document.getElementById('echelle').innerHTML = BAR.echelle.map(x=>
+    '<span style="display:inline-flex;align-items:center;gap:7px;font-size:.79rem;color:var(--ink-2)">'
       +'<b style="display:grid;place-items:center;width:22px;height:22px;border-radius:5px;background:var('+x.var+');color:#fff;font-family:var(--mono);font-size:.78rem">'+x.l+'</b>'
-      +'<span><b style="color:var(--ink)">'+esc(x.lab)+'</b> · '+bas+' '+haut+' pt'+'</span></span>';
-  }).join('');
+      +'<span><b style="color:var(--ink)">'+esc(x.lab)+'</b> · '
+      +(x.haut===null ? x.bas+' pt et plus' : x.bas+' à '+x.haut+' pt')+'</span></span>').join('');
 
+  /* Les phrases qui citent des chiffres sont écrites ici, pas dans le HTML :
+     un barème réglé ne doit pas pouvoir être démenti par son explication. */
+  document.getElementById('compo-intro').textContent =
+    "Les points de pénalité du flux qui fixe la note, répartis entre les "
+    + BAR.criteres.length + " critères. La barre va de 0 à " + BAR.max
+    + " points ; au-delà de " + (BAR.seuilDerniereLettre-1) + ", l'îlot est en "
+    + BAR.derniereLettre + ".";
+  document.getElementById('bareme-intro').innerHTML =
+    "Le score additionne des <b>points de pénalité</b> sur " + BAR.criteres.length
+    + " critères, puis convertit le total en lettre. Zéro point donne "
+    + BAR.premiereLettre + ", " + BAR.seuilDerniereLettre + " points ou plus donnent "
+    + BAR.derniereLettre + ". Le détail est affiché sur chaque îlot, de sorte qu'une "
+    + "note se vérifie toujours contre les photos.";
+  document.getElementById('bareme-recidive').textContent =
+    "La récidive est ce qui distingue un incident d'un problème de fond : c'est elle "
+    + "qui permet de montrer au syndicat de collecte qu'un point revient sans cesse, "
+    + "même quand chaque constat pris isolément paraît modeste. Elle se compte en "
+    + "passages sur " + BAR.fenetreJours + " jours : plusieurs photos du même dépôt, "
+    + "prises à moins de " + BAR.passageMinutes + " minutes d'intervalle, ne comptent qu'une fois.";
 }
 document.getElementById('opt-test').addEventListener('change',rendu);
 
@@ -583,9 +598,10 @@ document.getElementById('opt-test').addEventListener('change',rendu);
 
 Promise.all([
   chargerConfig(),
+  chargerBareme(appliquerBareme),
   fetch('donnees.json',{cache:'no-cache'}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
 ])
-  .then(([cfg,d])=>{
+  .then(([cfg,,d])=>{
     const n=normaliser(d);
     REF=n.REF; OBS=n.OBS;
     document.getElementById('m-commune').textContent=libelleCommune(n.commune,n.departement);

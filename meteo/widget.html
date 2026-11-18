@@ -115,8 +115,8 @@ a { color: inherit; }
 <div id="app"><p class="err">Chargement…</p></div>
 
 <script type="module">
-import { normaliser, resume } from "./bac-score.js";
-import { chargerConfig, config } from "./config.js";
+import { normaliser, resume, appliquerBareme } from "./bac-score.js";
+import { chargerConfig, chargerBareme } from "./config.js";
 
 const COULEUR = { A: "--sA", B: "--sB", C: "--sC", D: "--sD", E: "--sE" };
 /* La page détaillée : donnée par config.json, sinon le dossier courant —
@@ -184,10 +184,11 @@ function rendre(d) {
 
 Promise.all([
   chargerConfig(),
+  chargerBareme(appliquerBareme),   // l'encart note avec le même barème que la page
   fetch("donnees.json", { cache: "no-cache" })
     .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
 ])
-  .then(([cfg, d]) => {
+  .then(([cfg, , d]) => {
     if (cfg.adresses && cfg.adresses.meteo) PAGE = cfg.adresses.meteo;
     const n = normaliser(d); rendre(resume(n.REF, n.OBS, n));
   })
