@@ -116,9 +116,12 @@ a { color: inherit; }
 
 <script type="module">
 import { normaliser, resume } from "./bac-score.js";
+import { chargerConfig, config } from "./config.js";
 
 const COULEUR = { A: "--sA", B: "--sB", C: "--sC", D: "--sD", E: "--sE" };
-const PAGE = "https://collecte.mairie-albon.fr/meteo/";   // la page détaillée
+/* La page détaillée : donnée par config.json, sinon le dossier courant —
+   l'encart vit dans une iframe, un lien relatif y mènerait au site hôte. */
+let PAGE = new URL(".", location.href).href;
 
 const theme = new URLSearchParams(location.search).get("theme");
 if (theme === "dark" || theme === "auto") document.documentElement.dataset.theme = theme;
@@ -179,9 +182,15 @@ function rendre(d) {
     </div>`;
 }
 
-fetch("donnees.json", { cache: "no-cache" })
-  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(d => { const n = normaliser(d); rendre(resume(n.REF, n.OBS, n)); })
+Promise.all([
+  chargerConfig(),
+  fetch("donnees.json", { cache: "no-cache" })
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+])
+  .then(([cfg, d]) => {
+    if (cfg.adresses && cfg.adresses.meteo) PAGE = cfg.adresses.meteo;
+    const n = normaliser(d); rendre(resume(n.REF, n.OBS, n));
+  })
   .catch(() => {
     document.getElementById("app").innerHTML =
       '<p class="err">Les relevés ne sont pas disponibles pour le moment.</p>';

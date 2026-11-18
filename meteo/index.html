@@ -201,7 +201,7 @@ details[open] summary{margin-bottom:8px}
   <h1>Météo des points de collecte</h1>
   <p class="sub">Chaque îlot d'apport volontaire porte deux indications. Le <b>Bac-Score</b>, de A à E, note la situation durable du point sur trente jours. La <b>météo</b>, à côté, donne l'état constaté au dernier passage. Un point peut être beau aujourd'hui et noté D parce qu'il déborde toutes les semaines.</p>
   <div class="meta">
-    <span id="m-commune">Commune d'Albon (26)</span>
+    <span id="m-commune"></span>
     <span id="m-maj"></span>
     <span id="m-nb"></span>
   </div>
@@ -277,7 +277,7 @@ details[open] summary{margin-bottom:8px}
 </section>
 
 <footer>
-  <p>Source : classeur « PAV Albon — relevés points de collecte », feuilles Référentiel et Observations. Page calculée à partir des données brutes, sans saisie manuelle.</p>
+  <p id="m-source">Page calculée à partir des données brutes, sans saisie manuelle.</p>
   <p>La photo d'un îlot n'est pas publiée lorsque le relevé signale une personne ou une plaque d'immatriculation reconnaissable : le constat compte dans la note, l'image reste privée.</p>
 </footer>
 </div>
@@ -288,6 +288,7 @@ details[open] summary{margin-bottom:8px}
    implémentation du barème, partagée avec la vignette. */
 import {LETTRES, FLUX_LABEL, dateFR, jours, normaliser,
         calcule as calculeAvec, passagesParSite as passagesAvec} from './bac-score.js';
+import {chargerConfig, urlPhoto, urlVignette, libelleCommune} from './config.js';
 
 let REF=[], OBS=[];
 const calcule=obs=>calculeAvec(REF,obs);
@@ -358,9 +359,9 @@ function rendu(){
     if(!f.publiable) return '<div class="sansphoto">Photo non publiée : une personne ou une plaque y est reconnaissable.</div>';
     const n=new Set(s.flux.filter(x=>x.photo).map(x=>x.photo)).size;
     return '<figure class="preuve">'
-      +'<a href="https://drive.google.com/file/d/'+f.photo+'/view" target="_blank" rel="noopener" '
+      +'<a href="'+urlPhoto(f.photo)+'" target="_blank" rel="noopener" '
       +'title="'+esc((FLUX_LABEL[f.flux]||f.flux)+' — '+(f.ts?dateFR(f.ts):''))+'">'
-      +'<img src="https://drive.google.com/thumbnail?id='+f.photo+'&sz=w600" loading="lazy" '
+      +'<img src="'+urlVignette(f.photo,600)+'" loading="lazy" '
       +'alt="'+esc('Relevé photo de l\'îlot '+s.nom)+'" onerror="this.closest(\'figure\').remove()"></a>'
       +'<figcaption><b>'+esc(FLUX_LABEL[f.flux]||f.flux)+'</b>'+(f.ts?' · '+esc(dateFR(f.ts)):'')
       +(n>1?' · '+n+' photos ce jour-là':'')+'</figcaption></figure>';
@@ -448,7 +449,7 @@ function rendu(){
       const inner='<span class="fr-sq'+(l.depot?' depot':'')+'" style="background:'+col+'">'
         +(l.L?l.L.l:'?')+'</span><span class="fr-dt">'+jj+'</span>';
       return l.photo
-        ? '<a class="fr-cell" href="https://drive.google.com/file/d/'+l.photo+'/view" target="_blank" rel="noopener" title="'+esc(titre)+'" aria-label="'+esc(titre)+'">'+inner+'</a>'
+        ? '<a class="fr-cell" href="'+urlPhoto(l.photo)+'" target="_blank" rel="noopener" title="'+esc(titre)+'" aria-label="'+esc(titre)+'">'+inner+'</a>'
         : '<span class="fr-cell" title="'+esc(titre)+'">'+inner+'</span>';
     }).join('');
     const avecDepot=s.lots.filter(l=>l.depot).length;
@@ -580,13 +581,19 @@ document.getElementById('opt-test').addEventListener('change',rendu);
   });
 })();
 
-fetch('donnees.json',{cache:'no-cache'})
-  .then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
-  .then(d=>{
+Promise.all([
+  chargerConfig(),
+  fetch('donnees.json',{cache:'no-cache'}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+])
+  .then(([cfg,d])=>{
     const n=normaliser(d);
     REF=n.REF; OBS=n.OBS;
-    document.getElementById('m-commune').textContent=
-      "Commune d'"+(n.commune||'Albon')+" (26)";
+    document.getElementById('m-commune').textContent=libelleCommune(n.commune,n.departement);
+    /* La provenance des donnees est nommee par la commune elle-meme : la page
+       ne doit pas pretendre savoir dans quel classeur elle puise. */
+    const src=(cfg.mentions&&cfg.mentions.source)||d.source||'';
+    if(src) document.getElementById('m-source').textContent=
+      'Source : '+src+'. Page calculée à partir des données brutes, sans saisie manuelle.';
     rendu();
   })
   .catch(()=>{

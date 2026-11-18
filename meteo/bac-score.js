@@ -4,7 +4,7 @@
  * vignette l'importent toutes les deux : si le barème change ici, il change
  * aux deux endroits le même jour. Aucune dépendance au DOM, aucun style —
  * de quoi le charger aussi ailleurs (autre commune, autre page) sans rien
- * emporter d'Albon avec lui.
+ * emporter d'une commune en particulier avec lui.
  *
  * Les données brutes viennent de donnees.json, publié depuis le classeur.
  */
@@ -74,7 +74,7 @@ export function normaliser(donnees){
     personneVisible:!!o.personneVisible, plaqueLisible:!!o.plaqueLisible,
     test:/^(test|cors)-/.test(String(o.uuid))
   }));
-  return {REF,OBS,commune:donnees.commune||"",maj:donnees.maj||null};
+  return {REF,OBS,commune:donnees.commune||"",departement:donnees.departement||"",maj:donnees.maj||null};
 }
 
 /* ── Lecture d'un couple îlot × flux ──────────────────────────────────────
