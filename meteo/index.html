@@ -137,6 +137,22 @@ section{margin-top:40px}
 .fr-dt{font-family:var(--mono);font-size:.63rem;color:var(--ink-3)}
 .fr-cell:hover .fr-sq,.fr-cell:focus-visible .fr-sq{outline:2px solid var(--ink-2);outline-offset:2px}
 .fr-sum{font-size:.74rem;color:var(--ink-3);margin-top:7px}
+button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;cursor:pointer}
+.fr-cell[aria-expanded="true"] .fr-sq{outline:2px solid var(--ink);outline-offset:2px}
+/* Détail d'un passage, déplié sous la bande de l'îlot. */
+.fr-det{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.fd-t{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600;font-size:.88rem}
+.fd-l{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:#fff;font-family:var(--mono);flex:none}
+.fd-ph{display:flex;gap:10px;overflow-x:auto;margin:12px 0;padding-bottom:3px}
+.fd-ph figure{margin:0;flex:0 0 auto;width:220px}
+.fd-ph img{width:220px;height:165px;object-fit:cover;border-radius:8px;display:block;background:var(--surface-2)}
+.fd-ph figcaption{font-size:.72rem;color:var(--ink-3);margin-top:4px;font-family:var(--mono)}
+.fd-np{width:220px;height:165px;border-radius:8px;display:grid;place-items:center;text-align:center;padding:14px;font-size:.78rem;color:var(--ink-3);background:var(--surface-2)}
+.fd-v{font-size:.8rem;color:var(--ink-3);margin:10px 0}
+.fd-f{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.fd-f li{font-size:.82rem;line-height:1.45}
+.fd-f b{font-weight:600}
+.fd-tx{display:block;color:var(--ink-3);font-size:.78rem;margin-top:2px}
 .fr-vide{font-size:.82rem;color:var(--ink-3);padding:9px 0}
 
 /* D'où vient la note : barres empilées, trois composantes du Bac-Score. */
@@ -232,7 +248,7 @@ details[open] summary{margin-bottom:8px}
 <section>
   <div class="sechead">
     <h2>Frise des passages</h2>
-    <p>Un carré par passage, du plus ancien au plus récent, coloré par le Bac-Score calculé ce jour-là. Le point rouge signale un dépôt au sol. Cliquez un carré pour ouvrir la photo.</p>
+    <p>Un carré par passage, du plus ancien au plus récent, coloré par le Bac-Score calculé ce jour-là. Le point rouge signale un dépôt au sol. Cliquez un carré pour voir les photos du passage et ce qui a été constaté flux par flux.</p>
   </div>
   <div class="mapwrap">
     <div class="frise" id="frise"></div>
@@ -453,9 +469,57 @@ function rendu(){
 
   // Frise des passages
   const MAXP=10;
+  /* Un carré = un passage. Le clic déplie sous la bande les photos du passage
+     et ce que le classifieur a constaté flux par flux : de quoi comprendre
+     pourquoi l'îlot avait telle note ce jour-là. Une photo où une personne ou
+     une plaque est reconnaissable n'est ni affichée ni liée. */
+  const FRISE={};
+  document.getElementById('frise').onclick=e=>{
+    const b=e.target.closest('button.fr-cell'); if(!b) return;
+    const row=b.closest('.frow2'), det=row.querySelector('.fr-det');
+    const deja=b.getAttribute('aria-expanded')==='true';
+    row.querySelectorAll('button.fr-cell').forEach(x=>x.setAttribute('aria-expanded','false'));
+    if(deja){ det.hidden=true; det.innerHTML=''; return; }
+    const l=(FRISE[b.dataset.site]||[])[+b.dataset.i]; if(!l) return;
+    b.setAttribute('aria-expanded','true');
+    det.innerHTML=detailPassage(l); det.hidden=false;
+  };
+  function detailPassage(l){
+    const col=l.L?'var('+l.L.var+')':'var(--sOff)';
+    const ids=[...new Set(l.obs.map(o=>o.photo).filter(Boolean))];
+    const photos=ids.map(id=>{
+      const rows=l.obs.filter(o=>o.photo===id);
+      const h=new Date(rows[0].ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      const leg=esc(h+' · '+[...new Set(rows.map(o=>FLUX_LABEL[o.flux]||o.flux))].join(', '));
+      if(rows.some(o=>o.personneVisible||o.plaqueLisible))
+        return '<figure><div class="fd-np">Photo non publiée : une personne ou une plaque y est reconnaissable.</div><figcaption>'+leg+'</figcaption></figure>';
+      return '<figure><a href="'+urlPhoto(id)+'" target="_blank" rel="noopener"><img src="'+urlVignette(id,600)+'" loading="lazy" alt="'+esc('Photo de '+h)+'"></a><figcaption>'+leg+'</figcaption></figure>';
+    }).join('');
+    const parFlux={};
+    l.obs.forEach(o=>{ const p=parFlux[o.flux]; if(!p||new Date(o.ts)>new Date(p.ts)) parFlux[o.flux]=o; });
+    const constats=Object.values(parFlux).map(o=>{
+      const bouts=[];
+      if(o.inaccessible) bouts.push('inaccessible');
+      else if(o.vues===0) bouts.push('conteneur non repéré sur la photo');
+      else {
+        bouts.push(o.vues+' conteneur'+(o.vues>1?'s':'')+' vu'+(o.vues>1?'s':''));
+        if(o.pleines) bouts.push(o.pleines+' plein'+(o.pleines>1?'s':''));
+        if(o.bloquees) bouts.push(o.bloquees+' bloqué'+(o.bloquees>1?'s':''));
+        if(o.dessus) bouts.push(o.dessus+' avec un dépôt dessus');
+      }
+      if(o.depotSol) bouts.push('dépôt au sol'+(o.sacs?' ('+o.sacs+' sac'+(o.sacs>1?'s':'')+')':''));
+      return '<li><b>'+esc(FLUX_LABEL[o.flux]||o.flux)+'</b> — '+esc(bouts.join(' · '))
+        +(o.texte?'<span class="fd-tx">'+esc(o.texte)+'</span>':'')+'</li>';
+    }).join('');
+    const titre=(l.L?'Bac-Score '+l.L.l+' — '+l.L.lab+' · '+l.pts+' point'+(l.pts>1?'s':''):'Non noté')+' · '+dateFR(l.fin);
+    return '<div class="fd-t"><span class="fd-l" style="background:'+col+'">'+(l.L?l.L.l:'?')+'</span><span>'+esc(titre)+'</span></div>'
+      +(photos?'<div class="fd-ph">'+photos+'</div>':'<p class="fd-v">Pas de photo pour ce passage.</p>')
+      +'<ul class="fd-f">'+constats+'</ul>';
+  }
   document.getElementById('frise').innerHTML = commeLesCartes(passagesParSite(obs)).map(s=>{
     const lots=s.lots.slice(-MAXP);
-    const cells=lots.map(l=>{
+    FRISE[s.site]=lots;
+    const cells=lots.map((l,i)=>{
       const col=l.L?'var('+l.L.var+')':'var(--sOff)';
       const jj=new Date(l.fin).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
       const titre=(l.L?'Bac-Score '+l.L.l+' — '+l.L.lab+' · '+l.pts+' point'+(l.pts>1?'s':'')
@@ -463,8 +527,8 @@ function rendu(){
       const inner='<span class="fr-sq'+(l.depot?' depot':'')+'" style="background:'+col+'">'
         +(l.L?l.L.l:'?')+'</span><span class="fr-dt">'+jj+'</span>';
       return l.photo
-        ? '<a class="fr-cell" href="'+urlPhoto(l.photo)+'" target="_blank" rel="noopener" title="'+esc(titre)+'" aria-label="'+esc(titre)+'">'+inner+'</a>'
-        : '<span class="fr-cell" title="'+esc(titre)+'">'+inner+'</span>';
+        ? '<button type="button" class="fr-cell" data-site="'+esc(s.site)+'" data-i="'+i+'" aria-expanded="false" title="'+esc(titre)+'" aria-label="'+esc(titre)+'">'+inner+'</button>'
+        : '<button type="button" class="fr-cell" data-site="'+esc(s.site)+'" data-i="'+i+'" aria-expanded="false" title="'+esc(titre)+'" aria-label="'+esc(titre)+'">'+inner+'</button>';
     }).join('');
     const avecDepot=s.lots.filter(l=>l.depot).length;
     const dj=s.lots.length?jours(s.lots[s.lots.length-1].fin):null;
@@ -476,7 +540,7 @@ function rendu(){
       : '';
     return '<div class="frow2">'
       +'<div><div class="fr-code">'+esc(s.site)+'</div><div class="fr-nom">'+esc(s.nom)+'</div></div>'
-      +'<div>'+(lots.length?'<div class="fr-cells">'+cells+'</div><div class="fr-sum">'+esc(resume)+'</div>'
+      +'<div>'+(lots.length?'<div class="fr-cells">'+cells+'</div><div class="fr-sum">'+esc(resume)+'</div><div class="fr-det" hidden></div>'
                           :'<div class="fr-vide">Jamais relevé</div>')+'</div>'
     +'</div>';
   }).join('');
