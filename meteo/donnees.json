@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-20T08:15:08Z",
+ "maj": "2026-11-20T09:30:09Z",
  "source": "classeur PAV Albon — relevés points de collecte",
  "referentiel": [
   {
@@ -2121,7 +2121,7 @@
    "confiance": 0.85,
    "texte": "Deux colonnes semi-enterrées à dôme gris et socle en béton, avec pictogramme de sac, sont visibles avec leurs ouvertures ; aucun déchet posé dessus ni au sol. Un troisième dôme, partiellement caché à l'arrière-plan à gauche, n'est pas compté car son ouverture n'est pas visible.",
    "personneVisible": false,
-   "plaqueLisible": false
+   "plaqueLisible": true
   },
   {
    "uuid": "a54a32b5-49da-4c67-ac8d-18840686d60a",
@@ -2140,7 +2140,7 @@
    "confiance": 0.75,
    "texte": "Grosse colonne sombre au premier plan à droite avec autocollant vert et anneau d'ouverture vert partiellement coupé par le cadre ; rien posé dessus ni à son pied.",
    "personneVisible": false,
-   "plaqueLisible": false
+   "plaqueLisible": true
   },
   {
    "uuid": "a54a32b5-49da-4c67-ac8d-18840686d60a",
@@ -2159,7 +2159,7 @@
    "confiance": 0.65,
    "texte": "Colonne verte à gauche avec autocollant jaune et ouverture ronde visible ; aucun déchet dessus ni au sol.",
    "personneVisible": false,
-   "plaqueLisible": false
+   "plaqueLisible": true
   },
   {
    "uuid": "a54a32b5-49da-4c67-ac8d-18840686d60a",
@@ -2178,7 +2178,7 @@
    "confiance": 0.4,
    "texte": "Colonne verte centrale avec autocollant bleu et ouvertures rectangulaires, flux papier absent des postes attendus ; rien dessus ni au sol.",
    "personneVisible": false,
-   "plaqueLisible": false
+   "plaqueLisible": true
   },
   {
    "uuid": "c0087215-fb60-4939-b426-5bb8a457a67a",
