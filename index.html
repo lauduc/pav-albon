@@ -80,8 +80,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 10px;
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
+.bar-d { display: flex; align-items: center; gap: 10px; flex: none; }
+.logo { height: 28px; width: auto; max-width: 72px; object-fit: contain; border-radius: 4px; display: block; }
 .count { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: .95rem; }
 .count b { font-size: 1.3rem; font-weight: 500; }
 .track { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
@@ -400,7 +402,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
 <div class="bar"><div class="bar-in">
   <span class="eyebrow" id="day">Relevé</span>
-  <span class="count" id="compte">—</span>
+  <span class="bar-d">
+<span class="count" id="compte">—</span>
+<img class="logo" id="logo" alt="" hidden>
+</span>
 </div></div>
 
 <div class="wrap">
@@ -651,6 +656,18 @@ function appliquerConfig() {
   const pref = (CONF.commune && CONF.commune.prefixeCode) || "";
   if (pref) $("code-i").placeholder = pref + "-XXXXXX";
   $("share-u").textContent = URL_PARTAGE;
+  /* Logo de la commune : en-tete + favicon. Absent ou introuvable : rien ne s'affiche. */
+  const logo = (CONF.commune && CONF.commune.logo) || "";
+  const img = $("logo");
+  img.onerror = () => { img.hidden = true; };
+  img.hidden = !logo;
+  if (logo) {
+    img.src = logo;
+    img.alt = "Logo " + ((CONF.commune && CONF.commune.nom) || "de la commune");
+    document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(l => {
+      l.href = logo; l.removeAttribute("sizes"); l.removeAttribute("type");
+    });
+  }
   majFile(); rendre();
 }
 
