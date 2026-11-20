@@ -1,14 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="560" height="420" viewBox="0 0 560 420" role="img" aria-label="Propreté des points de collecte — Albon : Bac-Score B">
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="420" viewBox="0 0 560 420" role="img" aria-label="Propreté des points de collecte — Albon : Bac-Score A">
 <rect width="560" height="420" fill="#FFFFFF"/>
-<rect x="15" y="14" width="58" height="58" rx="13" fill="#74a524"/>
-<text x="44" y="56" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="600" fill="#fff">B</text>
+<rect x="15" y="14" width="58" height="58" rx="13" fill="#1b7a3e"/>
+<text x="44" y="56" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="600" fill="#fff">A</text>
 <text x="85" y="29" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" letter-spacing="1" fill="#6A716B">POINTS DE COLLECTE — ALBON</text>
-<text x="85" y="51" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="600" fill="#1A1F1C">Bon</text>
-<text x="85" y="70" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6A716B">6 des 6 points relevés · dernier le 19 novembre</text>
-<rect x="15.0" y="86" width="103.6" height="26" rx="4" fill="#1b7a3e" opacity="0.34"/>
+<text x="85" y="51" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="600" fill="#1A1F1C">Impeccable</text>
+<text x="85" y="70" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6A716B">6 des 6 points relevés · dernier le 20 novembre</text>
+<rect x="15.0" y="86" width="103.6" height="26" rx="4" fill="#1b7a3e"/>
+<rect x="13.5" y="84.5" width="106.6" height="29" rx="5.5" fill="none" stroke="#1A1F1C" stroke-width="2"/>
 <text x="66.8" y="104" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#fff">A</text>
-<rect x="121.6" y="86" width="103.6" height="26" rx="4" fill="#74a524"/>
-<rect x="120.1" y="84.5" width="106.6" height="29" rx="5.5" fill="none" stroke="#1A1F1C" stroke-width="2"/>
+<rect x="121.6" y="86" width="103.6" height="26" rx="4" fill="#74a524" opacity="0.34"/>
 <text x="173.4" y="104" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#fff">B</text>
 <rect x="228.2" y="86" width="103.6" height="26" rx="4" fill="#d7a208" opacity="0.34"/>
 <text x="280.0" y="104" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#fff">C</text>
@@ -21,10 +21,10 @@
 <text x="45" y="144" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13.5" fill="#1A1F1C">Îlot Parking du restaurant routier</text>
 <text x="545" y="144" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#6A716B">Moyen</text>
 <line x1="15" y1="154" x2="545" y2="154" stroke="#D8DCD7" stroke-width="1"/>
-<rect x="15" y="159" width="21" height="21" rx="6" fill="#74a524"/>
-<text x="25.5" y="174" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#fff">B</text>
+<rect x="15" y="159" width="21" height="21" rx="6" fill="#1b7a3e"/>
+<text x="25.5" y="174" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#fff">A</text>
 <text x="45" y="174" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13.5" fill="#1A1F1C">Îlot Route de l&apos;Argentelle</text>
-<text x="545" y="174" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#6A716B">Bon</text>
+<text x="545" y="174" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#6A716B">Impeccable</text>
 <line x1="15" y1="184" x2="545" y2="184" stroke="#D8DCD7" stroke-width="1"/>
 <rect x="15" y="189" width="21" height="21" rx="6" fill="#1b7a3e"/>
 <text x="25.5" y="204" text-anchor="middle" font-family="Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#fff">A</text>
