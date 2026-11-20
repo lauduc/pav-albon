@@ -14,7 +14,7 @@
   "terrain": {
     "rayonM": 100,
     "precisionMaxM": 30,
-    "alerteJours": 3
+    "alerteJours": 2
   },
   "mentions": {
     "source": "classeur « PAV Albon — relevés points de collecte », feuilles Référentiel et Observations"
