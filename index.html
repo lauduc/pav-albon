@@ -82,6 +82,31 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   padding-block: 10px;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
+/* Alerte : points sans photo depuis trop longtemps. Orange, comme une tâche
+   à faire, pas rouge : rien n'est cassé. */
+.retard {
+  background: color-mix(in srgb, var(--warn) 14%, var(--surface));
+  border: 2px solid var(--warn); border-radius: 14px;
+  padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 8px;
+}
+.retard-t { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 1.05rem; color: var(--ink); }
+.retard-t svg { width: 22px; height: 22px; flex: none; color: var(--warn); }
+.retard-s { margin: -4px 0 0 31px; font-size: .82rem; color: var(--muted); }
+.retard-l { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.retard-l button {
+  appearance: none; cursor: pointer; width: 100%; min-height: 48px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 12px; font-family: var(--font-ui); font-size: .95rem; font-weight: 500;
+}
+.retard-l button:active { background: var(--bg); }
+.retard-l .j { font-family: var(--font-mono); font-size: .82rem; color: var(--warn); flex: none; }
+.tag-r {
+  font-family: var(--font-label); text-transform: uppercase; letter-spacing: .04em;
+  font-size: .72rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; flex: none;
+  background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn);
+}
+.round li.retard-p > button { border-color: var(--warn); }
 .bar-d { display: flex; align-items: center; gap: 10px; flex: none; }
 .logo { height: 28px; width: auto; max-width: 72px; object-fit: contain; border-radius: 4px; display: block; }
 .count { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: .95rem; }
@@ -418,7 +443,15 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <span id="q-send-lbl">Envoyer</span>
   </button>
 
-  <div class="point">
+  <!-- Points sans photo depuis alerteJours (config.json) : calculé à partir des
+     observations de donnees.json. Masqué quand tout est à jour. -->
+<div class="retard" id="retard" role="alert" hidden>
+<div class="retard-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span id="retard-titre"></span></div>
+<p class="retard-s" id="retard-s"></p>
+<ul class="retard-l" id="retard-l"></ul>
+</div>
+
+<div class="point">
     <span class="eyebrow" id="state-lbl">Recherche du point…</span>
     <h1 id="site-nm">—</h1>
     <span class="code" id="site-cd"></span>
@@ -628,13 +661,50 @@ function sitesDepuis(d) {
 try { const c = JSON.parse(localStorage.getItem("pav-referentiel") || "null");
       if (Array.isArray(c) && c.length) SITES = c; } catch {}
 
+/* Dernier relevé connu par îlot, tiré des observations de donnees.json.
+   null tant qu'aucune observation n'est arrivée : pas d'alerte sur du vide. */
+let DERNIERS = null;
+try { DERNIERS = JSON.parse(localStorage.getItem("pav-derniers") || "null"); } catch {}
+function majDerniers(d) {
+  const obs = d && Array.isArray(d.observations) ? d.observations : null;
+  if (!obs) return;
+  const m = {};
+  for (const o of obs) {
+    if (/^(test|cors)-/.test(String(o.uuid || ""))) continue; // relevés d'essai
+    const c = String(o.site || ""), t = String(o.ts || "");
+    if (c && t && (!m[c] || t > m[c])) m[c] = t;
+  }
+  DERNIERS = m;
+  try { localStorage.setItem("pav-derniers", JSON.stringify(m)); } catch {}
+}
+/* Jours de calendrier depuis le dernier relevé ; null = jamais relevé. */
+function joursSans(code) {
+  const t = DERNIERS && DERNIERS[code]; if (!t) return null;
+  const a = new Date(t), b = new Date();
+  a.setHours(0, 0, 0, 0); b.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.round((b - a) / 86400000));
+}
+/* Points sans photo depuis alerteJours (config.json) ou plus, les plus en
+   retard d'abord. Un point photographié aujourd'hui sur ce téléphone sort
+   de la liste tout de suite, sans attendre l'analyse. */
+function enRetard() {
+  const seuil = (CONF.terrain && CONF.terrain.alerteJours) || 0;
+  if (!seuil || !DERNIERS) return [];
+  const cle = j => j === null ? 1e9 : j;
+  return SITES.map(s => ({ s, j: joursSans(s.code) }))
+    .filter(x => !faits.has(x.s.code) && (x.j === null || x.j >= seuil))
+    .sort((a, b) => cle(b.j) - cle(a.j));
+}
+
 async function chargerReferentiel() {
   const url = CONF.adresses.referentiel;
   if (!url) return;
   try {
     const r = await fetch(url, { headers: { accept: "application/json" }, cache: "no-cache" });
     if (!r.ok) return;
-    const sites = sitesDepuis(await r.json());
+    const d = await r.json();
+    majDerniers(d);
+    const sites = sitesDepuis(d);
     if (!sites.length) return;                         // jamais effacer sur une réponse vide
     SITES = sites;
     try { localStorage.setItem("pav-referentiel", JSON.stringify(sites)); } catch {}
@@ -824,6 +894,19 @@ function rendre() {
   /* Le relevé n'est pas une liste à finir : un agent passe où il passe. Le
      compteur décrit donc ce qui a été fait, il ne réclame rien. */
   const n = faits.size, ph = vignettes.length;
+  /* Bandeau d'alerte : les points sans photo depuis trop longtemps. */
+  const retards = enRetard(), codesRetard = new Map(retards.map(x => [x.s.code, x.j]));
+  const libJ = j => j === null ? "jamais" : `${j} j`;
+  $("retard").hidden = !retards.length;
+  if (retards.length) {
+    const seuil = CONF.terrain.alerteJours;
+    $("retard-titre").textContent = retards.length > 1
+      ? `${retards.length} points à relever en priorité` : "1 point à relever en priorité";
+    $("retard-s").textContent = `Sans photo depuis ${seuil} jour${seuil > 1 ? "s" : ""} ou plus. Appuie sur un point pour le choisir.`;
+    $("retard-l").innerHTML = retards.map(x =>
+      `<li><button type="button" data-code="${x.s.code}"><span>${x.s.nom}</span>` +
+      `<span class="j">${x.j === null ? "jamais relevé" : libJ(x.j)} &rsaquo;</span></button></li>`).join("");
+  }
   $("compte").textContent = n === 0 ? "aucun point relevé"
     : `${n} point${n > 1 ? "s" : ""} · ${ph} photo${ph > 1 ? "s" : ""}`;
   $("day").textContent = new Date().toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
@@ -875,7 +958,7 @@ function rendre() {
     /* Tout envoyé : l'îlot passe à la coche. L'écran se vide de ce qui est
        parti, mais le passage reste lisible — sinon on repasse deux fois. */
     const cls = [k ? "done" : "", k && !attente ? "envoye" : "",
-                 courant && s.code === courant.code ? "here" : ""].filter(Boolean).join(" ");
+                 courant && s.code === courant.code ? "here" : "", codesRetard.has(s.code) ? "retard-p" : ""].filter(Boolean).join(" ");
     /* La distance remplace le code tant que le point n'est pas fait : c'est la
        seule chose utile que l'ancienne liste en double apportait. */
     const d = position ? Math.round(distance(position, s)) : null;
@@ -886,7 +969,9 @@ function rendre() {
       : attente > 1 ? `${attente} photos`
       : (nbColonnes(s) > 1 ? `1 photo · ${nbColonnes(s)} col.` : "1 photo");
     let bloc = `<li class="${cls}"><button type="button" data-code="${s.code}">` +
-      `<span class="dot"></span><span class="nm">${s.nom}</span><span class="cd">${droite}</span>` +
+      `<span class="dot"></span><span class="nm">${s.nom}</span>` +
+      (codesRetard.has(s.code) ? `<span class="tag-r">à relever &middot; ${libJ(codesRetard.get(s.code))}</span>` : "") +
+      `<span class="cd">${droite}</span>` +
       `</button></li>`;
     /* Les photos du point sélectionné sont dépliées sous sa ligne : pas de
        second écran à ouvrir, et on voit tout de suite ce qu'on a pris. */
@@ -947,6 +1032,14 @@ function majGps() {
 /* Il n'y a qu'une seule liste de points, celle de la tournée, et elle est
    toujours à l'écran. Le bouton n'ouvre donc plus une seconde liste : quand
    aucun point n'est reconnu il y emmène, et c'est tout. */
+/* Un appui sur un point du bandeau d'alerte fait exactement ce que fait la
+   ligne de la tournée : on la réutilise, pour ne pas dupliquer la logique. */
+$("retard-l").addEventListener("click", e => {
+  const b = e.target.closest("button[data-code]"); if (!b) return;
+  const l = document.querySelector(`#round li:not(.vgs) > button[data-code="${b.dataset.code}"]`);
+  if (l) { l.click(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+});
+
 $("discord-b").addEventListener("click", () => {
   if (!gpsSite) return;
   courant = gpsSite; choixManuel = false;
