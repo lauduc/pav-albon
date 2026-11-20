@@ -106,7 +106,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   font-size: .72rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; flex: none;
   background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn);
 }
-.round li.retard-p > button { border-color: var(--warn); }
+/* :not(.vgs) pour peser autant que la règle de base des lignes, :not(.here)
+   pour laisser le point sélectionné garder sa bordure jaune. */
+.round li.retard-p:not(.here):not(.vgs) > button { border-color: var(--warn); border-width: 1.5px; }
 .bar-d { display: flex; align-items: center; gap: 10px; flex: none; }
 .logo { height: 28px; width: auto; max-width: 72px; object-fit: contain; border-radius: 4px; display: block; }
 .count { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: .95rem; }
