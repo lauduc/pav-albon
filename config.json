@@ -26,7 +26,8 @@
 
   "terrain": {
     "rayonM": 100,
-    "precisionMaxM": 30
+    "precisionMaxM": 30,
+    "alerteJours": 3
   },
 
   "mentions": {
