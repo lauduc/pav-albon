@@ -228,7 +228,7 @@ details[open] summary{margin-bottom:8px}
     <span id="m-nb"></span>
   </div>
   <div style="margin-top:14px">
-    <label class="toggle"><input type="checkbox" id="opt-test"> Inclure les relevés de test</label>
+    <!-- Case « relevés de test » retirée : la page publique les exclut toujours. -->
   </div>
 </header>
 
@@ -364,7 +364,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 
 
 function rendu(){
-  aconst inclureTest=false; // la page est publique : les relevés de test n'y figurent jamais
+  const inclureTest=false; // la page est publique : les relevés de test n'y figurent jamais
   const obs=OBS.filter(o=>inclureTest||!o.test);
   /* Du plus récemment relevé au plus ancien : une page de suivi se lit par le
      haut, et ce qu'on vient de constater vaut mieux que l'ordre alphabétique
