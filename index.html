@@ -109,6 +109,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 /* :not(.vgs) pour peser autant que la règle de base des lignes, :not(.here)
    pour laisser le point sélectionné garder sa bordure jaune. */
 .round li.retard-p:not(.here):not(.vgs) > button { border-color: var(--warn); border-width: 1.5px; }
+.ver { margin: 4px 0 0; text-align: center; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); }
 .bar-d { display: flex; align-items: center; gap: 10px; flex: none; }
 .logo { height: 28px; width: auto; max-width: 72px; object-fit: contain; border-radius: 4px; display: block; }
 .count { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: .95rem; }
@@ -544,7 +545,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 19 4"/><path d="m16 7 2 2"/><path d="m19.5 4.5 2 2"/></svg>
     <span id="code-l">Code d'accès</span>
   </button>
-  <input type="file" accept="image/*" capture="environment" id="file" hidden>
+  <!-- Version du moteur (version.json, écrit par la diffusion) : pour savoir
+     d'un coup d'œil quelle version tourne sur le téléphone. -->
+<p class="ver" id="ver"></p>
+<input type="file" accept="image/*" capture="environment" id="file" hidden>
   <input type="file" accept="image/*" id="file-gal" multiple hidden>
 </div>
 
@@ -728,6 +732,7 @@ function appliquerConfig() {
   const pref = (CONF.commune && CONF.commune.prefixeCode) || "";
   if (pref) $("code-i").placeholder = pref + "-XXXXXX";
   $("share-u").textContent = URL_PARTAGE;
+  afficherVersion();
   /* Logo de la commune : en-tete + favicon. Absent ou introuvable : rien ne s'affiche. */
   const logo = (CONF.commune && CONF.commune.logo) || "";
   const img = $("logo");
@@ -741,6 +746,17 @@ function appliquerConfig() {
     });
   }
   majFile(); rendre();
+}
+
+/* Version du moteur, écrite par la diffusion dans version.json. Le service
+   worker la garde en cache : elle s'affiche aussi sans réseau. */
+async function afficherVersion() {
+  try {
+    const r = await fetch("version.json", { cache: "no-cache" });
+    if (!r.ok) return;
+    const v = (await r.json()).version;
+    if (v) $("ver").textContent = "Moteur " + v;
+  } catch {}
 }
 
 async function chargerConfig() {
