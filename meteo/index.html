@@ -153,6 +153,18 @@ button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;c
 .fd-f li{font-size:.82rem;line-height:1.45}
 .fd-f b{font-weight:600}
 .fd-tx{display:block;color:var(--ink-3);font-size:.78rem;margin-top:2px}
+/* Mise en route du projet : une jauge globale et une barre par prérequis. */
+.init{display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.in-g{display:flex;align-items:baseline;gap:10px}
+.in-g b{font-size:1.8rem;font-family:var(--mono);font-weight:600}
+.in-g span{color:var(--ink-3);font-size:.85rem}
+.in-r{display:grid;grid-template-columns:1fr minmax(120px,40%) 70px;gap:12px;align-items:center}
+@media (max-width:560px){.in-r{grid-template-columns:1fr 70px}.in-b{grid-column:1/-1;grid-row:2}}
+.in-k{font-size:.85rem}
+.in-k i{color:var(--warn);font-style:normal;font-size:.78rem}
+.in-b{height:10px;background:var(--surface-2);border-radius:5px;overflow:hidden}
+.in-b span{display:block;height:100%;background:var(--accent);border-radius:5px}
+.in-v{font-family:var(--mono);font-size:.82rem;text-align:right;color:var(--ink-2)}
 /* Dépliant « D’où vient la note » en bas de chaque carte. */
 .dvn{margin-top:12px;border-top:1px solid var(--line);padding-top:9px}
 .dvn summary{cursor:pointer;font-size:.82rem;font-weight:600;color:var(--accent)}
@@ -279,11 +291,20 @@ details[open] summary{margin-bottom:8px}
 
 <section>
   <div class="sechead">
-    <h2>Statistiques</h2>
-    <p>Sur la période couverte par les relevés.</p>
+    <h2>Statistiques d'exploitation</h2>
+    <p>Ce que disent les passages sur la période couverte par les relevés.</p>
   </div>
   <div class="tiles" id="tiles"></div>
   <div class="bars" id="bars"></div>
+</section>
+
+<!-- Mise en route : se masque d'elle-même quand tout est à 100 %. -->
+<section>
+  <div class="sechead">
+    <h2>Mise en route du projet</h2>
+    <p>Ce qui reste à compléter pour que toutes les notes soient calculées entièrement. Cette rubrique disparaît une fois à 100 %.</p>
+  </div>
+  <div class="init" id="init"></div>
 </section>
 
 
@@ -617,16 +638,36 @@ function rendu(){
   const couplesReleves=new Set(obs.filter(o=>REF.some(r=>r.site===o.site&&r.flux===o.flux)).map(o=>o.site+"|"+o.flux)).size;
   const depots=obs.filter(o=>o.depotSol);
   const sacsMax=Math.max(0,...obs.map(o=>o.sacs));
+  /* L'unité de l'exploitation est le PASSAGE (une visite d'un îlot), pas le
+     constat : une photo donne un constat par flux, ce qui gonflait les compteurs. */
+  const passages=passagesParSite(obs).flatMap(s=>s.lots);
+  const nbPassages=passages.length, passDepot=passages.filter(l=>l.depot).length;
   const unitesConnues=REF.filter(r=>r.nbUnites>0).length;
   const dates=obs.map(o=>o.ts).sort();
   const periode = dates.length? new Date(dates[0]).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+" → "+new Date(dates[dates.length-1]).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : "—";
+  /* Mise en route : ce qui conditionne la complétude des notes. */
+  const jauges=[
+    {k:"Îlots photographiés au moins une fois",n:sitesReleves,t:sites.length},
+    {k:"Conteneurs (îlot × flux) photographiés au moins une fois",n:couplesReleves,t:couplesRef},
+    {k:"Nombre de colonnes renseigné dans le référentiel",n:unitesConnues,t:couplesRef,aide:"sans lui, le remplissage n'est pas calculé"}
+  ];
+  const jTot=jauges.reduce((a,j)=>a+j.t,0), jFait=jauges.reduce((a,j)=>a+Math.min(j.n,j.t),0);
+  const pctInit=jTot?Math.round(100*jFait/jTot):100;
+  document.getElementById('init').closest('section').style.display=pctInit>=100?'none':'';
+  document.getElementById('init').innerHTML=
+    '<div class="in-g"><b>'+pctInit+' %</b><span>du projet initialisé</span></div>'
+    +jauges.map(j=>{ const p=j.t?Math.round(100*j.n/j.t):100;
+      return '<div class="in-r"><div class="in-k">'+esc(j.k)+(j.aide&&p<100?' <i>— '+esc(j.aide)+'</i>':'')+'</div>'
+        +'<div class="in-b"><span style="width:'+p+'%"></span></div>'
+        +'<div class="in-v">'+j.n+' / '+j.t+'</div></div>'; }).join('');
+
   const tiles=[
-    {k:"Îlots relevés",v:sitesReleves+" / "+sites.length,n:sitesReleves<sites.length?(sites.length-sitesReleves)+" îlot(s) jamais photographié(s)":"couverture complète"},
-    {k:"Couples îlot × flux",v:couplesReleves+" / "+couplesRef,n:Math.round(100*couplesReleves/couplesRef)+" % du référentiel couvert"},
-    {k:"Constats avec dépôt au sol",v:depots.length+" / "+obs.length,n:depots.length?"maximum "+sacsMax+" sacs sur un même point":"aucun dépôt constaté"},
+    {k:"Passages",v:String(nbPassages),n:"visites d'îlots, sur "+sitesReleves+" îlot"+(sitesReleves>1?"s":"")+" relevé"+(sitesReleves>1?"s":"")},
+    {k:"Passages avec dépôt au sol",v:(nbPassages?Math.round(100*passDepot/nbPassages):0)+" %",n:passDepot+" sur "+nbPassages+(passDepot?" · jusqu'à "+sacsMax+" sacs sur un même point":" · aucun dépôt constaté")},
+    // (constats avec dépôt au sol : remplacé par le pourcentage de passages ci-dessus)
     {k:"Îlots notés D ou E",v:String(sites.filter(s=>s.L&&(s.L.l==="D"||s.L.l==="E")).length),n:"points à remonter au syndicat"},
     {k:"Période couverte",v:periode,n:photos.length+" photos analysées"},
-    {k:"Nombre de conteneurs renseigné",v:unitesConnues+" / "+couplesRef,n:"bloque le calcul du remplissage",alert:unitesConnues<couplesRef}
+    // (nombre de conteneurs renseigné : déplacé dans « Mise en route du projet »)
   ];
   document.getElementById('tiles').innerHTML=tiles.map(t=>
     '<div class="tile'+(t.alert?' alert':'')+'"><div class="k">'+esc(t.k)+'</div><div class="v">'+esc(t.v)+'</div><div class="n">'+esc(t.n)+'</div></div>').join('');
