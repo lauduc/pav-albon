@@ -4,7 +4,8 @@
   "commune": {
     "nom": "Albon",
     "departement": "26",
-    "prefixeCode": "ALB"
+    "prefixeCode": "ALB",
+    "logo": "logo.png"
   },
 
   "adresses": {
