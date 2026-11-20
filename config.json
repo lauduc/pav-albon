@@ -1,36 +1,30 @@
 {
-  "_": "Le seul fichier à changer pour une autre commune. Tout le reste du dépôt est commun. Les points de collecte ne sont PAS ici : ils vivent dans le classeur de la mairie et arrivent par meteo/donnees.json.",
-
+  "_": "Généré par n8n depuis l’onglet Parametres du classeur de la commune. Ne pas modifier ici : ce serait écrasé.",
   "commune": {
     "nom": "Albon",
     "departement": "26",
     "prefixeCode": "ALB",
     "logo": "logo.png"
   },
-
   "adresses": {
     "application": "https://collecte.mairie-albon.fr/",
     "meteo": "https://collecte.mairie-albon.fr/meteo/",
     "referentiel": "meteo/donnees.json"
   },
-
+  "terrain": {
+    "rayonM": 100,
+    "precisionMaxM": 30,
+    "alerteJours": 3
+  },
+  "mentions": {
+    "source": "classeur « PAV Albon — relevés points de collecte », feuilles Référentiel et Observations"
+  },
   "depot": {
     "endpoint": "https://n8n.srv1040760.hstgr.cloud/webhook/pav-photo"
   },
-
   "photos": {
     "hebergeur": "google-drive",
     "vue": "https://drive.google.com/file/d/{id}/view",
     "vignette": "https://drive.google.com/thumbnail?id={id}&sz=w{largeur}"
-  },
-
-  "terrain": {
-    "rayonM": 100,
-    "precisionMaxM": 30,
-    "alerteJours": 2
-  },
-
-  "mentions": {
-    "source": "classeur « PAV Albon — relevés points de collecte », feuilles Référentiel et Observations"
   }
 }
