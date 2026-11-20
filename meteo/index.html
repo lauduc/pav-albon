@@ -153,6 +153,12 @@ button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;c
 .fd-f li{font-size:.82rem;line-height:1.45}
 .fd-f b{font-weight:600}
 .fd-tx{display:block;color:var(--ink-3);font-size:.78rem;margin-top:2px}
+/* Dépliant « D’où vient la note » en bas de chaque carte. */
+.dvn{margin-top:12px;border-top:1px solid var(--line);padding-top:9px}
+.dvn summary{cursor:pointer;font-size:.82rem;font-weight:600;color:var(--accent)}
+.dvn[open] summary{margin-bottom:9px}
+.dvn-q{font-size:.78rem;color:var(--ink-3);margin:0 0 8px}
+.dvn .c-end{margin-top:6px}
 .fr-vide{font-size:.82rem;color:var(--ink-3);padding:9px 0}
 
 /* D'où vient la note : barres empilées, trois composantes du Bac-Score. */
@@ -256,7 +262,9 @@ details[open] summary{margin-bottom:8px}
   </div>
 </section>
 
-<section>
+<!-- Section remplacée par le dépliant « D’où vient la note » de chaque carte.
+     Gardée masquée : le script y écrit encore l'axe et la légende. -->
+<section style="display:none">
   <div class="sechead">
     <h2>D'où vient la note</h2>
     <p id="compo-intro">Les points de pénalité du flux qui fixe la note, répartis entre les trois critères.</p>
@@ -356,7 +364,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 
 
 function rendu(){
-  const inclureTest=document.getElementById('opt-test').checked;
+  aconst inclureTest=false; // la page est publique : les relevés de test n'y figurent jamais
   const obs=OBS.filter(o=>inclureTest||!o.test);
   /* Du plus récemment relevé au plus ancien : une page de suivi se lit par le
      haut, et ce qu'on vient de constater vaut mieux que l'ordre alphabétique
@@ -430,7 +438,8 @@ function rendu(){
           +'<span class="fdetail">'+esc(f.detail)+'</span>'
         +'</div>';
       }).join('')+'</div>'
-    +'</article>';
+    +dOuVient(s)
+      +'</article>';
   }).join('');
 
   // Carte
@@ -545,6 +554,29 @@ function rendu(){
     +'</div>';
   }).join('');
 
+  /* « D’où vient la note », dépliable dans chaque carte : les points du flux
+     qui fixe la note, répartis entre les critères du barème actif. Déclarée
+     ici mais appelée plus haut par les cartes : elle ne dépend donc que du
+     barème, pas des constantes de la section ci-dessous. */
+  function dOuVient(s){
+    const f=s.flux.filter(x=>x.sc).sort((a,b)=>b.sc.total-a.sc.total)[0];
+    if(!f) return '';
+    const bar=decrireBareme(), cols=['var(--c1)','var(--c2)','var(--c3)','var(--c4)'];
+    const crit=bar.criteres.map((c,i)=>({k:c.cle,lab:c.libelle,c:cols[i%cols.length]}));
+    const segs=crit.filter(c=>f.sc[c.k]>0).map(c=>
+      '<span class="c-seg" style="width:'+(100*f.sc[c.k]/bar.max).toFixed(2)+'%;background:'+c.c+'"'
+      +' title="'+esc(c.lab+' : '+f.sc[c.k]+' point'+(f.sc[c.k]>1?'s':''))+'"></span>').join('');
+    const vals=crit.map(c=>'<i><span class="c-key" style="background:'+c.c+'"></span>'
+      +esc(c.lab.toLowerCase())+' '+f.sc[c.k]+'</i>').join('');
+    const qui=f.sc.total===0 ? 'Tous les flux au vert.'
+      : 'Note fixée par le flux « '+(FLUX_LABEL[f.flux]||f.flux)+' », le plus pénalisé.';
+    return '<details class="dvn"><summary>D’où vient la note</summary>'
+      +'<p class="dvn-q">'+esc(qui)+'</p>'
+      +'<div class="c-bar" role="img" aria-label="'+esc(crit.map(c=>c.lab.toLowerCase()+' '+f.sc[c.k]).join(', ')+', total '+f.sc.total+' points')+'">'+segs+'</div>'
+      +'<div class="c-end"><b>'+f.sc.total+' point'+(f.sc.total>1?'s':'')+'</b><span class="c-vals">'+vals+'</span></div>'
+      +'</details>';
+  }
+
   // D'où vient la note : décomposition en trois composantes
   /* Les trois composantes, leur poids et l'échelle des lettres viennent du
      barème actif : la page ne recopie plus aucun seuil. */
@@ -646,7 +678,7 @@ function rendu(){
     + "passages sur " + BAR.fenetreJours + " jours : plusieurs photos du même dépôt, "
     + "prises à moins de " + BAR.passageMinutes + " minutes d'intervalle, ne comptent qu'une fois.";
 }
-document.getElementById('opt-test').addEventListener('change',rendu);
+
 
 /* Retour vers le site appelant. Deux sources, dans cet ordre : le paramètre
    ?retour=, qui est une destination et marche donc même dans un onglet neuf ;
