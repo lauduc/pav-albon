@@ -1,6 +1,6 @@
 {
   "_": "Le barème du Bac-Score, commun à toutes les communes. Généré par n8n depuis le classeur « PAV — paramètres communs » : ne pas modifier ici, ce serait écrasé. Chaque critère est une suite de paliers ordonnés ; le dernier a « max »: null et vaut « et au-delà ».",
-  "version": 2,
+  "version": 3,
   "lettres": [
     {
       "l": "A",
@@ -81,7 +81,7 @@
     ]
   },
   "recidive": {
-    "libelle": "Récidive (test)",
+    "libelle": "Récidive",
     "_": "max = nombre de passages avec dépôt au sol dans la fenêtre, celui du relevé compris.",
     "fenetreJours": 30,
     "paliers": [
