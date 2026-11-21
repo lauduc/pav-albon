@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-20T21:45:24Z",
+ "maj": "2026-11-21T10:15:54Z",
  "source": "classeur PAV Albon — relevés points de collecte",
  "referentiel": [
   {
@@ -2329,6 +2329,44 @@
    "cause": "",
    "confiance": 0.82,
    "texte": "Quatre colonnes semi-enterrées à dôme gris alignées, ouvertures visibles ; aucun déchet posé dessus ni au sol, seulement des feuilles mortes sur le revêtement. Le flux est déduit de la couleur grise et du nombre de colonnes attendu, les pictogrammes étant illisibles.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "578c23b4-7348-4402-a7b6-a7b342a7f15a",
+   "ts": "2026-11-21T10:13:58.872Z",
+   "site": "ALB-06",
+   "flux": "ordures_menageres",
+   "photo": "16NLYOcclpW_47BMctMYnd6mzmLtd5af4",
+   "inaccessible": false,
+   "vues": 2,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.7,
+   "texte": "Deux colonnes semi-enterrées grises à habillage gravillonné sont entièrement visibles, sans déchet dessus ni au sol ; une troisième, coupée par le bord gauche, n'est pas comptée et la photo est en contre-jour.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "578c23b4-7348-4402-a7b6-a7b342a7f15a",
+   "ts": "2026-11-21T10:13:58.872Z",
+   "site": "ALB-06",
+   "flux": "verre",
+   "photo": "16NLYOcclpW_47BMctMYnd6mzmLtd5af4",
+   "inaccessible": false,
+   "vues": 2,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.7,
+   "texte": "Deux colonnes vertes à ouvertures rondes au centre de la photo, sans déchet dessus ni au sol ; les deux conteneurs verts de droite n'ont pas pu être attribués à un flux avec certitude.",
    "personneVisible": false,
    "plaqueLisible": false
   }
