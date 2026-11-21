@@ -1595,6 +1595,7 @@ async function vider() {
       fd.append("photo", it.photo, it.uuid + ".jpg");
       for (const k of ["uuid","horodatage","site_code","lat","lon","precision_m"]) fd.append(k, it[k]);
       fd.append("code", CODE);
+         fd.append("commune", (CONF.commune && CONF.commune.nom) || "");
       const r = await fetch(ENDPOINT, { method: "POST", body: fd });
       /* Un code refusé ne se répare pas en réessayant : on désarme, on le dit,
          et la photo reste en file — elle partira une fois le code corrigé. */
